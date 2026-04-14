@@ -12,7 +12,8 @@ app = FastAPI(title=settings.PROJECT_NAME)
 app.include_router(api_router, prefix="/api/v1")
 
 # CORS configuration
-# Obtenemos orígenes permitidos desde settings y agregamos defaults comunes
+# Permitimos localhost y cualquier IP de red local (10.x.x.x, 192.168.x.x, etc.) para testing
+# Además de usar los orígenes explícitos.
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -24,8 +25,9 @@ if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.\d+\.\d+\.\d+)(:\d+)?$",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"], # OPTIONS es manejado automáticamente por el middleware
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

@@ -12,8 +12,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 app.include_router(api_router, prefix="/api/v1")
 
 # CORS configuration
-# Permitimos localhost y cualquier IP de red local (10.x.x.x, 192.168.x.x, etc.) para testing
-# Además de usar los orígenes explícitos.
+# Permitimos orígenes explícitos y un fallback amplio por regex para despliegues VPS / IPs Dinámicas
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -25,7 +24,7 @@ if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.\d+\.\d+\.\d+)(:\d+)?$",
+    allow_origin_regex=r".*",  # Esto acepta cualquier otro subdominio o IP pública/privada (ej: dominios personalizados o IPs del VPS)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -38,14 +38,38 @@ def create_family_group(claims: Dict[str, Any] = Depends(get_current_user)):
     # Check if group already exists
     exist = supabase.table("grupos_familiares").select("*").eq("tutor_user_id", tutor_id).execute()
     if exist.data:
-        return {"success": True, "grupo_id": exist.data[0]["id"], "message": "Grupo ya existe."}
+        grupo_id = exist.data[0]["id"]
+        # Asegurarse que el tutor esté en miembros_familiares, ya que un bug anterior no los insertaba
+        mem = supabase.table("miembros_familiares").select("*").eq("grupo_id", grupo_id).eq("user_id", tutor_id).execute()
+        if not mem.data:
+            supabase.table("miembros_familiares").insert({
+                "organizacion_id": orga_id,
+                "grupo_id": grupo_id,
+                "user_id": tutor_id,
+                "rol": "tutor",
+                "estado": "activo"
+            }).execute()
+            
+        return {"success": True, "grupo_id": grupo_id, "message": "Grupo ya existe."}
 
     try:
         res = supabase.table("grupos_familiares").insert({
             "organizacion_id": orga_id,
             "tutor_user_id": tutor_id
         }).execute()
-        return {"success": True, "grupo_id": res.data[0]["id"], "message": "Grupo creado exitosamente."}
+        
+        grupo_id = res.data[0]["id"]
+        
+        # Insertar al tutor como miembro activo del grupo
+        supabase.table("miembros_familiares").insert({
+            "organizacion_id": orga_id,
+            "grupo_id": grupo_id,
+            "user_id": tutor_id,
+            "rol": "tutor",
+            "estado": "activo"
+        }).execute()
+        
+        return {"success": True, "grupo_id": grupo_id, "message": "Grupo creado exitosamente."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

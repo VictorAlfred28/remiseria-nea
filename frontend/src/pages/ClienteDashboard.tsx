@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft } from "lucide-react";
+import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
@@ -7,7 +7,7 @@ import { calculateDistance } from "../utils/geo";
 
 export default function ClienteDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet'>('pedir');
+  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia'>('pedir');
   
   // States
   const [origen, setOrigen] = useState("");
@@ -58,6 +58,13 @@ export default function ClienteDashboard() {
   // Foto Perfil
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  
+  // Cuenta Familiar
+  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+  const [invitePhone, setInvitePhone] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [tutorPhoneToAccept, setTutorPhoneToAccept] = useState("");
+  const [familyLoading, setFamilyLoading] = useState(false);
 
   useEffect(() => {
     cargarDatosIniciales();
@@ -68,9 +75,16 @@ export default function ClienteDashboard() {
           verificarRatings();
       })
       .subscribe();
+      
+    const sub_tutor = supabase.channel('viajes_tutor')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'viajes', filter: `tutor_responsable_id=eq.${user?.id}` }, () => {
+          cargarViajeActivo();
+      })
+      .subscribe();
 
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(sub_tutor);
     }
   }, [user]);
 
@@ -102,6 +116,19 @@ export default function ClienteDashboard() {
     if(promos) setPromociones(promos);
     
     cargarReservas();
+    cargarFamilia();
+  };
+
+  const cargarFamilia = async () => {
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/members`, {
+            headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            setFamilyMembers(data.members || []);
+        }
+    } catch(e) {}
   };
 
   const cargarEmpresaStatus = async () => {
@@ -141,11 +168,62 @@ export default function ClienteDashboard() {
        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/reservas`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
        });
-       if(resp.ok) {
+        if(resp.ok) {
            const d = await resp.json();
            setReservas(d);
        }
      } catch (e) {}
+  };
+
+  const handleCreateGroup = async () => {
+      setFamilyLoading(true);
+      try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/create`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+          });
+          await cargarFamilia();
+      } finally {
+          setFamilyLoading(false);
+      }
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if(!invitePhone) return;
+      setFamilyLoading(true);
+      try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/invite`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ telefono: invitePhone, nombre: inviteName || "Familiar" })
+          });
+          setInvitePhone(""); setInviteName("");
+          alert("Invitación enviada por WhatsApp");
+          await cargarFamilia();
+      } catch(err) {
+          alert("Error invitando");
+      } finally {
+          setFamilyLoading(false);
+      }
+  };
+
+  const handleAcceptInvite = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if(!tutorPhoneToAccept) return;
+      setFamilyLoading(true);
+      try {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/accept`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ tutor_telefono: tutorPhoneToAccept })
+          });
+          const d = await resp.json();
+          if(resp.ok) { alert(d.message); await cargarFamilia(); }
+          else alert(d.detail);
+      } finally {
+          setFamilyLoading(false);
+      }
   };
 
   const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +251,12 @@ export default function ClienteDashboard() {
   };
 
   const cargarViajeActivo = async () => {
-    const { data } = await supabase.from('viajes').select('*').eq('cliente_id', user?.id).in('estado', ['solicitado', 'REQUESTED', 'asignado', 'ACCEPTED', 'en_camino', 'ARRIVED', 'STARTED']).order('creado_en', { ascending: false }).limit(1);
+    const { data } = await supabase.from('viajes')
+       .select('*')
+       .or(`cliente_id.eq.${user?.id},tutor_responsable_id.eq.${user?.id}`)
+       .in('estado', ['solicitado', 'REQUESTED', 'asignado', 'ACCEPTED', 'en_camino', 'ARRIVED', 'STARTED'])
+       .order('creado_en', { ascending: false })
+       .limit(1);
     if(data && data.length > 0) {
       setViajeActivo(data[0]);
     } else {
@@ -535,6 +618,7 @@ export default function ClienteDashboard() {
                  { id: 'historial', label: 'Historial', icon: History },
                  { id: 'perfil', label: 'Perfil', icon: User },
                  { id: 'carnet', label: 'Carnet Socio', icon: Star },
+                 { id: 'familia', label: 'Seguridad', icon: Shield },
                  ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
                ].map(tab => (
                  <button 
@@ -560,6 +644,7 @@ export default function ClienteDashboard() {
              { id: 'historial', label: 'Historial', icon: History },
              { id: 'perfil', label: 'Perfil', icon: User },
              { id: 'carnet', label: 'Carnet Socio', icon: Star },
+             { id: 'familia', label: 'Seguridad', icon: Shield },
              ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
            ].map(tab => (
               <button 
@@ -1074,6 +1159,90 @@ export default function ClienteDashboard() {
                     Para utilizar tu beneficio corporativo, selecciona el botón circular <b>Modo de Viaje: Empresa</b> en la pestaña Inicio antes de solicitar tu móvil. El descuento se aplicará directamente sobre el tarifario.
                  </p>
               </div>
+           </div>
+        )}
+
+        {/* TAB: FAMILIA */}
+        {activeTab === 'familia' && (
+           <div className="bg-zinc-900/50 backdrop-blur-xl border border-blue-500/20 shadow-xl p-6 md:p-8 rounded-3xl animate-in fade-in duration-300">
+               <div className="flex items-center gap-3 mb-6">
+                 <Shield className="text-blue-500" size={28} />
+                 <h2 className="text-2xl font-black text-white">Grupo Familiar</h2>
+               </div>
+               
+               <p className="text-zinc-400 mb-8 max-w-xl">
+                 Vincula cuentas de menores para supervisar sus viajes en tiempo real y centralizar todos los pagos en tu cuenta automáticamente.
+               </p>
+
+               {familyMembers.length > 0 || (familyMembers.some(m => m.rol === 'tutor')) ? (
+                 <div className="space-y-6">
+                    {/* Lista de Miembros */}
+                    <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                       <h3 className="font-bold text-white mb-2">Miembros Vinculados</h3>
+                       {familyMembers.map((m, i) => (
+                           <div key={i} className="flex justify-between items-center bg-zinc-800/50 p-4 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                 {m.usuarios?.foto_perfil ? (
+                                    <img src={m.usuarios.foto_perfil} className="w-10 h-10 rounded-full" />
+                                 ) : (
+                                    <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center"><User size={16} className="text-zinc-400" /></div>
+                                 )}
+                                 <div>
+                                    <p className="text-white font-bold">{m.usuarios?.nombre || "Usuario"}</p>
+                                    <p className="text-xs text-zinc-400">{m.usuarios?.telefono}</p>
+                                 </div>
+                              </div>
+                              <span className={`text-xs px-3 py-1 rounded-full font-bold ${m.estado === 'activo' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                 {m.estado}
+                              </span>
+                           </div>
+                       ))}
+                    </div>
+
+                    {/* Invitar */}
+                    <form onSubmit={handleInvite} className="bg-blue-500/10 p-5 rounded-2xl border border-blue-500/20 flex flex-col gap-3">
+                       <h3 className="font-bold text-blue-200">Invitar Adolescente</h3>
+                       <div className="flex gap-2">
+                           <input placeholder="Nombre" value={inviteName} onChange={e => setInviteName(e.target.value)} className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white" />
+                       </div>
+                       <div className="flex gap-2">
+                           <input type="tel" placeholder="Nro Teléfono (+549...)" value={invitePhone} onChange={e => setInvitePhone(e.target.value)} className="flex-[2] bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white" />
+                           <button type="submit" disabled={familyLoading} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">{familyLoading ? 'Guardando...' : 'Invitar'}</button>
+                       </div>
+                    </form>
+                 </div>
+               ) : (
+                 <div className="flex flex-col gap-6 md:flex-row">
+                    {/* Crear Grupo */}
+                    <div className="flex-1 bg-zinc-800/50 p-6 rounded-2xl flex flex-col items-center text-center gap-4 border border-zinc-700/50">
+                       <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                          <User className="text-blue-400" size={24} />
+                       </div>
+                       <div>
+                          <p className="font-bold text-white mb-1">Soy Tutor</p>
+                          <p className="text-sm text-zinc-400">Crear un grupo para administrar dependientes.</p>
+                       </div>
+                       <button onClick={handleCreateGroup} disabled={familyLoading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-sm">
+                          {familyLoading ? 'Iniciando...' : 'Habilitar Control Parental'}
+                       </button>
+                    </div>
+
+                    {/* Vincularme a Tutor */}
+                    <div className="flex-1 bg-zinc-800/50 p-6 rounded-2xl flex flex-col items-center text-center gap-4 border border-zinc-700/50">
+                       <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center">
+                          <Lock className="text-purple-400" size={24} />
+                       </div>
+                       <div>
+                          <p className="font-bold text-white mb-1">Soy Adolescente</p>
+                          <p className="text-sm text-zinc-400">Tengo permiso y quiero vincularme.</p>
+                       </div>
+                       <form onSubmit={handleAcceptInvite} className="w-full flex gap-2">
+                          <input type="tel" placeholder="Teléfono de Tutor" required value={tutorPhoneToAccept} onChange={e => setTutorPhoneToAccept(e.target.value)} className="w-full bg-black/50 border border-white/10 p-2 rounded-xl text-white text-sm" />
+                          <button type="submit" disabled={familyLoading} className="bg-purple-600 px-4 text-white font-bold rounded-xl text-sm">→</button>
+                       </form>
+                    </div>
+                 </div>
+               )}
            </div>
         )}
 

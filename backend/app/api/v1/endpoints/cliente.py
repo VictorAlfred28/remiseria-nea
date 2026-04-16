@@ -184,6 +184,29 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
         "fecha_solicitud": datetime.now().isoformat()
     }
     
+    # 3. Lógica de Cuenta Familiar (Control Parental)
+    fam_check = supabase.table("miembros_familiares").select("rol, estado, grupos_familiares(tutor_user_id)").eq("user_id", cliente_id).eq("estado", "activo").execute()
+    if fam_check.data and fam_check.data[0].get("rol") == "dependiente":
+        tutor_id = fam_check.data[0].get("grupos_familiares", {}).get("tutor_user_id")
+        if tutor_id:
+            nuevo_viaje["tutor_responsable_id"] = tutor_id
+            nuevo_viaje["metodo_pago"] = "cargo_tutor"
+            
+            # Lanzamos una petición en background a evolution/WhatsApp 
+            try:
+                from app.api.v1.endpoints.webhooks import send_whatsapp_message
+                t_data = supabase.table("usuarios").select("telefono").eq("id", tutor_id).execute()
+                if t_data.data and t_data.data[0].get("telefono"):
+                    nombre_hijo = claims.get("nombre", "Tu dependiente")
+                    origen_str = data.origen.get("direccion", "Su ubicación")
+                    destino_str = data.destino.get("direccion", "Un destino")
+                    import asyncio
+                    msg = f"🚗 *Viajes NEA - Control Familiar*\n\n{nombre_hijo} acaba de solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n\nPuedes supervisarlo en vivo desde tu panel."
+                    asyncio.create_task(send_whatsapp_message(t_data.data[0]["telefono"], msg, claims.get("organizacion_id")))
+            except Exception as e:
+                print("Aviso de viaje tutelado no enviado:", e)
+                
+    # 4. Inserción del viaje
     resp = supabase.table("viajes").insert(nuevo_viaje).execute()
     
     if not resp.data:

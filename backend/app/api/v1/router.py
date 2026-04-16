@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import admin, chofer, openai, webhooks, public, tariffs, reservations, payments, cliente, radar, socios
+from app.api.v1.endpoints import admin, chofer, openai, webhooks, public, tariffs, reservations, payments, cliente, radar, socios, family
 
 api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["Administración"])
@@ -13,3 +13,4 @@ api_router.include_router(tariffs.router, prefix="/tariffs", tags=["Tarifario Di
 api_router.include_router(reservations.router, prefix="/reservations", tags=["Reservas"])
 api_router.include_router(payments.router, prefix="/payments", tags=["Billetera y Pagos MP"])
 api_router.include_router(socios.router, prefix="/socios", tags=["Socios Carnet Digital"])
+api_router.include_router(family.router, prefix="/family", tags=["Control Parental"])

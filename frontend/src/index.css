@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-Rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================================
+   MODO CLARO (INVERSIÓN HSL DINÁMICA)
+   --------------------------------------------------------
+   Transforma los fondos oscuros en claros e invierte textos 
+   con un solo switch, manteniendo los tonos de color base.
+   ======================================================== */
+   
+.light-theme {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #fff; /* Asegurar que el body tome un fondo base si el html es blanco se invierte a negro y vice versa */
+}
+
+/* Prevenir que se reinviertan fotos de perfil, logotipos, mapas o videos.
+   Todo lo que requiera conservar su color puro debe tener .no-invert */
+.light-theme img,
+.light-theme video,
+.light-theme iframe,
+.light-theme .no-invert,
+.light-theme .leaflet-container {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Si existe algún mapa con Leaflet se suele proteger especificamente */
+.light-theme .leaflet-layer {
+  filter: invert(1) hue-rotate(180deg);
+}

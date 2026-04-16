@@ -4,7 +4,6 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
 import { calculateDistance } from "../utils/geo";
-import QRCode from "react-qr-code";
 
 export default function ClienteDashboard() {
   const { user } = useAuthStore();
@@ -1072,7 +1071,7 @@ export default function ClienteDashboard() {
                             </div>
                             <div className="text-right">
                                <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">SOCIO N°</p>
-                               <p className="text-sm font-mono text-zinc-300 tracking-widest">{user?.id.substring(0,8).toUpperCase()}</p>
+                               <p className="text-sm font-mono text-zinc-300 tracking-widest">{user?.id ? String(user.id).substring(0,8).toUpperCase() : 'NEA00000'}</p>
                             </div>
                          </div>
                       </div>
@@ -1084,8 +1083,8 @@ export default function ClienteDashboard() {
                      <div className="relative bg-white p-6 sm:p-8 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.05)] flex flex-col items-center justify-center min-h-[250px] min-w-[250px] w-full max-w-[280px]">
                         {qrToken ? (
                            <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">
-                             <div className="p-2 border-4 border-zinc-100 rounded-xl bg-white shadow-inner">
-                               <QRCode value={qrToken} size={180} bgColor="#ffffff" fgColor="#09090b" level="Q" />
+                             <div className="p-2 border-4 border-zinc-100 rounded-xl bg-white shadow-inner flex justify-center items-center overflow-hidden w-[188px] h-[188px]">
+                               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken)}`} alt="QR Socio" className="w-[180px] h-[180px]" />
                              </div>
                              <div className="mt-6 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest">
                                 <Lock size={14} /> Token Seguro

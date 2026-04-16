@@ -17,6 +17,7 @@ origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://viajesnea.vercel.app",
+    "https://viajesnea.agentech.ar",
 ]
 if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
     origins.append(settings.FRONTEND_URL)
@@ -24,6 +25,7 @@ if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https?://.*", # Habilitar IPs locales y subdominios dinámicos (10.x, 192.x, etc.) para evitar el Error 400 en OPTIONS
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

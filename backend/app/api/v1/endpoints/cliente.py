@@ -267,13 +267,14 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
             if mensajes_rechazo:
                 msg_err = " y ".join(mensajes_rechazo)
                 try:
-                    from app.api.v1.endpoints.webhooks import send_whatsapp_message
+                    from app.core.evolution import send_whatsapp_message
                     t_data = supabase.table("usuarios").select("telefono").eq("id", tutor_id).execute()
                     if t_data.data and t_data.data[0].get("telefono"):
                         import asyncio
                         msg_wa = f"⚠️ *Alerta Control Parental*\n\nTu dependiente intentó pedir un viaje pero fue bloqueado por: *{msg_err}*"
-                        asyncio.create_task(send_whatsapp_message(t_data.data[0]["telefono"], msg_wa, claims.get("organizacion_id")))
-                except: pass
+                        asyncio.create_task(send_whatsapp_message(str(claims.get("organizacion_id")), t_data.data[0]["telefono"], msg_wa))
+                except Exception as e:
+                    print(f"Error enviando alerta WhatsApp: {e}")
                 raise HTTPException(status_code=403, detail="Restricción parental: " + msg_err)
 
 

@@ -5,7 +5,7 @@ import asyncio
 
 from app.core.security import get_current_user
 from app.db.supabase import supabase
-from app.api.v1.endpoints.webhooks import send_whatsapp_message  # Asumiendo que esta es la base o proveeré un wrapper local
+from app.core.evolution import send_whatsapp_message
 
 router = APIRouter()
 
@@ -85,9 +85,9 @@ async def invite_member(req: InviteRequest, claims: Dict[str, Any] = Depends(get
         # En la estructura base asumo que tienen config de env para URL de API
         # Por seguridad y no romper, si no lo manda, asume éxito en app
         await send_whatsapp_message(
-            phone=req.telefono,
-            text=mensaje,
-            orga_id=orga_id
+            str(orga_id),
+            req.telefono,
+            mensaje
         )
     except Exception as e:
         print(f"Aviso webhooks no despachado / dependiente db error: {e}")

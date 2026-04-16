@@ -3,12 +3,23 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import { LogOut, ScanLine, CheckCircle2, XCircle, Loader2, Store } from "lucide-react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { useSearchParams } from "react-router-dom";
 
 export default function ComercioDashboard() {
   const { user, signOut } = useAuthStore();
   const [scanResult, setScanResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tokenInUrl = searchParams.get("scan");
+    if (tokenInUrl && !scanResult && isScanning) {
+       // Si vino por cámara nativa y leyó la URL
+       setSearchParams({}, { replace: true });
+       handleScanSuccess(tokenInUrl);
+    }
+  }, [searchParams, isScanning, scanResult]);
 
   useEffect(() => {
     // Only initialize scanner if tab is scanning and no result is there yet

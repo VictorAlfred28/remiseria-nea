@@ -1084,7 +1084,7 @@ export default function ClienteDashboard() {
                         {qrToken ? (
                            <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">
                              <div className="p-2 border-4 border-zinc-100 rounded-xl bg-white shadow-inner flex justify-center items-center overflow-hidden w-[188px] h-[188px]">
-                               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken)}`} alt="QR Socio" className="w-[180px] h-[180px]" />
+                               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`https://viajesnea.agentech.ar/comercio?scan=${qrToken}`)}`} alt="QR Socio" className="w-[180px] h-[180px]" />
                              </div>
                              <div className="mt-6 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest">
                                 <Lock size={14} /> Token Seguro

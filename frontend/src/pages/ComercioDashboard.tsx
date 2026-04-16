@@ -130,9 +130,18 @@ export default function ComercioDashboard() {
                     <div className="w-full flex flex-col items-center animate-in zoom-in-95 duration-500 p-4">
                         {scanResult.valido ? (
                            <>
-                             <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
-                                <CheckCircle2 size={48} className="text-emerald-500" />
-                             </div>
+                             {scanResult.socio?.foto_perfil ? (
+                               <div className="w-24 h-24 rounded-full border-4 border-emerald-500 shadow-lg shadow-emerald-500/20 overflow-hidden mb-4 relative">
+                                  <img src={scanResult.socio.foto_perfil} alt="Foto Socio" className="w-full h-full object-cover" />
+                                  <div className="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full">
+                                    <CheckCircle2 size={18} />
+                                  </div>
+                               </div>
+                             ) : (
+                               <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                                  <CheckCircle2 size={48} className="text-emerald-500" />
+                               </div>
+                             )}
                              <h3 className="text-2xl font-black text-emerald-400 text-center mb-1">SOCIO VÁLIDO</h3>
                              <p className="text-white text-lg font-bold mb-4">{scanResult.socio?.nombre}</p>
                              <div className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-lg text-emerald-400 text-sm text-center mb-8">

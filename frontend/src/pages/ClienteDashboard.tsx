@@ -54,6 +54,10 @@ export default function ClienteDashboard() {
   
   // Carnet Digital
   const [qrToken, setQrToken] = useState<string | null>(null);
+  
+  // Foto Perfil
+  const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     cargarDatosIniciales();
@@ -78,6 +82,10 @@ export default function ClienteDashboard() {
     // Cargar organizacion support
     const { data: orgInfo } = await supabase.from('organizaciones').select('whatsapp_numero, nombre').limit(1);
     if(orgInfo) setOrgSoporteMoto(orgInfo[0]);
+
+    // Cargar foto perfil
+    const { data: uData } = await supabase.from('usuarios').select('foto_perfil').eq('id', user.id).single();
+    if(uData?.foto_perfil) setFotoPerfil(uData.foto_perfil);
 
     // Fetch API Historial (usamos el endpoint pero supabase es directo aca tmb)
     const { data: hist } = await supabase.from('viajes').select('*, promocion_id(titulo)').eq('cliente_id', user.id).order('creado_en', { ascending: false }).limit(50);
@@ -138,6 +146,30 @@ export default function ClienteDashboard() {
            setReservas(d);
        }
      } catch (e) {}
+  };
+
+  const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (!file || !user) return;
+     
+     setUploadingAvatar(true);
+     try {
+       const fileExt = file.name.split('.').pop();
+       const filePath = `${user.id}_${Date.now()}.${fileExt}`;
+       
+       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+       if (uploadError) throw uploadError;
+
+       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+       await supabase.from('usuarios').update({ foto_perfil: publicUrl }).eq('id', user.id);
+       setFotoPerfil(publicUrl);
+     } catch (err: any) {
+        console.error(err);
+        alert(`Error subiendo la imagen: ${err.message || 'Verifique que exista el bucket "avatars"'}`);
+     } finally {
+        setUploadingAvatar(false);
+     }
   };
 
   const cargarViajeActivo = async () => {
@@ -947,9 +979,20 @@ export default function ClienteDashboard() {
           {activeTab === 'perfil' && (
              <div className="space-y-6">
                 <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
-                   <div className="flex items-center gap-4 mb-8">
-                      <div className="w-16 h-16 bg-blue-600/20 border border-blue-500/50 rounded-full flex items-center justify-center">
-                         <User size={28} className="text-blue-400" />
+                   <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
+                      <div className="relative group w-24 h-24 sm:w-20 sm:h-20 flex-shrink-0">
+                          <div className="w-full h-full bg-blue-600/20 border border-blue-500/50 rounded-full flex items-center justify-center overflow-hidden">
+                             {fotoPerfil ? (
+                                <img src={fotoPerfil} alt="Avatar" className="w-full h-full object-cover" />
+                             ) : (
+                                <User size={36} className="text-blue-400" />
+                             )}
+                          </div>
+                          
+                          <label className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                             {uploadingAvatar ? <Loader2 size={24} className="animate-spin text-white" /> : <p className="text-xs text-white font-bold text-center">Cambiar</p>}
+                             <input type="file" accept="image/*" className="hidden" onChange={handleFotoChange} disabled={uploadingAvatar} />
+                          </label>
                       </div>
                       <div>
                          <h2 className="text-2xl font-bold text-white">{user?.user_metadata?.nombre || 'Pasajero Ejecutivo'}</h2>
@@ -1060,7 +1103,13 @@ export default function ClienteDashboard() {
                               <div className="h-1 w-8 bg-amber-500 rounded-full mb-1"></div>
                             </div>
                             <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl">
-                               <Car size={20} className="text-white/80" />
+                               {fotoPerfil ? (
+                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500/50">
+                                   <img src={fotoPerfil} alt="Perfil" className="w-full h-full object-cover" />
+                                 </div>
+                               ) : (
+                                 <Car size={20} className="text-white/80" />
+                               )}
                             </div>
                          </div>
                          

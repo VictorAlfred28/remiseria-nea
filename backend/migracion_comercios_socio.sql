@@ -36,3 +36,4 @@ CREATE POLICY "hist_escaneo_insert" ON public.historial_escaneos_socios
         comercio_id = auth.uid() OR 
         public.get_auth_rol() IN ('admin', 'superadmin')
     );
+

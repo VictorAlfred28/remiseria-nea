@@ -80,7 +80,7 @@ def validar_qr(data: ValidarQRRequest, claims: Dict[str, Any] = Depends(get_curr
         cliente_id = payload.get("sub")
         
         # Validar en base de datos estado actual
-        res_cli = supabase.table("usuarios").select("nombre, es_socio, activo").eq("id", cliente_id).execute()
+        res_cli = supabase.table("usuarios").select("nombre, es_socio, activo, foto_perfil").eq("id", cliente_id).execute()
         if not res_cli.data:
             return {"valido": False, "mensaje": "Usuario eliminado o inexistente."}
             
@@ -109,7 +109,8 @@ def validar_qr(data: ValidarQRRequest, claims: Dict[str, Any] = Depends(get_curr
             "mensaje": "Socio Validado Correctamente",
             "socio": {
                 "nombre": cliente.get("nombre", payload.get("nombre", "Socio NEA")),
-                "id": cliente_id
+                "id": cliente_id,
+                "foto_perfil": cliente.get("foto_perfil")
             }
         }
         

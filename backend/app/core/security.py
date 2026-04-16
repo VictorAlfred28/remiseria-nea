@@ -9,14 +9,17 @@ from app.db.supabase import supabase
 security = HTTPBearer()
 
 import time
+from collections import OrderedDict
 
-token_cache = {}
+# Utilizar OrderedDict como un LRU Cache para prevenir fugas de memoria
+token_cache = OrderedDict()
 CACHE_TTL = 300 # 5 minutes (300 segundos)
+MAX_CACHE_SIZE = 2000 # Mantener como máximo 2000 tokens en memoria para evitar memory leaks
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """
     Verifica el token JWT de Supabase usando el SDK, e implementa caché en memoria 
-    para mitigar cuellos de botella por repetitivas validaciones HTTP de red.
+    limitado (LRU) para abatir memory leaks mitigando accesos BD repetitivos.
     """
     token = credentials.credentials
     now = time.time()
@@ -25,7 +28,8 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
     if token in token_cache:
         val, expiry = token_cache[token]
         if now < expiry:
-            # Si expira en menos de 5 min, usamos esto para NO ir a la DB.
+            # Refrescar acceso moviéndolo al final (reciente)
+            token_cache.move_to_end(token)
             return val
         else:
             del token_cache[token]
@@ -38,20 +42,21 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
         
         user_id = user_resp.user.id
         
-        # Obtenemos organizacion y rol de paso en la misma ventana de latencia.
         res = supabase.table("usuarios").select("rol, organizacion_id").eq("id", user_id).execute()
         if not res.data:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no registrado")
         
-        # Armamos el payload consolidado
         claims = {
             "sub": user_id,
             "rol": res.data[0].get("rol"),
             "organizacion_id": res.data[0].get("organizacion_id")
         }
         
-        # Guardamos en caché
+        # 3. Guardamos en caché LRU limitando el tamaño máximo
         token_cache[token] = (claims, now + CACHE_TTL)
+        if len(token_cache) > MAX_CACHE_SIZE:
+             # Desechar el más antiguo (LIFO por push, LRU descartado del inicio)
+             token_cache.popitem(last=False)
         
         return claims
 

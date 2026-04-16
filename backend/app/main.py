@@ -24,7 +24,6 @@ if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r".*",  # Esto acepta cualquier otro subdominio o IP pública/privada (ej: dominios personalizados o IPs del VPS)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -184,15 +184,106 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
         "fecha_solicitud": datetime.now().isoformat()
     }
     
-    # 3. Lógica de Cuenta Familiar (Control Parental)
-    fam_check = supabase.table("miembros_familiares").select("rol, estado, grupos_familiares(tutor_user_id)").eq("user_id", cliente_id).eq("estado", "activo").execute()
+    # 3. Lógica de Cuenta Familiar (Control Parental y Reglas PRO)
+    fam_check = supabase.table("miembros_familiares").select("rol, estado, grupo_id, grupos_familiares(tutor_user_id)").eq("user_id", cliente_id).eq("estado", "activo").execute()
     if fam_check.data and fam_check.data[0].get("rol") == "dependiente":
         tutor_id = fam_check.data[0].get("grupos_familiares", {}).get("tutor_user_id")
+        grupo_id = fam_check.data[0].get("grupo_id")
+        
         if tutor_id:
+            # Validaciones PRO
+            orga_data = supabase.table("organizaciones").select("plan").eq("id", claims.get("organizacion_id")).execute()
+            is_pro = orga_data.data and orga_data.data[0].get("plan", "").lower() in ["pro", "premium", "enterprise"]
+            
+            mensajes_rechazo = []
+            requiere_aprobacion = False
+            
+            if is_pro and grupo_id:
+                try:
+                    rules = supabase.table("family_rules").select("*").eq("grupo_id", grupo_id).execute()
+                    if rules.data:
+                        rule = rules.data[0]
+                        if rule.get("require_approval"):
+                            requiere_aprobacion = True
+                            
+                        if rule.get("max_amount_per_trip") is not None:
+                            if precio_final > float(rule["max_amount_per_trip"]):
+                                mensajes_rechazo.append(f"Excede el tope por viaje (${rule['max_amount_per_trip']})")
+                                
+                        if rule.get("allowed_start_time") and rule.get("allowed_end_time"):
+                            from datetime import datetime
+                            import pytz
+                            ahora = datetime.now(pytz.timezone('America/Argentina/Buenos_Aires')).time()
+                            h_ini = datetime.strptime(rule["allowed_start_time"], "%H:%M:%S").time()
+                            h_fin = datetime.strptime(rule["allowed_end_time"], "%H:%M:%S").time()
+                            if h_ini < h_fin:
+                                if not (h_ini <= ahora <= h_fin): mensajes_rechazo.append("Horario no escolar/restringido")
+                            else:
+                                if not (ahora >= h_ini or ahora <= h_fin): mensajes_rechazo.append("Horario restringido extremo")
+                                
+                        if rule.get("max_trips_per_day") is not None:
+                            from datetime import datetime
+                            import pytz
+                            today = datetime.now(pytz.timezone('America/Argentina/Buenos_Aires')).strftime('%Y-%m-%d')
+                            vt = supabase.table("viajes").select("id").eq("cliente_id", cliente_id).gte("creado_en", today).execute()
+                            if vt.data and len(vt.data) >= rule["max_trips_per_day"]:
+                                mensajes_rechazo.append("Supera cupo de viajes diarios")
+                                
+                    zones = supabase.table("family_zones").select("*").eq("grupo_id", grupo_id).execute()
+                    if zones.data:
+                        import math
+                        def haversine(lat1, lon1, lat2, lon2):
+                            R = 6371000
+                            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+                            dphi = math.radians(lat2 - lat1)
+                            dlbd = math.radians(lon2 - lon1)
+                            a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlbd/2)**2
+                            return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+                        
+                        o_lat, o_lng = float(data.origen.get("lat", 0)), float(data.origen.get("lng", 0))
+                        d_lat, d_lng = float(data.destino.get("lat", 0)), float(data.destino.get("lng", 0))
+                        
+                        has_allowed_rules = any(z["tipo"] == "permitida" for z in zones.data)
+                        o_in_allowed = False
+                        d_in_allowed = False
+                        
+                        for z in zones.data:
+                            dist_o = haversine(o_lat, o_lng, z["lat"], z["lng"])
+                            dist_d = haversine(d_lat, d_lng, z["lat"], z["lng"])
+                            
+                            if z["tipo"] == "restringida":
+                                if dist_o <= z["radio_metros"] or dist_d <= z["radio_metros"]:
+                                    mensajes_rechazo.append(f"Zona prohibida: {z['nombre']}")
+                            elif z["tipo"] == "permitida":
+                                if dist_o <= z["radio_metros"]: o_in_allowed = True
+                                if dist_d <= z["radio_metros"]: d_in_allowed = True
+                        
+                        if has_allowed_rules:
+                            if not o_in_allowed: mensajes_rechazo.append("Origen fuera de zona permitida")
+                            if not d_in_allowed: mensajes_rechazo.append("Destino fuera de zona permitida")
+                except Exception as e:
+                    print("Error parseando reglas:", e)
+                    
+            if mensajes_rechazo:
+                msg_err = " y ".join(mensajes_rechazo)
+                try:
+                    from app.api.v1.endpoints.webhooks import send_whatsapp_message
+                    t_data = supabase.table("usuarios").select("telefono").eq("id", tutor_id).execute()
+                    if t_data.data and t_data.data[0].get("telefono"):
+                        import asyncio
+                        msg_wa = f"⚠️ *Alerta Control Parental*\n\nTu dependiente intentó pedir un viaje pero fue bloqueado por: *{msg_err}*"
+                        asyncio.create_task(send_whatsapp_message(t_data.data[0]["telefono"], msg_wa, claims.get("organizacion_id")))
+                except: pass
+                raise HTTPException(status_code=403, detail="Restricción parental: " + msg_err)
+
+
             nuevo_viaje["tutor_responsable_id"] = tutor_id
             nuevo_viaje["metodo_pago"] = "cargo_tutor"
             
-            # Lanzamos una petición en background a evolution/WhatsApp 
+            if requiere_aprobacion:
+                nuevo_viaje["estado"] = "esperando_tutor"
+                
+            # Notificamos
             try:
                 from app.api.v1.endpoints.webhooks import send_whatsapp_message
                 t_data = supabase.table("usuarios").select("telefono").eq("id", tutor_id).execute()
@@ -201,7 +292,12 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                     origen_str = data.origen.get("direccion", "Su ubicación")
                     destino_str = data.destino.get("direccion", "Un destino")
                     import asyncio
-                    msg = f"🚗 *Viajes NEA - Control Familiar*\n\n{nombre_hijo} acaba de solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n\nPuedes supervisarlo en vivo desde tu panel."
+                    
+                    if requiere_aprobacion:
+                        msg = f"🛡️ *Viajes NEA - Autorización Requerida*\n\n{nombre_hijo} quiere solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n💵 Estimado: ${precio_final}\n\nIngresa a tu App, pestaña Familia, para *APROBAR* o *RECHAZAR*."
+                    else:
+                        msg = f"🚗 *Viajes NEA - Control Familiar*\n\n{nombre_hijo} acaba de solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n\nPuedes supervisarlo en vivo desde tu panel."
+                        
                     asyncio.create_task(send_whatsapp_message(t_data.data[0]["telefono"], msg, claims.get("organizacion_id")))
             except Exception as e:
                 print("Aviso de viaje tutelado no enviado:", e)

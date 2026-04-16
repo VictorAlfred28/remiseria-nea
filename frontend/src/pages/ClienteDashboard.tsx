@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield } from "lucide-react";
+import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
@@ -65,6 +65,14 @@ export default function ClienteDashboard() {
   const [inviteName, setInviteName] = useState("");
   const [tutorPhoneToAccept, setTutorPhoneToAccept] = useState("");
   const [familyLoading, setFamilyLoading] = useState(false);
+  
+  // Reglas PRO
+  const [isPro, setIsPro] = useState(false);
+  const [showProConfig, setShowProConfig] = useState(false);
+  const [familyRules, setFamilyRules] = useState({ max_trips_per_day: '', max_amount_per_trip: '', allowed_start_time: '', allowed_end_time: '', require_approval: false });
+  const [aprobacionesPro, setAprobacionesPro] = useState<any[]>([]);
+  const [familyZones, setFamilyZones] = useState<any[]>([]);
+  const [newZone, setNewZone] = useState({ nombre: '', tipo: 'permitida', lat: -27.45, lng: -58.98, radio_metros: 1000 });
 
   useEffect(() => {
     cargarDatosIniciales();
@@ -93,9 +101,13 @@ export default function ClienteDashboard() {
     await cargarViajeActivo();
     await verificarRatings();
     
-    // Cargar organizacion support
-    const { data: orgInfo } = await supabase.from('organizaciones').select('whatsapp_numero, nombre').limit(1);
-    if(orgInfo) setOrgSoporteMoto(orgInfo[0]);
+    // Cargar organizacion support & PRO plan
+    const { data: orgInfo } = await supabase.from('organizaciones').select('whatsapp_numero, nombre, plan').limit(1);
+    if(orgInfo) {
+        setOrgSoporteMoto(orgInfo[0]);
+        const tp = (orgInfo[0].plan || '').toLowerCase();
+        setIsPro(tp === 'pro' || tp === 'premium' || tp === 'enterprise');
+    }
 
     // Cargar foto perfil
     const { data: uData } = await supabase.from('usuarios').select('foto_perfil').eq('id', user.id).single();
@@ -127,8 +139,51 @@ export default function ClienteDashboard() {
         if (resp.ok) {
             const data = await resp.json();
             setFamilyMembers(data.members || []);
+            // Si soy tutor, cargar aprobaciones y reglas
+            if(data.members?.some((m:any) => m.rol === 'tutor' && m.user_id === user?.id)) {
+                cargarAprobacionesPro();
+                cargarReglasPro();
+                cargarZonasPro();
+            }
         }
     } catch(e) {}
+  };
+
+  const cargarZonasPro = async () => {
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones`, {
+           headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+        });
+        if(resp.ok) {
+            const data = await resp.json();
+            setFamilyZones(data.zones || []);
+        }
+    } catch(e){}
+  };
+
+  const cargarAprobacionesPro = async () => {
+      const { data } = await supabase.from('viajes').select('id, origen, destino, precio_original, final_price, estado, clientes:usuarios!viajes_cliente_id_fkey(nombre)')
+         .eq('estado', 'esperando_tutor')
+         .eq('tutor_responsable_id', user?.id);
+      if(data) setAprobacionesPro(data);
+  };
+
+  const cargarReglasPro = async () => {
+      try {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/rules`, {
+             headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+          });
+          if(resp.ok) {
+              const d = await resp.json();
+              if(d.rules) setFamilyRules({
+                  max_trips_per_day: d.rules.max_trips_per_day || '',
+                  max_amount_per_trip: d.rules.max_amount_per_trip || '',
+                  allowed_start_time: d.rules.allowed_start_time || '',
+                  allowed_end_time: d.rules.allowed_end_time || '',
+                  require_approval: d.rules.require_approval || false
+              });
+          }
+      } catch(e){}
   };
 
   const cargarEmpresaStatus = async () => {
@@ -224,6 +279,64 @@ export default function ClienteDashboard() {
       } finally {
           setFamilyLoading(false);
       }
+  };
+
+  const handleSaveRules = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setFamilyLoading(true);
+      try {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/rules`, {
+             method: 'PUT',
+             headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
+             body: JSON.stringify({
+                ...familyRules,
+                max_trips_per_day: familyRules.max_trips_per_day ? parseInt(familyRules.max_trips_per_day as any) : null,
+                max_amount_per_trip: familyRules.max_amount_per_trip ? parseFloat(familyRules.max_amount_per_trip as any) : null
+             })
+          });
+          if(resp.ok) alert("Reglas guardadas");
+          else alert("Error guardando reglas");
+      } catch(e) {} finally { setFamilyLoading(false); }
+  };
+
+  const handleAddZone = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setFamilyLoading(true);
+      try {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
+              body: JSON.stringify(newZone)
+          });
+          if(resp.ok) {
+              setNewZone({ nombre: '', tipo: 'permitida', lat: -27.45, lng: -58.98, radio_metros: 1000 });
+              cargarZonasPro();
+          }
+      } catch(e) {} finally { setFamilyLoading(false); }
+  };
+
+  const handleDeleteZone = async (id: string) => {
+      if(!confirm("¿Eliminar esta zona?")) return;
+      try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones/${id}`, {
+              method: 'DELETE',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+          });
+          cargarZonasPro();
+      } catch(e) {}
+  };
+
+  const handleTripAction = async (tripId: string, action: 'approve' | 'reject') => {
+      try {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/${action}-trip/${tripId}`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+          });
+          if(resp.ok) {
+              alert(`Viaje ${action === 'approve'? 'Aprobado' : 'Rechazado'}`);
+              cargarAprobacionesPro();
+          }
+      } catch(e) {}
   };
 
   const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -336,6 +449,8 @@ export default function ClienteDashboard() {
          case 'STARTED': return "En viaje";
          case 'finalizado':
          case 'FINISHED': return "Finalizado";
+         case 'esperando_tutor': return "🛡️ Esperando aprobación de tutor";
+         case 'rechazado': return "❌ Viaje rechazado por tutor";
          default: return estado;
      }
   };
@@ -407,9 +522,16 @@ export default function ClienteDashboard() {
       });
 
       if(response.ok) {
+        const d = await response.json();
+        if(d.estado === 'esperando_tutor') {
+           alert("🛡️ Tu viaje ha quedado pendiente de aprobación. Le hemos avisado a tu tutor.");
+        }
         await cargarViajeActivo();
         await cargarPuntosStatus();
         setOrigen(''); setDestino(''); setCotizacion(null); setUsarViajeGratis(false);
+      } else {
+        const err = await response.json();
+        alert(`No se pudo solicitar: ${err.detail || 'Error desconocido'}`);
       }
     } catch (e) {
       console.error(e);
@@ -1207,9 +1329,149 @@ export default function ClienteDashboard() {
                        </div>
                        <div className="flex gap-2">
                            <input type="tel" placeholder="Nro Teléfono (+549...)" value={invitePhone} onChange={e => setInvitePhone(e.target.value)} className="flex-[2] bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white" />
-                           <button type="submit" disabled={familyLoading} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">{familyLoading ? 'Guardando...' : 'Invitar'}</button>
+                           <button type="submit" disabled={familyLoading} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">{familyLoading ? '...' : 'Invitar'}</button>
                        </div>
                     </form>
+                    
+                    {/* APROBACIONES PENDIENTES */}
+                    {aprobacionesPro.length > 0 && (
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl animate-in fade-in slide-in-from-bottom-2">
+                           <h3 className="font-bold text-amber-500 flex items-center gap-2 mb-3">
+                              <Shield size={18} /> Viajes esperando aprobación manual
+                           </h3>
+                           <div className="space-y-3">
+                              {aprobacionesPro.map(ap => (
+                                 <div key={ap.id} className="bg-black/40 p-3 rounded-xl border border-white/5 space-y-2">
+                                     <div className="flex justify-between items-start text-sm">
+                                        <div className="text-zinc-300">
+                                            <p><span className="text-amber-500">De:</span> {ap.clientes?.nombre}</p>
+                                            <p className="truncate w-40"><span className="text-zinc-500">Origen:</span> {ap.origen?.direccion}</p>
+                                            <p className="truncate w-40"><span className="text-zinc-500">Destino:</span> {ap.destino?.direccion}</p>
+                                        </div>
+                                        <div className="text-right font-bold text-green-400">
+                                            ${ap.final_price || ap.precio_original}
+                                        </div>
+                                     </div>
+                                     <div className="flex gap-2 pt-2 border-t border-white/5">
+                                        <button onClick={() => handleTripAction(ap.id, 'reject')} className="flex-1 py-1.5 bg-red-500/20 text-red-400 rounded-lg font-bold text-sm hover:bg-red-500/30">Rechazar</button>
+                                        <button onClick={() => handleTripAction(ap.id, 'approve')} className="flex-1 py-1.5 bg-green-500/20 text-green-400 rounded-lg font-bold text-sm hover:bg-green-500/30">Aprobar</button>
+                                     </div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                    )}
+                    
+                    {/* PANEL REGALAS PRO */}
+                    {isPro ? (
+                        <div className="bg-indigo-500/10 border border-indigo-500/30 p-5 rounded-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 py-1 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-[10px] font-black uppercase tracking-wider text-white rounded-bl-xl">SaaS PRO</div>
+                            <h3 className="font-bold text-indigo-300 mb-4 flex items-center gap-2"><Lock size={18}/> Reglas y Restricciones</h3>
+                            
+                            {!showProConfig ? (
+                                <button onClick={() => setShowProConfig(true)} className="w-full py-2 bg-indigo-600/20 text-indigo-400 rounded-xl font-bold hover:bg-indigo-600/40 transition">
+                                    Configurar Restricciones
+                                </button>
+                            ) : (
+                                <form onSubmit={handleSaveRules} className="space-y-4 text-sm animate-in fade-in zoom-in-95">
+                                   <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1">
+                                          <label className="text-zinc-400 text-xs">Monto Máximo ($)</label>
+                                          <input type="number" placeholder="Ej: 5000" value={familyRules.max_amount_per_trip || ''} onChange={e => setFamilyRules({...familyRules, max_amount_per_trip: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                                      </div>
+                                      <div className="space-y-1">
+                                          <label className="text-zinc-400 text-xs">Max. Viajes / Día</label>
+                                          <input type="number" placeholder="Límite diario" value={familyRules.max_trips_per_day || ''} onChange={e => setFamilyRules({...familyRules, max_trips_per_day: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                                      </div>
+                                   </div>
+                                   <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1">
+                                          <label className="text-zinc-400 text-xs">Horario de Inicio</label>
+                                          <input type="time" value={familyRules.allowed_start_time || ''} step="1" onChange={e => setFamilyRules({...familyRules, allowed_start_time: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-zinc-500" />
+                                      </div>
+                                      <div className="space-y-1">
+                                          <label className="text-zinc-400 text-xs">Horario Límite</label>
+                                          <input type="time" value={familyRules.allowed_end_time || ''} step="1" onChange={e => setFamilyRules({...familyRules, allowed_end_time: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-zinc-500" />
+                                      </div>
+                                   </div>
+                                   <label className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border border-white/5 cursor-pointer">
+                                      <input type="checkbox" checked={familyRules.require_approval} onChange={e => setFamilyRules({...familyRules, require_approval: e.target.checked})} className="w-5 h-5 accent-indigo-500" />
+                                      <div>
+                                          <p className="font-bold text-white text-sm leading-none mb-1">Aprobación Estricta</p>
+                                          <p className="text-xs text-zinc-500">Ningún coche buscará al menor sin tu OK previo.</p>
+                                      </div>
+                                   </label>
+                                   <div className="flex gap-2 pt-2">
+                                       <button type="button" onClick={() => setShowProConfig(false)} className="px-4 py-2 bg-zinc-800 text-white rounded-xl">Cerrar</button>
+                                       <button type="submit" disabled={familyLoading} className="flex-1 bg-indigo-600 text-white font-bold rounded-xl">{familyLoading ? '...' : 'Guardar Reglas'}</button>
+                                   </div>
+                                </form>
+                            )}
+
+                            {/* ZONAS GEOFENCING */}
+                            <div className="mt-8 border-t border-white/5 pt-6">
+                                <h4 className="text-zinc-300 font-bold text-sm mb-4 flex items-center gap-2"><Map size={16} className="text-indigo-400"/> Zonas GEOFENCING</h4>
+                                
+                                <div className="space-y-3 mb-6">
+                                    {familyZones.length === 0 ? (
+                                        <p className="text-zinc-500 text-xs italic">No has definido perímetros de seguridad aún.</p>
+                                    ) : (
+                                        familyZones.map(z => (
+                                            <div key={z.id} className="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${z.tipo === 'permitida' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                                        <Shield size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-white">{z.nombre}</p>
+                                                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{z.tipo} • {z.radio_metros}m</p>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => handleDeleteZone(z.id)} className="p-2 text-zinc-600 hover:text-rose-500 transition-colors">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div className="bg-indigo-500/5 border border-white/5 p-4 rounded-xl">
+                                    <p className="text-[10px] font-black text-indigo-400 uppercase mb-3">Nueva Zona de Seguridad</p>
+                                    <form onSubmit={handleAddZone} className="space-y-3">
+                                        <input required type="text" placeholder="Nombre (Ej: Escuela Centenario)" value={newZone.nombre} onChange={e => setNewZone({...newZone, nombre: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <select value={newZone.tipo} onChange={e => setNewZone({...newZone, tipo: e.target.value})} className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                                                <option value="permitida">Zona Permitida</option>
+                                                <option value="restringida">Zona Prohibida</option>
+                                            </select>
+                                            <input required type="number" placeholder="Radio (mts)" value={newZone.radio_metros} onChange={e => setNewZone({...newZone, radio_metros: parseInt(e.target.value)})} className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] text-zinc-500 uppercase px-1">Latitud</label>
+                                                <input required type="number" step="0.000001" value={newZone.lat} onChange={e => setNewZone({...newZone, lat: parseFloat(e.target.value)})} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] text-zinc-500 uppercase px-1">Longitud</label>
+                                                <input required type="number" step="0.000001" value={newZone.lng} onChange={e => setNewZone({...newZone, lng: parseFloat(e.target.value)})} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                            </div>
+                                        </div>
+                                        <button type="submit" disabled={familyLoading} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-2">
+                                            <Plus size={14} /> {familyLoading ? 'Creando...' : 'Añadir Perímetro'}
+                                        </button>
+                                    </form>
+                                    <p className="text-[9px] text-zinc-500 mt-3 italic text-center">Tip: Puedes obtener la Lat/Lng tocando el mapa o desde Google Maps.</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-zinc-800/40 p-5 rounded-2xl border border-zinc-700/50 text-center">
+                            <Lock className="mx-auto text-zinc-500 mb-2" />
+                            <p className="text-sm font-bold text-zinc-300">Restricciones Avanzadas</p>
+                            <p className="text-xs text-zinc-500 mt-1">Tu Remisería no te ha asignado un Plan PRO para limitar el horario y consumo de tus dependientes.</p>
+                        </div>
+                    )}
+                    
                  </div>
                ) : (
                  <div className="flex flex-col gap-6 md:flex-row">

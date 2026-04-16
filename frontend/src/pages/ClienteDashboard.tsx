@@ -233,11 +233,17 @@ export default function ClienteDashboard() {
   const handleCreateGroup = async () => {
       setFamilyLoading(true);
       try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/create`, {
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/create`, {
               method: 'POST',
               headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
           });
+          if (!resp.ok) {
+              const errData = await resp.json().catch(() => ({}));
+              throw new Error(errData.detail || "Error al crear grupo familiar");
+          }
           await cargarFamilia();
+      } catch (e: any) {
+          alert(`Error: ${e.message}`);
       } finally {
           setFamilyLoading(false);
       }

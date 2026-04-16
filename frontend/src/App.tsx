@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-ro
 import AdminDashboard from "./pages/AdminDashboard";
 import ChoferDashboard from "./pages/ChoferDashboard";
 import ClienteDashboard from "./pages/ClienteDashboard";
+import ComercioDashboard from "./pages/ComercioDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LiveTracker from "./pages/LiveTracker";
@@ -53,6 +54,9 @@ function App() {
                 {role === 'cliente' && (
                   <Link to="/cliente" className="text-purple-400 hover:text-purple-300 transition-colors">Panel Pasajero</Link>
                 )}
+                {role === 'comercio' && (
+                  <Link to="/comercio" className="text-amber-400 hover:text-amber-300 transition-colors">Panel Comercio</Link>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -81,7 +85,7 @@ function App() {
             <Route path="/" element={
               <div className="flex items-center justify-center p-10 h-[80vh]">
                 {user ? (
-                  <Navigate to={role === 'admin' ? "/admin" : (role === 'chofer' ? "/chofer" : "/cliente")} />
+                  <Navigate to={role === 'admin' ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
                 ) : (
                   <Navigate to="/login" />
                 )}
@@ -109,6 +113,12 @@ function App() {
             <Route path="/cliente" element={
               <ProtectedRoute allowedRole="cliente">
                 <div className="p-4 md:p-6"><ClienteDashboard /></div>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/comercio" element={
+              <ProtectedRoute allowedRole="comercio">
+                <ComercioDashboard />
               </ProtectedRoute>
             } />
             

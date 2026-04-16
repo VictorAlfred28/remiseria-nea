@@ -4,10 +4,11 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
 import { calculateDistance } from "../utils/geo";
+import QRCode from "react-qr-code";
 
 export default function ClienteDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa'>('pedir');
+  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet'>('pedir');
   
   // States
   const [origen, setOrigen] = useState("");
@@ -51,6 +52,9 @@ export default function ClienteDashboard() {
   const [ratingVal, setRatingVal] = useState(5);
   const [ratingComentario, setRatingComentario] = useState("");
   const [ratingLoading, setRatingLoading] = useState(false);
+  
+  // Carnet Digital
+  const [qrToken, setQrToken] = useState<string | null>(null);
 
   useEffect(() => {
     cargarDatosIniciales();
@@ -146,6 +150,28 @@ export default function ClienteDashboard() {
       setViajeMinimizado(false);
     }
   }
+
+  const cargarQrSocio = async () => {
+     try {
+       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/socios/qr_token`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+       });
+       if(resp.ok) {
+           const d = await resp.json();
+           setQrToken(d.qr_token);
+       }
+     } catch (e) {
+        console.error("Error cargando QR:", e);
+     }
+  };
+
+  useEffect(() => {
+     if(activeTab === 'carnet') {
+         cargarQrSocio();
+         const interval = setInterval(cargarQrSocio, 4.5 * 60 * 1000); // 4.5 minutos
+         return () => clearInterval(interval);
+     }
+  }, [activeTab]);
 
   const verificarRatings = async () => {
      if(!user) return;
@@ -477,6 +503,7 @@ export default function ClienteDashboard() {
                  { id: 'reservas', label: 'Reservas', icon: Calendar },
                  { id: 'historial', label: 'Historial', icon: History },
                  { id: 'perfil', label: 'Perfil', icon: User },
+                 { id: 'carnet', label: 'Carnet Socio', icon: Star },
                  ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
                ].map(tab => (
                  <button 
@@ -501,6 +528,7 @@ export default function ClienteDashboard() {
              { id: 'reservas', label: 'Reservas', icon: Calendar },
              { id: 'historial', label: 'Historial', icon: History },
              { id: 'perfil', label: 'Perfil', icon: User },
+             { id: 'carnet', label: 'Carnet Socio', icon: Star },
              ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
            ].map(tab => (
               <button 
@@ -1003,6 +1031,74 @@ export default function ClienteDashboard() {
                  <p>
                     Para utilizar tu beneficio corporativo, selecciona el botón circular <b>Modo de Viaje: Empresa</b> en la pestaña Inicio antes de solicitar tu móvil. El descuento se aplicará directamente sobre el tarifario.
                  </p>
+              </div>
+           </div>
+        )}
+
+        {/* TAB: CARNET DIGITAL SOCIO */}
+        {activeTab === 'carnet' && (
+           <div className="bg-zinc-900/50 backdrop-blur-xl border border-blue-500/20 shadow-xl shadow-blue-500/5 p-6 md:p-8 rounded-3xl animate-in fade-in duration-300 relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+              
+              <div className="flex flex-col items-center max-w-sm mx-auto">
+                  <div className="text-center mb-8">
+                      <h2 className="text-3xl font-black text-white flex justify-center items-center gap-3">
+                        <Star className="text-amber-400 fill-amber-400" size={32} /> Carnet Socio
+                      </h2>
+                      <p className="text-zinc-400 mt-2 text-sm">Presentá tu código QR en comercios adheridos para acceder a descuentos.</p>
+                  </div>
+
+                  {/* Tarjeta Tipo Premium */}
+                  <div className="relative w-full aspect-[1.586/1] bg-gradient-to-tr from-zinc-950 via-zinc-900 to-zinc-800 p-6 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/10 opacity-30 group-hover:opacity-100 transition-opacity duration-700"></div>
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl mix-blend-overlay"></div>
+                      <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+
+                      <div className="relative z-10 flex flex-col h-full justify-between">
+                         <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest mb-1">MIEMBRO CLUB NEA</p>
+                              <div className="h-1 w-8 bg-amber-500 rounded-full mb-1"></div>
+                            </div>
+                            <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl">
+                               <Car size={20} className="text-white/80" />
+                            </div>
+                         </div>
+                         
+                         <div className="flex justify-between items-end mt-4">
+                            <div>
+                               <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Titular</p>
+                               <p className="text-lg sm:text-xl font-bold text-white uppercase tracking-wider">{user?.user_metadata?.nombre || 'Socio Activo'}</p>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">SOCIO N°</p>
+                               <p className="text-sm font-mono text-zinc-300 tracking-widest">{user?.id.substring(0,8).toUpperCase()}</p>
+                            </div>
+                         </div>
+                      </div>
+                  </div>
+
+                  {/* Zona QR Dinámico */}
+                  <div className="relative mt-10 w-full flex flex-col items-center">
+                     <div className="absolute inset-0 bg-blue-500/5 rounded-3xl blur-xl"></div>
+                     <div className="relative bg-white p-6 sm:p-8 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.05)] flex flex-col items-center justify-center min-h-[250px] min-w-[250px] w-full max-w-[280px]">
+                        {qrToken ? (
+                           <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">
+                             <div className="p-2 border-4 border-zinc-100 rounded-xl bg-white shadow-inner">
+                               <QRCode value={qrToken} size={180} bgColor="#ffffff" fgColor="#09090b" level="Q" />
+                             </div>
+                             <div className="mt-6 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest">
+                                <Lock size={14} /> Token Seguro
+                             </div>
+                           </div>
+                        ) : (
+                           <div className="flex flex-col items-center justify-center text-zinc-400 gap-4">
+                             <Loader2 size={36} className="animate-spin text-blue-500" />
+                             <span className="text-sm font-bold uppercase tracking-widest text-center">Encriptando<br/>credencial...</span>
+                           </div>
+                        )}
+                     </div>
+                  </div>
               </div>
            </div>
         )}

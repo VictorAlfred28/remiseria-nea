@@ -8,7 +8,12 @@
 ALTER TABLE public.viajes DROP CONSTRAINT IF EXISTS viajes_estado_check;
 
 ALTER TABLE public.viajes ADD CONSTRAINT viajes_estado_check 
-CHECK (estado IN ('solicitado', 'asignado', 'en_camino', 'finalizado', 'cancelado', 'esperando_tutor', 'rechazado'));
+CHECK (estado IN (
+    'REQUESTED', 'QUOTED', 'ACCEPTED', 'ASSIGNED', 'ARRIVED', 'STARTED', 'IN_PROGRESS', 
+    'FINISHED', 'CANCELLED', 'NO_SHOW', 'en_puerta', 
+    'solicitado', 'asignado', 'en_camino', 'finalizado', 'cancelado', 
+    'esperando_tutor', 'rechazado'
+));
 
 -- 2. TABLA DE REGLAS
 CREATE TABLE IF NOT EXISTS public.family_rules (

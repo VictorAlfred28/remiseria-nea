@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
@@ -13,6 +13,7 @@ export default function Login() {
   const [isResetView, setIsResetView] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const checkSession = useAuthStore(state => state.checkSession);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,7 +34,9 @@ export default function Login() {
       if (data.session) {
         localStorage.setItem('sb-access-token', data.session.access_token);
         await checkSession();
-        navigate('/');
+        
+        const redirectUrl = searchParams.get('redirect');
+        navigate(redirectUrl || '/');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al iniciar sesión');

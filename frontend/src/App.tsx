@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import AdminDashboard from "./pages/AdminDashboard";
 import ChoferDashboard from "./pages/ChoferDashboard";
 import ClienteDashboard from "./pages/ClienteDashboard";
@@ -19,9 +19,10 @@ if (localStorage.getItem('theme') === 'light') {
 // Componente para proteger rutas según el rol
 function ProtectedRoute({ children, allowedRole }: { children: ReactNode, allowedRole: string }) {
   const { user, role, isLoading } = useAuthStore();
+  const location = useLocation();
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">Cargando Sistema...</div>;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} />;
   if (role !== allowedRole && role !== 'superadmin') return <Navigate to="/" />;
 
   return children;

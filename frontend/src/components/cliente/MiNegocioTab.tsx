@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Store, Clock, XCircle, CheckCircle2, TrendingUp, Tag, Plus, Edit2, Trash2, Camera, UploadCloud, LogOut, ChevronRight } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
-import { useAuthStore } from "../../../store/useAuthStore";
+import { supabase } from "../../lib/supabase";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function MiNegocioTab() {
   const { user } = useAuthStore();

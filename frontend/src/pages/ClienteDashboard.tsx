@@ -4,11 +4,12 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
 import ControlParental from "../components/cliente/ControlParental";
+import MiNegocioTab from "../components/cliente/MiNegocioTab";
 import { calculateDistance } from "../utils/geo";
 
 export default function ClienteDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia'>('pedir');
+  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia' | 'negocio'>('pedir');
   
   // States
   const [origen, setOrigen] = useState("");
@@ -561,7 +562,7 @@ export default function ClienteDashboard() {
            <div className="flex flex-col gap-3">
              <div>
                <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                 ¡Hola, {user?.user_metadata?.nombre || 'Pasajero'}! 👋
+                 ¡Hola, {user?.user_metadata?.nombre || user?.email?.split('@')[0]}! 👋
                </h1>
                <p className="text-zinc-400 text-sm mt-1">Tu panel de movilidad inteligente</p>
              </div>
@@ -579,7 +580,8 @@ export default function ClienteDashboard() {
                  { id: 'perfil', label: 'Perfil', icon: User },
                  { id: 'carnet', label: 'Carnet Socio', icon: Star },
                  { id: 'familia', label: 'Seguridad', icon: Shield },
-                 ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
+                 { id: 'negocio', label: 'Mi Negocio', icon: Building },
+                 ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : [])
                ].map(tab => (
                  <button 
                    key={tab.id}
@@ -605,7 +607,8 @@ export default function ClienteDashboard() {
              { id: 'perfil', label: 'Perfil', icon: User },
              { id: 'carnet', label: 'Carnet Socio', icon: Star },
              { id: 'familia', label: 'Seguridad', icon: Shield },
-             ...(empresaAsignada ? [{ id: 'empresa', label: 'Mi Empresa', icon: Building }] : [])
+             { id: 'negocio', label: 'Mi Negocio', icon: Building },
+             ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : [])
            ].map(tab => (
               <button 
                 key={tab.id}
@@ -1125,6 +1128,11 @@ export default function ClienteDashboard() {
         {/* TAB: FAMILIA */}
         {activeTab === 'familia' && (
            <ControlParental user={user} isPro={isPro} />
+        )}
+
+        {/* TAB: NEGOCIO */}
+        {activeTab === 'negocio' && (
+           <MiNegocioTab />
         )}
 
         {/* TAB: CARNET DIGITAL SOCIO */}

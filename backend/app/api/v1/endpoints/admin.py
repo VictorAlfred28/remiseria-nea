@@ -446,3 +446,58 @@ def rechazar_pago_manual(pago_id: str, payload: PagoRechazoRequest, claims: Dict
         raise HTTPException(status_code=404, detail="Pago no encontrado.")
         
     return {"message": "Pago rechazado", "data": update_resp.data[0]}
+
+# === NUEVO MÓDULO: SOLICITUDES DE COMERCIOS ===
+
+@router.get("/comercios/solicitudes")
+def get_comercio_solicitudes(claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Trae todas las solicitudes de comercios (pendientes, aprobados, rechazados)."""
+    resp = supabase.table("comercio_solicitudes").select("*, auth_users:user_id(email)").order("created_at", desc=True).execute()
+    return resp.data
+
+@router.post("/comercios/solicitudes/{sol_id}/aprobar")
+def aprobar_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Aprueba la solicitud y transfiere los datos a la tabla de comercios activa."""
+    # 1. Obtener solicitud
+    sol_resp = supabase.table("comercio_solicitudes").select("*").eq("id", sol_id).execute()
+    if not sol_resp.data:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+        
+    solicitud = sol_resp.data[0]
+    if solicitud["estado"] == "APROBADO":
+        raise HTTPException(status_code=400, detail="Esta solicitud ya fue aprobada.")
+        
+    # 2. Insertar en comercios
+    nuevo_comercio = {
+        "user_id": solicitud["user_id"],
+        "nombre_comercio": solicitud["nombre"],
+        "rubro": solicitud["rubro"],
+        "direccion": solicitud["direccion"],
+        "telefono": solicitud["telefono"],
+        "email": solicitud["email"],
+        "descripcion": solicitud["descripcion"],
+        "logo_url": solicitud["logo_url"],
+        "instagram_url": solicitud["instagram_url"],
+        "facebook_url": solicitud["facebook_url"],
+        "estado": "ACTIVO"
+    }
+    
+    com_resp = supabase.table("comercios").insert(nuevo_comercio).execute()
+    if not com_resp.data:
+        raise HTTPException(status_code=500, detail="Error al transferir a la tabla de comercios.")
+        
+    # 3. Actualizar estado
+    supabase.table("comercio_solicitudes").update({"estado": "APROBADO"}).eq("id", sol_id).execute()
+    
+    return {"mensaje": "Comercio aprobado exitosamente.", "comercio": com_resp.data[0]}
+
+@router.post("/comercios/solicitudes/{sol_id}/rechazar")
+def rechazar_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Rechaza una solicitud de comercio."""
+    sol_resp = supabase.table("comercio_solicitudes").select("*").eq("id", sol_id).execute()
+    if not sol_resp.data:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+        
+    supabase.table("comercio_solicitudes").update({"estado": "RECHAZADO"}).eq("id", sol_id).execute()
+    return {"mensaje": "Solicitud rechazada."}
+

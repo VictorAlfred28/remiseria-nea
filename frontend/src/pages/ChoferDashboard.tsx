@@ -477,7 +477,7 @@ export default function ChoferDashboard() {
                   Viajes <span className={isOnline ? "text-green-500" : "text-zinc-500"}>NEA</span>
                </h1>
             </div>
-            <p className="text-xs font-bold text-zinc-500 mt-2 tracking-[0.2em] max-w-[200px] truncate uppercase sm:ml-11">{user?.email}</p>
+            <p className="text-xs font-bold text-zinc-400 mt-2 tracking-[0.2em] max-w-[250px] truncate uppercase sm:ml-11">¡Hola, {choferNombre}!</p>
             <div className="sm:ml-10 w-full animate-in fade-in slide-in-from-left-4 duration-700">
                <WeatherWidget />
             </div>

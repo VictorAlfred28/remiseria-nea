@@ -17,6 +17,29 @@ class TripRequest(BaseModel):
     usar_viaje_gratis: Optional[bool] = False
     tipo_viaje: Optional[str] = "PERSONAL"
 
+class ComercioSolicitudRequest(BaseModel):
+    nombre: str
+    rubro: str
+    direccion: str
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    descripcion: Optional[str] = None
+    logo_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    facebook_url: Optional[str] = None
+
+class PromocionComercioRequest(BaseModel):
+    titulo: str
+    descripcion: Optional[str] = None
+    descuento_porcentaje: Optional[float] = 0
+    fecha_inicio: Optional[str] = None
+    fecha_fin: Optional[str] = None
+    activa: Optional[bool] = True
+    tipo: Optional[str] = "fijo" # o porcentaje
+    imagen_url: Optional[str] = None
+    es_exclusiva_profesionales: Optional[bool] = False
+    instagram_url: Optional[str] = None
+    facebook_url: Optional[str] = None
 @router.get("/empresa")
 def get_empresa_info(claims: Dict[str, Any] = Depends(get_current_user)):
     """Obtiene la empresa y beneficios asignados al cliente (si los hay)."""
@@ -460,3 +483,87 @@ def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, 
         raise HTTPException(status_code=500, detail="Error al guardar la calificación.")
         
     return {"message": "Calificación registrada con éxito.", "calificacion": resp.data[0]}
+
+# ==========================================
+# MI NEGOCIO (COMERCIOS)
+# ==========================================
+
+@router.get("/negocio/estado")
+def get_negocio_estado(claims: Dict[str, Any] = Depends(get_current_user)):
+    """Obtiene el estado del negocio del usuario: NINGUNO, PENDIENTE, RECHAZADO o APROBADO."""
+    user_id = claims.get("sub")
+    
+    # Check si tiene un comercio activo aprobado primero (en tabla comercios)
+    comercio_resp = supabase.table("comercios").select("*").eq("user_id", user_id).execute()
+    if comercio_resp.data:
+        return {"estado": "APROBADO", "data_comercio": comercio_resp.data[0]}
+        
+    # Si no, buscar en solicitudes
+    sol_resp = supabase.table("comercio_solicitudes").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
+    if sol_resp.data:
+        return {"estado": sol_resp.data[0]["estado"], "solicitud": sol_resp.data[0]}
+        
+    return {"estado": "NINGUNO"}
+
+@router.post("/negocio/solicitud")
+def solicitar_adhesion_comercio(data: ComercioSolicitudRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+    """Crea una solicitud de adhesión para un comercio."""
+    user_id = claims.get("sub")
+    
+    # Validar si ya tiene un comercio activo
+    com_check = supabase.table("comercios").select("id").eq("user_id", user_id).execute()
+    if com_check.data:
+        raise HTTPException(status_code=400, detail="Ya posees un comercio aprobado.")
+        
+    # Upsert solicitud (permite reintentar si fue rechazado)
+    # Por si hay Unique constraint error
+    payload = data.model_dump()
+    payload["user_id"] = user_id
+    payload["estado"] = "PENDIENTE"
+    payload["updated_at"] = datetime.now().isoformat()
+    
+    # Usar upsert para no fallar por UNIQUE(user_id) en caso de que esté reintentando tras rechazo
+    resp = supabase.table("comercio_solicitudes").upsert(payload, on_conflict="user_id").execute()
+    if not resp.data:
+        raise HTTPException(status_code=500, detail="Error al registrar la solicitud.")
+        
+    return {"mensaje": "Solicitud enviada exitosamente", "solicitud": resp.data[0]}
+
+@router.get("/negocio/promociones")
+def get_mid_negocio_promociones(claims: Dict[str, Any] = Depends(get_current_user)):
+    """Trae las promociones creadas por el comercio del usuario."""
+    user_id = claims.get("sub")
+    
+    comercio_resp = supabase.table("comercios").select("id").eq("user_id", user_id).execute()
+    if not comercio_resp.data:
+        raise HTTPException(status_code=403, detail="No posees un comercio aprobado.")
+        
+    comercio_id = comercio_resp.data[0]["id"]
+    
+    resp = supabase.table("promociones").select("*").eq("comercio_id", comercio_id).order("created_at", desc=True).execute()
+    return resp.data
+
+@router.post("/negocio/promociones")
+def create_negocio_promocion(data: PromocionComercioRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+    """Crea una promoción (solo para comercios aprobados)."""
+    user_id = claims.get("sub")
+    org_id = claims.get("organizacion_id")
+    
+    # Validar que tiene comercio
+    comercio_resp = supabase.table("comercios").select("id").eq("user_id", user_id).execute()
+    if not comercio_resp.data:
+        raise HTTPException(status_code=403, detail="No tienes un comercio aprobado o asignado.")
+        
+    comercio_id = comercio_resp.data[0]["id"]
+    
+    payload = data.model_dump()
+    payload["comercio_id"] = comercio_id
+    # En AdminDashboard vemos que requiere originar de algo, o asocia la org:
+    payload["organizacion_id"] = org_id
+    
+    resp = supabase.table("promociones").insert(payload).execute()
+    if not resp.data:
+        raise HTTPException(status_code=500, detail="Error creando la promoción.")
+        
+    return resp.data[0]
+

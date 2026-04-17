@@ -5,6 +5,7 @@ import ReservationTable from "../components/ReservationTable";
 import EmpresasAdmin from "../components/EmpresasAdmin";
 import RecaudacionAdmin from "../components/RecaudacionAdmin";
 import PagosManualesAdmin from "../components/PagosManualesAdmin";
+import ComerciosAdmin from "../components/ComerciosAdmin";
 import { createChofer, registrarPagoChofer, updateChofer, deleteChofer } from "../services/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
@@ -386,6 +387,9 @@ export default function AdminDashboard() {
         <button onClick={() => setActiveTab("empresas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'empresas' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Building size={18} /> Empresa Adheridas
         </button>
+        <button onClick={() => setActiveTab("comercios")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'comercios' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <Store size={18} /> Validar Comercios
+        </button>
         <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <History size={18} /> Historial Global
         </button>
@@ -396,6 +400,7 @@ export default function AdminDashboard() {
         {activeTab === "tarifas" && <TariffManager />}
         {activeTab === "reservas" && <ReservationTable />}
         {activeTab === "empresas" && <EmpresasAdmin />}
+        {activeTab === "comercios" && <ComerciosAdmin />}
         
         {activeTab === "choferes" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

@@ -108,8 +108,9 @@ async def invite_member(req: InviteRequest, claims: Dict[str, Any] = Depends(get
         # Lanzar mensaje en background o directamente
         # En la estructura base asumo que tienen config de env para URL de API
         # Por seguridad y no romper, si no lo manda, asume éxito en app
+        from app.core.config import settings
         await send_whatsapp_message(
-            str(orga_id),
+            settings.EVOLUTION_INSTANCE,
             req.telefono,
             mensaje
         )

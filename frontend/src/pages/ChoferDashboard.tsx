@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, Instagram, Facebook } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 import { 
@@ -68,6 +68,8 @@ export default function ChoferDashboard() {
   const [fixedDestinations, setFixedDestinations] = useState<any[]>([]);
   const [choferReservas, setChoferReservas] = useState<any[]>([]);
   const [loadingChoferData, setLoadingChoferData] = useState(false);
+  const [promocionesComercio, setPromocionesComercio] = useState<any[]>([]);
+  const [loadingComercios, setLoadingComercios] = useState(false);
   
   // Estados para Ajustes
   const [newPassword, setNewPassword] = useState("");
@@ -203,7 +205,29 @@ export default function ChoferDashboard() {
       if (activeTab === "tarifas" || activeTab === "reservas") {
           fetchChoferDataConfig();
       }
+      if (activeTab === "comercios") {
+          fetchPromocionesComercio();
+      }
   }, [activeTab]);
+
+  const fetchPromocionesComercio = async () => {
+      setLoadingComercios(true);
+      try {
+          const { data, error } = await supabase
+              .from('promociones')
+              .select('*, comercios(*)')
+              .eq('organizacion_id', orgId)
+              .eq('activa', true)
+              .not('comercio_id', 'is', null);
+          
+          if (error) throw error;
+          setPromocionesComercio(data || []);
+      } catch (err) {
+          console.error("Error al cargar promociones de comercios:", err);
+      } finally {
+          setLoadingComercios(false);
+      }
+  };
 
   const fetchChoferDataConfig = async () => {
       setLoadingChoferData(true);
@@ -529,6 +553,7 @@ export default function ChoferDashboard() {
           { id: 'reservas', icon: Calendar, label: 'Reservas', color: 'text-blue-400' },
           { id: 'caja', icon: Wallet, label: 'Mi Caja', color: 'text-emerald-400' },
           { id: 'tarifas', icon: Zap, label: 'Tarifario', color: 'text-yellow-400' },
+          { id: 'comercios', icon: Store, label: 'Comercios', color: 'text-orange-400' },
           { id: 'premios', icon: Gift, label: 'Premios', color: 'text-purple-400' },
           { id: 'ajustes', icon: Settings, label: 'Ajustes', color: 'text-zinc-400' },
         ].map((tab: any) => (
@@ -901,6 +926,79 @@ export default function ChoferDashboard() {
           </div>
         )}
         
+        {activeTab === "comercios" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <h2 className="text-xl font-bold mb-4 text-orange-400 flex items-center gap-2"><Store size={20}/> Comercios Adheridos</h2>
+            <p className="text-zinc-400 mb-6 text-sm">Descuentos y beneficios exclusivos para choferes en el centro comercial de la ciudad.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                 {loadingComercios ? (
+                     <div className="col-span-full py-12 flex justify-center">
+                        <Loader2 className="animate-spin text-orange-500" size={40} />
+                     </div>
+                 ) : promocionesComercio.length === 0 ? (
+                     <div className="col-span-1 sm:col-span-2 text-center opacity-40 p-12 border border-dashed border-zinc-700 rounded-3xl my-4 bg-zinc-900/40">
+                        <Store size={64} className="mx-auto mb-4 text-zinc-600" />
+                        <p className="text-sm font-bold uppercase tracking-widest">No hay comercios con promociones activas.</p>
+                     </div>
+                 ) : (
+                     promocionesComercio.map((promo: any) => (
+                         <div key={promo.id} className="relative bg-zinc-900/80 border border-white/5 p-6 rounded-[2rem] shadow-2xl overflow-hidden group hover:border-orange-500/30 transition-all duration-500">
+                             {/* Badge de Descuento */}
+                             <div className="absolute top-4 right-4 bg-orange-500 text-black font-black text-xs px-3 py-1.5 rounded-full shadow-lg z-10">
+                                 {promo.tipo_descuento === 'porcentaje' ? `${promo.valor_descuento}% OFF` : `$${promo.valor_descuento} OFF`}
+                             </div>
+
+                             {/* Logo del Comercio */}
+                             <div className="flex items-center gap-4 mb-6">
+                                 <div className="w-14 h-14 bg-zinc-800 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
+                                     {promo.comercios?.logo_url ? (
+                                         <img src={promo.comercios.logo_url} alt={promo.comercios.nombre_comercio} className="w-full h-full object-cover" />
+                                     ) : (
+                                         <Store size={28} className="text-zinc-500" />
+                                     )}
+                                 </div>
+                                 <div>
+                                     <h3 className="font-black text-white text-lg tracking-tight leading-tight">{promo.comercios?.nombre_comercio || 'Comercio'}</h3>
+                                     <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em]">{promo.comercios?.rubro || 'General'}</p>
+                                 </div>
+                             </div>
+
+                             <div className="space-y-3 mb-6">
+                                 <h4 className="font-bold text-white text-md leading-snug">{promo.titulo}</h4>
+                                 <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">{promo.descripcion}</p>
+                             </div>
+
+                             <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                 <div className="flex gap-2">
+                                     {promo.instagram_url && (
+                                         <a href={promo.instagram_url} target="_blank" rel="noreferrer" className="p-2 bg-zinc-800 rounded-xl hover:bg-orange-500/20 hover:text-orange-400 transition-all text-zinc-500">
+                                             <Instagram size={18} />
+                                         </a>
+                                     )}
+                                     {promo.facebook_url && (
+                                         <a href={promo.facebook_url} target="_blank" rel="noreferrer" className="p-2 bg-zinc-800 rounded-xl hover:bg-orange-500/20 hover:text-orange-400 transition-all text-zinc-500">
+                                             <Facebook size={18} />
+                                         </a>
+                                     )}
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                     <MapPin size={12} className="text-zinc-500" />
+                                     <span className="text-[10px] font-bold text-zinc-500 uppercase truncate max-w-[120px]">
+                                         {promo.comercios?.direccion || 'S/D'}
+                                     </span>
+                                 </div>
+                             </div>
+
+                             {/* Fondo decorativo hover */}
+                             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                         </div>
+                     ))
+                 )}
+            </div>
+          </div>
+        )}
+
         {activeTab === "premios" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <h2 className="text-xl font-bold mb-4 text-purple-400 flex items-center gap-2"><Gift size={20}/> Tus Beneficios</h2>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight } from "lucide-react";
 import TariffManager from "../components/TariffManager";
 import ReservationTable from "../components/ReservationTable";
 import EmpresasAdmin from "../components/EmpresasAdmin";
@@ -564,18 +565,25 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-4 overflow-y-auto max-h-[440px]">
                     {promociones.map(promo => (
                         <div key={promo.id} className="bg-zinc-900/80 border border-blue-900/30 p-5 rounded-xl">
-                            <h4 className="font-bold text-white text-lg">{promo.titulo}</h4>
-                            <p className="text-zinc-400 text-sm mb-2">{promo.descripcion}</p>
-                            <div className="flex gap-2 flex-wrap">
-                               {promo.puntos_requeridos > 0 && (
-                                   <div className="text-xs font-bold text-orange-400 bg-orange-950/40 px-3 py-1.5 rounded-lg border border-orange-500/20">{promo.puntos_requeridos} PUNTOS</div>
-                               )}
-                               {promo.valor_descuento > 0 && (
-                                   <div className="text-xs font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-                                      - {promo.tipo_descuento === 'porcentaje' ? `${promo.valor_descuento}%` : `$${promo.valor_descuento}`}
-                                   </div>
-                               )}
-                            </div>
+                             <div className="flex justify-between items-start gap-4">
+                                <div>
+                                    <h4 className="font-bold text-white text-lg">{promo.titulo}</h4>
+                                    <p className="text-zinc-400 text-sm mb-2">{promo.descripcion}</p>
+                                </div>
+                                <Link to={`/promocion/${promo.id}`} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-blue-400 transition-all shrink-0" title="Ver Vista Pública">
+                                    <ChevronRight size={18} />
+                                </Link>
+                             </div>
+                             <div className="flex gap-2 flex-wrap mt-2">
+                                {promo.puntos_requeridos > 0 && (
+                                    <div className="text-xs font-bold text-orange-400 bg-orange-950/40 px-3 py-1.5 rounded-lg border border-orange-500/20">{promo.puntos_requeridos} PUNTOS</div>
+                                )}
+                                {promo.valor_descuento > 0 && (
+                                    <div className="text-xs font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                                       - {promo.tipo_descuento === 'porcentaje' ? `${promo.valor_descuento}%` : `$${promo.valor_descuento}`}
+                                    </div>
+                                )}
+                             </div>
                         </div>
                     ))}
                 </div>

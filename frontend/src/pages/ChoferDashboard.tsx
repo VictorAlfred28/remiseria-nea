@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
@@ -966,7 +967,10 @@ export default function ChoferDashboard() {
 
                              <div className="space-y-3 mb-6">
                                  <h4 className="font-bold text-white text-md leading-snug">{promo.titulo}</h4>
-                                 <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">{promo.descripcion}</p>
+                                 <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed">{promo.descripcion}</p>
+                                 <Link to={`/promocion/${promo.id}`} className="text-orange-500 hover:text-orange-400 text-xs font-bold transition-all inline-flex items-center gap-1 group/btn">
+                                     Ver más detalles <ChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                                 </Link>
                              </div>
 
                              <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">

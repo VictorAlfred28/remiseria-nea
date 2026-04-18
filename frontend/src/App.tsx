@@ -5,6 +5,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ChoferDashboard from "./pages/ChoferDashboard";
 import ClienteDashboard from "./pages/ClienteDashboard";
 import ComercioDashboard from "./pages/ComercioDashboard";
+import PromocionDetalle from "./pages/PromocionDetalle";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LiveTracker from "./pages/LiveTracker";
@@ -17,13 +18,14 @@ if (localStorage.getItem('theme') === 'light') {
   document.documentElement.classList.add('light-theme');
 }
 // Componente para proteger rutas según el rol
-function ProtectedRoute({ children, allowedRole }: { children: ReactNode, allowedRole: string }) {
+function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) {
   const { user, role, isLoading } = useAuthStore();
   const location = useLocation();
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">Cargando Sistema...</div>;
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} />;
-  if (role !== allowedRole) {
+  
+  if (allowedRoles && role && !allowedRoles.includes(role)) {
     if (role === 'admin' || role === 'superadmin') return <Navigate to="/admin" />;
     return <Navigate to="/" />;
   }
@@ -99,38 +101,44 @@ function App() {
             } />
 
             <Route path="/admin" element={
-              <ProtectedRoute allowedRole="admin">
+              <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
                 <div className="p-6"><AdminDashboard /></div>
               </ProtectedRoute>
             } />
 
             <Route path="/admin/print-tariff" element={
-              <ProtectedRoute allowedRole="admin">
+              <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
                 <TariffPrintView />
               </ProtectedRoute>
             } />
 
             <Route path="/chofer" element={
-              <ProtectedRoute allowedRole="chofer">
+              <ProtectedRoute allowedRoles={['chofer']}>
                 <div className="p-6"><ChoferDashboard /></div>
               </ProtectedRoute>
             } />
 
             <Route path="/cliente" element={
-              <ProtectedRoute allowedRole="cliente">
+              <ProtectedRoute allowedRoles={['cliente']}>
                 <div className="p-4 md:p-6"><ClienteDashboard /></div>
               </ProtectedRoute>
             } />
 
             <Route path="/comercio" element={
-              <ProtectedRoute allowedRole="comercio">
+              <ProtectedRoute allowedRoles={['comercio']}>
                 <ComercioDashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/promocion/:id" element={
+              <ProtectedRoute>
+                <div className="p-4 md:p-8"><PromocionDetalle /></div>
               </ProtectedRoute>
             } />
             
             {/* Opcional: una pantalla success si Mercado Pago re-dirige al volver */}
             <Route path="/cliente/payment-success" element={
-               <ProtectedRoute allowedRole="cliente">
+               <ProtectedRoute allowedRoles={['cliente']}>
                   <div className="p-10 flex flex-col items-center justify-center text-center">
                      <h2 className="text-2xl text-green-400 font-bold mb-4">¡Pago procesado con éxito!</h2>
                      <p className="text-zinc-400 mb-6">Gracias por viajar con nosotros.</p>

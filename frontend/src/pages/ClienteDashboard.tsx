@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
@@ -1287,7 +1288,10 @@ export default function ClienteDashboard() {
                       <div className="mt-1">🎁</div>
                       <div>
                         <p className="text-rose-200 font-bold text-sm mb-1">{promo.titulo}</p>
-                        <p className="text-rose-400/70 text-xs">Aplica a todos los pedidos solicitados durante este período promocional.</p>
+                        <p className="text-rose-400/70 text-[10px] mb-1 line-clamp-2">{promo.descripcion}</p>
+                        <Link to={`/promocion/${promo.id}`} className="text-rose-400 hover:text-rose-300 text-[10px] font-bold flex items-center gap-1 transition-colors">
+                           Ver más <ChevronRight size={10} />
+                        </Link>
                       </div>
                    </div>
                  ))}

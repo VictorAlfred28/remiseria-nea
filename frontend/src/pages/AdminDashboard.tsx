@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard } from "lucide-react";
+import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store } from "lucide-react";
 import TariffManager from "../components/TariffManager";
 import ReservationTable from "../components/ReservationTable";
 import EmpresasAdmin from "../components/EmpresasAdmin";

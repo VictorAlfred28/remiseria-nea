@@ -23,7 +23,10 @@ function ProtectedRoute({ children, allowedRole }: { children: ReactNode, allowe
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">Cargando Sistema...</div>;
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} />;
-  if (role !== allowedRole && role !== 'superadmin') return <Navigate to="/" />;
+  if (role !== allowedRole) {
+    if (role === 'admin' || role === 'superadmin') return <Navigate to="/admin" />;
+    return <Navigate to="/" />;
+  }
 
   return children;
 }

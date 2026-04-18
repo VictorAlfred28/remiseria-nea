@@ -30,8 +30,8 @@ export default function MiNegocioTab() {
   const [formPromo, setFormPromo] = useState({
     titulo: "",
     descripcion: "",
-    tipo: "fijo",
-    descuento_porcentaje: 0,
+    tipo_descuento: "fijo",
+    valor_descuento: 0,
     fecha_inicio: "",
     fecha_fin: ""
   });
@@ -147,7 +147,7 @@ export default function MiNegocioTab() {
         if (resp.ok) {
             alert("Promoción creada correctamente.");
             setShowFormPromo(false);
-            setFormPromo({titulo: "", descripcion: "", tipo: "fijo", descuento_porcentaje: 0, fecha_inicio: "", fecha_fin: ""});
+            setFormPromo({titulo: "", descripcion: "", tipo_descuento: "fijo", valor_descuento: 0, fecha_inicio: "", fecha_fin: ""});
             cargarPromociones();
         } else {
             alert("Hubo un error al crear la promoción.");
@@ -272,14 +272,14 @@ export default function MiNegocioTab() {
                          
                          <div className="space-y-1">
                              <label className="text-xs text-zinc-400 font-bold ml-1">Tipo de Descuento</label>
-                             <select value={formPromo.tipo} onChange={e => setFormPromo({...formPromo, tipo: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none appearance-none">
+                             <select value={formPromo.tipo_descuento} onChange={e => setFormPromo({...formPromo, tipo_descuento: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none appearance-none">
                                  <option value="porcentaje">Porcentaje (%)</option>
                                  <option value="fijo">Monto Fijo ($)</option>
                              </select>
                          </div>
                          <div className="space-y-1">
                              <label className="text-xs text-zinc-400 font-bold ml-1">Valor *</label>
-                             <input required type="number" min="0" value={formPromo.descuento_porcentaje} onChange={e => setFormPromo({...formPromo, descuento_porcentaje: parseFloat(e.target.value)})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none" placeholder="Ej: 20" />
+                             <input required type="number" min="0" value={formPromo.valor_descuento} onChange={e => setFormPromo({...formPromo, valor_descuento: parseFloat(e.target.value)})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none" placeholder="Ej: 20" />
                          </div>
 
                          <div className="space-y-1">
@@ -315,13 +315,13 @@ export default function MiNegocioTab() {
                                   </div>
                                   <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{promo.descripcion}</p>
                                   <div className="flex gap-2">
-                                      {promo.tipo === 'porcentaje' ? (
+                                      {promo.tipo_descuento === 'porcentaje' ? (
                                          <span className="bg-blue-600/20 text-blue-400 font-black text-sm px-3 py-1 rounded-lg border border-blue-500/20">
-                                            {promo.descuento_porcentaje}% OFF
+                                            {promo.valor_descuento}% OFF
                                          </span>
                                       ) : (
                                          <span className="bg-indigo-600/20 text-indigo-400 font-black text-sm px-3 py-1 rounded-lg border border-indigo-500/20">
-                                            ${promo.descuento_porcentaje} OFF
+                                            ${promo.valor_descuento} OFF
                                          </span>
                                       )}
                                       {(promo.fecha_inicio || promo.fecha_fin) && (

@@ -31,11 +31,11 @@ class ComercioSolicitudRequest(BaseModel):
 class PromocionComercioRequest(BaseModel):
     titulo: str
     descripcion: Optional[str] = None
-    descuento_porcentaje: Optional[float] = 0
+    valor_descuento: Optional[float] = 0
     fecha_inicio: Optional[str] = None
     fecha_fin: Optional[str] = None
     activa: Optional[bool] = True
-    tipo: Optional[str] = "fijo" # o porcentaje
+    tipo_descuento: Optional[str] = "fijo" # o porcentaje
     imagen_url: Optional[str] = None
     es_exclusiva_profesionales: Optional[bool] = False
     instagram_url: Optional[str] = None

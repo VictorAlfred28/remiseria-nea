@@ -85,7 +85,9 @@ function App() {
             
             <Route path="/" element={
               <div className="flex items-center justify-center p-10 h-[80vh]">
-                {user ? (
+                {isLoading ? (
+                  <div className="text-zinc-500 animate-pulse">Cargando perfil...</div>
+                ) : user ? (
                   <Navigate to={(role === 'admin' || role === 'superadmin') ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
                 ) : (
                   <Navigate to="/login" />

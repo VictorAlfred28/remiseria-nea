@@ -46,7 +46,7 @@ function App() {
               <span className="text-xl font-black text-white ml-2 tracking-tight">Viajes NEA</span>
               
               <div className="flex gap-4 border-l border-white/10 pl-6 ml-2 text-sm font-medium">
-                {role === 'admin' && (
+                {(role === 'admin' || role === 'superadmin') && (
                   <Link to="/admin" className="text-blue-400 hover:text-blue-300 transition-colors">Panel Admin</Link>
                 )}
                 {role === 'chofer' && (
@@ -86,7 +86,7 @@ function App() {
             <Route path="/" element={
               <div className="flex items-center justify-center p-10 h-[80vh]">
                 {user ? (
-                  <Navigate to={role === 'admin' ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
+                  <Navigate to={(role === 'admin' || role === 'superadmin') ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
                 ) : (
                   <Navigate to="/login" />
                 )}

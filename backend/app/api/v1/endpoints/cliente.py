@@ -540,7 +540,7 @@ def get_mid_negocio_promociones(claims: Dict[str, Any] = Depends(get_current_use
         
     comercio_id = comercio_resp.data[0]["id"]
     
-    resp = supabase.table("promociones").select("*").eq("comercio_id", comercio_id).order("created_at", desc=True).execute()
+    resp = supabase.table("promociones").select("*").eq("comercio_id", comercio_id).order("creado_en", desc=True).execute()
     return resp.data
 
 @router.post("/negocio/promociones")

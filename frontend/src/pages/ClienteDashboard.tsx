@@ -93,7 +93,7 @@ export default function ClienteDashboard() {
     
     // Cargar organizacion support & PRO plan
     const { data: orgInfo } = await supabase.from('organizaciones').select('whatsapp_numero, nombre, plan').limit(1);
-    if(orgInfo) {
+    if(orgInfo && orgInfo.length > 0) {
         setOrgSoporteMoto(orgInfo[0]);
         const tp = (orgInfo[0].plan || '').toLowerCase();
         setIsPro(tp === 'pro' || tp === 'premium' || tp === 'enterprise');

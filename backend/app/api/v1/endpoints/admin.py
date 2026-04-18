@@ -479,7 +479,8 @@ def aprobar_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_a
         "logo_url": solicitud["logo_url"],
         "instagram_url": solicitud["instagram_url"],
         "facebook_url": solicitud["facebook_url"],
-        "estado": "ACTIVO"
+        "estado": "ACTIVO",
+        "organizacion_id": claims.get("organizacion_id")
     }
     
     com_resp = supabase.table("comercios").insert(nuevo_comercio).execute()

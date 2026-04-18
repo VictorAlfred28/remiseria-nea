@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, Instagram, Facebook } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 import { 
@@ -973,12 +973,12 @@ export default function ChoferDashboard() {
                                  <div className="flex gap-2">
                                      {promo.instagram_url && (
                                          <a href={promo.instagram_url} target="_blank" rel="noreferrer" className="p-2 bg-zinc-800 rounded-xl hover:bg-orange-500/20 hover:text-orange-400 transition-all text-zinc-500">
-                                             <Instagram size={18} />
+                                             <ExternalLink size={18} />
                                          </a>
                                      )}
                                      {promo.facebook_url && (
                                          <a href={promo.facebook_url} target="_blank" rel="noreferrer" className="p-2 bg-zinc-800 rounded-xl hover:bg-orange-500/20 hover:text-orange-400 transition-all text-zinc-500">
-                                             <Facebook size={18} />
+                                             <ExternalLink size={18} />
                                          </a>
                                      )}
                                  </div>

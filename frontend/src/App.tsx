@@ -29,7 +29,7 @@ function ProtectedRoute({ children, allowedRole }: { children: ReactNode, allowe
 }
 
 function App() {
-  const { checkSession, user, role, logout, isLightMode, toggleTheme } = useAuthStore();
+  const { checkSession, user, role, logout, isLightMode, toggleTheme, isLoading } = useAuthStore();
 
   useEffect(() => {
     checkSession();

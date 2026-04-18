@@ -65,10 +65,11 @@ export default function ClienteDashboard() {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     cargarDatosIniciales();
     
     const subscription = supabase.channel('viajes_cliente')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'viajes', filter: `cliente_id=eq.${user?.id}` }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'viajes', filter: `cliente_id=eq.${user.id}` }, () => {
           cargarViajeActivo();
           verificarRatings();
       })

@@ -10,8 +10,9 @@ import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import { calculateDistance } from "../utils/geo";
 
 export default function ClienteDashboard() {
-  const { user, roles } = useAuthStore();
-  const esTitular = roles.includes('titular');
+  const { user, role, roles } = useAuthStore();
+  // Bug fix: chequear AMBOS — el rol primario (usuarios.rol) Y el array multi-rol (user_roles)
+  const esTitular = role === 'titular' || roles.includes('titular');
   const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia' | 'negocio' | 'flota'>('pedir');
   
   // States
@@ -168,6 +169,12 @@ export default function ClienteDashboard() {
      } catch (e) {}
   };
 
+
+  // Recarga aprobaciones pendientes del Control Parental (llamada desde handleTripAction)
+  const cargarAprobacionesPro = () => {
+    // No-op: Control Parental es un componente auto-contenido que maneja su propio state.
+    // Esta función existe para evitar ReferenceError al confirmar/rechazar viajes de menores.
+  };
 
   const handleTripAction = async (tripId: string, action: 'approve' | 'reject') => {
       try {

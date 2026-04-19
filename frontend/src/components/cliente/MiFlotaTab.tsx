@@ -98,7 +98,20 @@ export default function MiFlotaTab() {
       const res = await apiFetch(`/titular/vehiculos/${vehicleId}`);
       if (!res.ok) throw new Error('No se pudo cargar la ubicación.');
       const data = await res.json();
-      setGps(data.ubicacion_actual ?? { lat: null, lng: null, disponible: false });
+      // El backend retorna ubicacion_actual: { lat, lng, estado_chofer }
+      // pero SIN el campo `disponible`. Lo calculamos acá.
+      const raw = data.ubicacion_actual;
+      if (raw) {
+        setGps({
+          lat: raw.lat ?? null,
+          lng: raw.lng ?? null,
+          disponible: raw.lat !== null && raw.lat !== undefined
+                   && raw.lng !== null && raw.lng !== undefined,
+          estado_chofer: raw.estado_chofer,
+        });
+      } else {
+        setGps({ lat: null, lng: null, disponible: false });
+      }
     } catch (e: any) {
       setError(e.message); setGps(null);
     } finally {

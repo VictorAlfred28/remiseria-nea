@@ -627,14 +627,14 @@ export default function ChoferDashboard() {
                                   </h4>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[500px] overflow-y-auto scroll-smooth pr-1">
                                       {(() => {
-                                          let table = [];
-                                          let fraction = activeTariff?.fraction_km || 0.1;
-                                          let base_fare = activeTariff?.base_fare || 2500;
-                                          let fraction_price = activeTariff?.per_fraction_price || 175;
+                                          const table = [];
+                                          const fraction = activeTariff?.fraction_km || 0.1;
+                                          const base_fare = activeTariff?.base_fare || 2500;
+                                          const fraction_price = activeTariff?.per_fraction_price || 175;
 
                                           for (let d = 1.0; d <= 20.0; d += fraction) {
-                                              let fractions = Math.round((d - 1.0) / fraction);
-                                              let price = base_fare + (fractions * fraction_price);
+                                              const fractions = Math.round((d - 1.0) / fraction);
+                                              const price = base_fare + (fractions * fraction_price);
                                               table.push(
                                                   <div key={d.toFixed(1)} className="flex items-center justify-between bg-zinc-900 px-3 py-2.5 rounded-lg border border-zinc-800 hover:border-green-500/50 hover:bg-green-500/5 transition-all group">
                                                       <span className="text-zinc-400 font-bold text-xs uppercase group-hover:text-white transition-colors">{d.toFixed(1).replace('.', ',')} KM</span>

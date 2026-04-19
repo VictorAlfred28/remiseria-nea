@@ -153,6 +153,7 @@ export default function MiFlotaTab() {
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
         </button>
+        </div>
       </div>
 
       {error && (

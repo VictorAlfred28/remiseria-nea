@@ -246,7 +246,7 @@ export default function AdminDashboard() {
       channelRef.current
         .on("presence", { event: "sync" }, () => {
           const newState = channelRef.current.presenceState();
-          let flatDrivers: any[] = [];
+          const flatDrivers: any[] = [];
           for (const key in newState) {
               const presences = newState[key];
               presences.forEach((presence: any) => flatDrivers.push(presence));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, CheckCircle, XCircle, User, Car, Loader2, MessageCircle, AlertTriangle, ChevronRight, Phone } from "lucide-react";
+import { Briefcase, CheckCircle, XCircle, User, Car, Loader2, MessageCircle, Phone, AlertTriangle } from "lucide-react";
 import { getBolsaAdminOfertas, aprobarPostulacionBolsa, rechazarPostulacionBolsa } from "../../services/api";
 
 export default function BolsaAdminTab() {
@@ -12,8 +12,8 @@ export default function BolsaAdminTab() {
     try {
       const data = await getBolsaAdminOfertas();
       setOfertas(data || []);
-    } catch (e) {
-      console.error("Error al cargar bolsa en admin:", e);
+    } catch {
+      console.error("Error al cargar bolsa en admin:");
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ export default function BolsaAdminTab() {
       await aprobarPostulacionBolsa(postId);
       alert("¡Asignación exitosa! El chofer ya figura como conductor oficial de la unidad.");
       fetchOfertas();
-    } catch (e) {
+    } catch {
       alert("Error al procesar la aprobación.");
     } finally {
       setProcessing(null);
@@ -45,7 +45,7 @@ export default function BolsaAdminTab() {
     try {
       await rechazarPostulacionBolsa(postId);
       fetchOfertas();
-    } catch (e) {
+    } catch {
       alert("Error al procesar el rechazo.");
     } finally {
       setProcessing(null);

@@ -1,16 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map } from "lucide-react";
+import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
 import ControlParental from "../components/cliente/ControlParental";
 import MiNegocioTab from "../components/cliente/MiNegocioTab";
+import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import { calculateDistance } from "../utils/geo";
 
 export default function ClienteDashboard() {
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia' | 'negocio'>('pedir');
+  const { user, roles } = useAuthStore();
+  const esTitular = roles.includes('titular');
+  const [activeTab, setActiveTab] = useState<'pedir' | 'reservas' | 'historial' | 'perfil' | 'empresa' | 'carnet' | 'familia' | 'negocio' | 'flota'>('pedir');
   
   // States
   const [origen, setOrigen] = useState("");
@@ -583,7 +585,8 @@ export default function ClienteDashboard() {
                  { id: 'carnet', label: 'Carnet Socio', icon: Star },
                  { id: 'familia', label: 'Seguridad', icon: Shield },
                  { id: 'negocio', label: 'Mi Negocio', icon: Building },
-                 ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : [])
+                 ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : []),
+                  ...(esTitular ? [{ id: 'flota', label: 'Mi Flota', icon: Truck }] : [])
                ].map(tab => (
                  <button 
                    key={tab.id}
@@ -610,7 +613,8 @@ export default function ClienteDashboard() {
              { id: 'carnet', label: 'Carnet Socio', icon: Star },
              { id: 'familia', label: 'Seguridad', icon: Shield },
              { id: 'negocio', label: 'Mi Negocio', icon: Building },
-             ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : [])
+             ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : []),
+             ...(esTitular ? [{ id: 'flota', label: 'Mi Flota', icon: Truck }] : [])
            ].map(tab => (
               <button 
                 key={tab.id}
@@ -1135,6 +1139,13 @@ export default function ClienteDashboard() {
         {/* TAB: NEGOCIO */}
         {activeTab === 'negocio' && (
            <MiNegocioTab />
+        )}
+
+        {/* TAB: MI FLOTA (Titular) */}
+        {activeTab === 'flota' && esTitular && (
+           <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
+             <MiFlotaTab />
+           </div>
         )}
 
         {/* TAB: CARNET DIGITAL SOCIO */}

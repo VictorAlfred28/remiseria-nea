@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from datetime import datetime, date, time
 
-from app.core.security import get_current_user
+from app.core.security import get_current_cliente
 from app.db.supabase import supabase
 from app.core.pricing import calculate_fare
 
@@ -41,7 +41,7 @@ class PromocionComercioRequest(BaseModel):
     instagram_url: Optional[str] = None
     facebook_url: Optional[str] = None
 @router.get("/empresa")
-def get_empresa_info(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_empresa_info(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Obtiene la empresa y beneficios asignados al cliente (si los hay)."""
     user_id = claims.get("sub")
     
@@ -66,7 +66,7 @@ def get_empresa_info(claims: Dict[str, Any] = Depends(get_current_user)):
     }
 
 @router.get("/promociones/activas")
-def get_active_promotions(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_active_promotions(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Obtiene las promociones activas para la organización del cliente."""
     org_id = claims.get("organizacion_id")
     
@@ -79,7 +79,7 @@ def get_active_promotions(claims: Dict[str, Any] = Depends(get_current_user)):
     return resp.data
 
 @router.post("/viaje/cotizar")
-def cotizar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def cotizar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Cotiza el viaje consusltando la tarifa oficial del backend y busca la mejor promo aplicable."""
     org_id = claims.get("organizacion_id")
     user_id = claims.get("sub")
@@ -158,7 +158,7 @@ def cotizar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curren
     }
 
 @router.post("/viaje")
-def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Crea el viaje desde el panel del cliente pasajero."""
     cliente_id = claims.get("sub")
     
@@ -337,14 +337,14 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
     return resp.data[0]
 
 @router.get("/viajes")
-def historial_viajes(claims: Dict[str, Any] = Depends(get_current_user)):
+def historial_viajes(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Historial de viajes del cliente pasajero."""
     cliente_id = claims.get("sub")
     resp = supabase.table("viajes").select("*, promocion_id(titulo)").eq("cliente_id", cliente_id).order("creado_en", desc=True).limit(50).execute()
     return resp.data
 
 @router.post("/viaje/{viaje_id}/cancelar")
-def cancelar_viaje_cliente(viaje_id: str, claims: Dict[str, Any] = Depends(get_current_user)):
+def cancelar_viaje_cliente(viaje_id: str, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """El pasajero cancela su propio viaje."""
     cliente_id = claims.get("sub")
     
@@ -376,7 +376,7 @@ class ReservaClienteRequest(BaseModel):
     hora: str
 
 @router.post("/reservas")
-def crear_reserva_cliente(req: ReservaClienteRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def crear_reserva_cliente(req: ReservaClienteRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """El pasajero crea una reserva."""
     # Obtenemos nombre y tel del perfil
     u_resp = supabase.table("usuarios").select("nombre, telefono").eq("id", claims.get("sub")).limit(1).execute()
@@ -398,7 +398,7 @@ def crear_reserva_cliente(req: ReservaClienteRequest, claims: Dict[str, Any] = D
     return resp.data[0]
 
 @router.get("/reservas")
-def get_reservas_cliente(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_reservas_cliente(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Obtiene las reservas futuras del pasajero."""
     # Como el cliente está asociado al telefono, macheamos las reservas de esa organizacion.
     # Podriamos agregar `cliente_id` a reservations, pero usando el teléfono sirve.
@@ -413,7 +413,7 @@ def get_reservas_cliente(claims: Dict[str, Any] = Depends(get_current_user)):
     return resp.data
 
 @router.get("/organizacion")
-def get_organizacion_info(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_organizacion_info(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Datos de soporte para el dashboard de cliente."""
     org_id = claims.get("organizacion_id")
     resp = supabase.table("organizaciones").select("whatsapp_numero, nombre").eq("id", org_id).execute()
@@ -422,7 +422,7 @@ def get_organizacion_info(claims: Dict[str, Any] = Depends(get_current_user)):
     return resp.data[0]
 
 @router.get("/puntos/status")
-def get_puntos_status(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_puntos_status(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Obtiene el balance de puntos y viajes gratis del cliente."""
     user_id = claims.get("sub")
     resp = supabase.table("usuarios").select("puntos_actuales, viajes_gratis").eq("id", user_id).execute()
@@ -443,7 +443,7 @@ class CalificacionRequest(BaseModel):
     comentario: Optional[str] = None
 
 @router.post("/viaje/{viaje_id}/calificar")
-def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Permite al pasajero calificar un viaje finalizado."""
     cliente_id = claims.get("sub")
     
@@ -489,7 +489,7 @@ def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, 
 # ==========================================
 
 @router.get("/negocio/estado")
-def get_negocio_estado(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_negocio_estado(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Obtiene el estado del negocio del usuario: NINGUNO, PENDIENTE, RECHAZADO o APROBADO."""
     user_id = claims.get("sub")
     
@@ -506,7 +506,7 @@ def get_negocio_estado(claims: Dict[str, Any] = Depends(get_current_user)):
     return {"estado": "NINGUNO"}
 
 @router.post("/negocio/solicitud")
-def solicitar_adhesion_comercio(data: ComercioSolicitudRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def solicitar_adhesion_comercio(data: ComercioSolicitudRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Crea una solicitud de adhesión para un comercio."""
     user_id = claims.get("sub")
     
@@ -530,7 +530,7 @@ def solicitar_adhesion_comercio(data: ComercioSolicitudRequest, claims: Dict[str
     return {"mensaje": "Solicitud enviada exitosamente", "solicitud": resp.data[0]}
 
 @router.get("/negocio/promociones")
-def get_mid_negocio_promociones(claims: Dict[str, Any] = Depends(get_current_user)):
+def get_mid_negocio_promociones(claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Trae las promociones creadas por el comercio del usuario."""
     user_id = claims.get("sub")
     
@@ -544,7 +544,7 @@ def get_mid_negocio_promociones(claims: Dict[str, Any] = Depends(get_current_use
     return resp.data
 
 @router.post("/negocio/promociones")
-def create_negocio_promocion(data: PromocionComercioRequest, claims: Dict[str, Any] = Depends(get_current_user)):
+def create_negocio_promocion(data: PromocionComercioRequest, claims: Dict[str, Any] = Depends(get_current_cliente)):
     """Crea una promoción (solo para comercios aprobados)."""
     user_id = claims.get("sub")
     org_id = claims.get("organizacion_id")

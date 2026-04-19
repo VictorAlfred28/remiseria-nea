@@ -34,7 +34,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allow
 }
 
 function App() {
-  const { checkSession, user, role, logout, isLightMode, toggleTheme, isLoading } = useAuthStore();
+  const { checkSession, user, role, roles, logout, isLightMode, toggleTheme, isLoading } = useAuthStore();
 
   useEffect(() => {
     checkSession();
@@ -60,8 +60,15 @@ function App() {
                 {role === 'cliente' && (
                   <Link to="/cliente" className="text-purple-400 hover:text-purple-300 transition-colors">Panel Pasajero</Link>
                 )}
+                {role === 'titular' && (
+                  <Link to="/cliente" className="text-orange-400 hover:text-orange-300 transition-colors">🚗 Mi Flota</Link>
+                )}
                 {role === 'comercio' && (
                   <Link to="/comercio" className="text-amber-400 hover:text-amber-300 transition-colors">Panel Comercio</Link>
+                )}
+                {/* Multi-rol: si tiene titular además de otro rol */}
+                {role !== 'titular' && roles.includes('titular') && (
+                  <Link to="/cliente" className="text-orange-400 hover:text-orange-300 transition-colors">🚗 Mi Flota</Link>
                 )}
               </div>
             </div>
@@ -119,7 +126,7 @@ function App() {
             } />
 
             <Route path="/cliente" element={
-              <ProtectedRoute allowedRoles={['cliente']}>
+              <ProtectedRoute allowedRoles={['cliente', 'titular']}>
                 <div className="p-4 md:p-6"><ClienteDashboard /></div>
               </ProtectedRoute>
             } />

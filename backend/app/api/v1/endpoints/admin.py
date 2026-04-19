@@ -502,3 +502,258 @@ def rechazar_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_
     supabase.table("comercio_solicitudes").update({"estado": "RECHAZADO"}).eq("id", sol_id).execute()
     return {"mensaje": "Solicitud rechazada."}
 
+
+# ============================================================
+# MÓDULO: GESTIÓN DE VEHÍCULOS (Admin)
+# ============================================================
+
+class VehicleCreate(BaseModel):
+    titular_id: str
+    marca: str
+    modelo: str
+    año: Optional[int] = None
+    patente: str
+    estado: Optional[str] = "activo"
+
+class VehicleUpdate(BaseModel):
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    año: Optional[int] = None
+    patente: Optional[str] = None
+    estado: Optional[str] = None
+
+class AssignDriverRequest(BaseModel):
+    driver_id: Optional[str] = None  # None = desasignar chofer
+
+
+@router.get("/vehiculos")
+def get_vehiculos(claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Lista todos los vehículos de la organización con titular y chofer."""
+    org_id = claims.get("organizacion_id")
+    resp = supabase.table("vehicles") \
+        .select("*, titular:titular_id(id, nombre, email), driver:driver_id(id, nombre, email, telefono)") \
+        .eq("organizacion_id", org_id) \
+        .order("created_at", desc=True) \
+        .execute()
+    return resp.data
+
+
+@router.post("/vehiculos")
+def create_vehiculo(data: VehicleCreate, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Crea un nuevo vehículo y lo asocia a un titular."""
+    org_id = claims.get("organizacion_id")
+
+    # Validar que el titular exista en la organización
+    tit_check = supabase.table("usuarios") \
+        .select("id, rol") \
+        .eq("id", data.titular_id) \
+        .eq("organizacion_id", org_id) \
+        .execute()
+    if not tit_check.data:
+        raise HTTPException(status_code=404, detail="Titular no encontrado en esta organización.")
+
+    resp = supabase.table("vehicles").insert({
+        "organizacion_id": org_id,
+        "titular_id": data.titular_id,
+        "marca": data.marca,
+        "modelo": data.modelo,
+        "año": data.año,
+        "patente": data.patente.upper().strip(),
+        "estado": data.estado,
+    }).execute()
+
+    if not resp.data:
+        raise HTTPException(status_code=500, detail="Error al crear el vehículo.")
+
+    return resp.data[0]
+
+
+@router.put("/vehiculos/{vehicle_id}")
+def update_vehiculo(vehicle_id: str, data: VehicleUpdate, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Actualiza los datos básicos de un vehículo."""
+    org_id = claims.get("organizacion_id")
+
+    # Verificar propiedad de la organización
+    check = supabase.table("vehicles").select("id").eq("id", vehicle_id).eq("organizacion_id", org_id).execute()
+    if not check.data:
+        raise HTTPException(status_code=404, detail="Vehículo no encontrado.")
+
+    payload = {k: v for k, v in data.model_dump().items() if v is not None}
+    if "patente" in payload:
+        payload["patente"] = payload["patente"].upper().strip()
+
+    if not payload:
+        return {"message": "Nada que actualizar."}
+
+    resp = supabase.table("vehicles").update(payload).eq("id", vehicle_id).execute()
+    return resp.data[0] if resp.data else {}
+
+
+@router.put("/vehiculos/{vehicle_id}/chofer")
+def assign_chofer_a_vehiculo(
+    vehicle_id: str,
+    data: AssignDriverRequest,
+    claims: Dict[str, Any] = Depends(get_current_admin)
+):
+    """
+    Asigna (o desasigna) un chofer a un vehículo.
+    - driver_id = UUID del usuario chofer → asigna
+    - driver_id = null → desasigna (libera el vehículo)
+    Solo admin puede ejecutar esta operación.
+    """
+    org_id = claims.get("organizacion_id")
+
+    # 1. Verificar que el vehículo existe en la organización
+    v_check = supabase.table("vehicles").select("id").eq("id", vehicle_id).eq("organizacion_id", org_id).execute()
+    if not v_check.data:
+        raise HTTPException(status_code=404, detail="Vehículo no encontrado.")
+
+    driver_id = data.driver_id
+
+    # 2. Si se asigna un chofer, validar que sea un usuario con rol chofer de la org
+    if driver_id:
+        u_check = supabase.table("usuarios") \
+            .select("id, rol") \
+            .eq("id", driver_id) \
+            .eq("organizacion_id", org_id) \
+            .execute()
+
+        if not u_check.data:
+            raise HTTPException(status_code=404, detail="Usuario chofer no encontrado en esta organización.")
+
+        if u_check.data[0].get("rol") not in ["chofer", "admin", "superadmin"]:
+            raise HTTPException(
+                status_code=400,
+                detail="El usuario seleccionado no tiene el rol 'chofer'. Verifica el perfil del usuario."
+            )
+
+    # 3. Actualizar asignación
+    resp = supabase.table("vehicles").update({"driver_id": driver_id}).eq("id", vehicle_id).execute()
+
+    accion = "asignado" if driver_id else "desasignado"
+    return {"message": f"Chofer {accion} correctamente.", "vehiculo": resp.data[0] if resp.data else {}}
+
+
+@router.delete("/vehiculos/{vehicle_id}")
+def delete_vehiculo(vehicle_id: str, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Elimina un vehículo. Solo si no tiene un chofer asignado activo."""
+    org_id = claims.get("organizacion_id")
+
+    v_resp = supabase.table("vehicles") \
+        .select("id, driver_id, patente") \
+        .eq("id", vehicle_id) \
+        .eq("organizacion_id", org_id) \
+        .execute()
+
+    if not v_resp.data:
+        raise HTTPException(status_code=404, detail="Vehículo no encontrado.")
+
+    if v_resp.data[0].get("driver_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede eliminar un vehículo con un chofer asignado. Desasigna primero el chofer."
+        )
+
+    supabase.table("vehicles").delete().eq("id", vehicle_id).execute()
+    return {"message": f"Vehículo {v_resp.data[0].get('patente')} eliminado correctamente."}
+
+
+# ============================================================
+# POST /admin/create-titular
+# ============================================================
+
+from fastapi import BackgroundTasks
+from app.core.evolution import send_whatsapp_message
+from app.core.config import settings
+
+class TitularCreate(BaseModel):
+    nombre: str
+    email: EmailStr
+    telefono: str
+
+class TitularResponse(BaseModel):
+    id: str
+    nombre: str
+    email: str
+    password_temporal: str
+
+@router.post("/create-titular", response_model=TitularResponse)
+def create_titular(
+    data: TitularCreate,
+    background_tasks: BackgroundTasks,
+    claims: Dict[str, Any] = Depends(get_current_admin)
+):
+    """
+    Crea un usuario con rol 'titular' (propietario de vehículos).
+    Genera contraseña temporal, registra en Auth + usuarios + user_roles,
+    y envía invitación por WhatsApp al número del titular.
+    """
+    org_id = claims.get("organizacion_id")
+
+    # 1. Generar contraseña temporal (mismo patrón que create_chofer)
+    alphabet = string.ascii_letters + string.digits
+    password = "Nea" + ''.join(secrets.choice(alphabet) for _ in range(6)) + "!"
+
+    # 2. Crear usuario en Supabase Auth
+    try:
+        auth_res = supabase.auth.admin.create_user({
+            "email": data.email,
+            "password": password,
+            "email_confirm": True
+        })
+        user_id = auth_res.user.id
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo crear el usuario en Auth: {str(e)}")
+
+    # 3. Insertar perfil en `usuarios` con rol 'titular' + rollback en caso de error
+    try:
+        supabase.table("usuarios").insert({
+            "id": user_id,
+            "organizacion_id": org_id,
+            "email": data.email,
+            "nombre": data.nombre,
+            "telefono": data.telefono,
+            "rol": "titular",
+        }).execute()
+
+        # 4. Registrar en user_roles para soporte multi-rol
+        supabase.table("user_roles").insert({
+            "user_id": user_id,
+            "role": "titular",
+            "organizacion_id": org_id,
+        }).execute()
+
+    except Exception as e:
+        # Rollback del Auth user para no dejar registros huérfanos
+        try:
+            supabase.auth.admin.delete_user(user_id)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Error registrando titular: {str(e)}")
+
+    # 5. Notificación WhatsApp de invitación (en background, no bloquea la respuesta)
+    phone = data.telefono.strip().replace(" ", "").replace("-", "")
+    if not phone.endswith("@s.whatsapp.net"):
+        phone = phone + "@s.whatsapp.net"
+
+    mensaje_invitacion = (
+        f"👋 ¡Hola *{data.nombre}*! Fuiste registrado como *Titular* en Viajes NEA.\n\n"
+        f"🔑 Tus credenciales de acceso:\n"
+        f"📧 Email: *{data.email}*\n"
+        f"🔐 Contraseña temporal: *{password}*\n\n"
+        f"🌐 Ingresar en: {settings.FRONTEND_URL}\n\n"
+        f"Por seguridad, te recomendamos cambiar tu contraseña al ingresar por primera vez."
+    )
+    background_tasks.add_task(
+        send_whatsapp_message,
+        settings.EVOLUTION_INSTANCE,
+        phone,
+        mensaje_invitacion
+    )
+
+    return TitularResponse(
+        id=user_id,
+        nombre=data.nombre,
+        email=data.email,
+        password_temporal=password
+    )

@@ -52,12 +52,14 @@ def update_ubicacion(lat: float, lng: float, claims: Dict[str, Any] = Depends(ge
 def notificar_aceptacion(viaje_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_chofer)):
     chofer_user_id = claims.get("sub")
     
-    # 1. Obtener datos del viaje
-    v_resp = supabase.table("viajes").select("*").eq("id", viaje_id).execute()
+    # 1. Obtener datos del viaje y del chofer
+    v_resp = supabase.table("viajes").select("*, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
     if not v_resp.data:
          raise HTTPException(status_code=404, detail="Viaje no encontrado.")
     
     viaje = v_resp.data[0]
+    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
+         raise HTTPException(status_code=403, detail="No tienes permiso para modificar este viaje.")
     origen_data = viaje.get("origen", {})
     pasajero_phone = origen_data.get("cliente_telefono")
     ai_instance = origen_data.get("ai_instance", "viajesnea") 
@@ -97,6 +99,13 @@ def iniciar_viaje(viaje_id: str, background_tasks: BackgroundTasks, claims: Dict
     Marca el inicio real del viaje (pasajero a bordo).
     Corta el tiempo de espera.
     """
+    chofer_user_id = claims.get("sub")
+    v_resp = supabase.table("viajes").select("id, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
+    if not v_resp.data:
+        raise HTTPException(status_code=404, detail="Viaje no encontrado.")
+    if v_resp.data[0].get("choferes", {}).get("usuario_id") != chofer_user_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este viaje.")
+
     # 1. Actualizar estado y timestamp
     supabase.table("viajes").update({
         "estado": "STARTED",
@@ -123,6 +132,8 @@ def finalizar_viaje(viaje_id: str, background_tasks: BackgroundTasks, claims: Di
          raise HTTPException(status_code=404, detail="Viaje no encontrado.")
     
     viaje = v_resp.data[0]
+    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
+         raise HTTPException(status_code=403, detail="No tienes permiso para finalizar este viaje.")
     if viaje["estado"] == "FINISHED":
         return {"message": "Viaje ya finalizado anteriormente."}
 
@@ -163,105 +174,51 @@ def finalizar_viaje(viaje_id: str, background_tasks: BackgroundTasks, claims: Di
     final_price = calc_res["total"]
     wait_cost = calc_res["breakdown"].get("wait_cost", 0.0)
     
-    # 5. Actualizar DB
-    update_data = {
-        "estado": "FINISHED",
-        "finished_at": finished_at,
-        "fecha_fin_viaje": finished_at,
-        "wait_minutes": wait_minutes,
-        "wait_cost": wait_cost,
-        "final_price": final_price,
-        "precio": final_price # Sync deprecated field
-    }
-    supabase.table("viajes").update(update_data).eq("id", viaje_id).execute()
-    
-    # 5.5 CUENTA CORRIENTE EMPRESA
+    # 5. Ejecutar la función RPC transaccional que agrupa todos los UPDATES/INSERTS
     empresa_id = viaje.get("empresa_id")
-    if empresa_id:
-        try:
-            em_resp = supabase.table("empresas").select("saldo").eq("id", empresa_id).execute()
-            if em_resp.data:
-                saldo_actual = float(em_resp.data[0].get("saldo", 0))
-                nuevo_saldo = saldo_actual + final_price # Deuda incrementa
-                
-                # 1. Update saldo
-                supabase.table("empresas").update({"saldo": nuevo_saldo}).eq("id", empresa_id).execute()
-                
-                # 2. Add movement
-                emp_user_nombre = "Usuario de Empresa"
-                if viaje.get("cliente_id"):
-                    us_resp = supabase.table("usuarios").select("nombre").eq("id", viaje["cliente_id"]).execute()
-                    if us_resp.data:
-                        emp_user_nombre = us_resp.data[0]["nombre"]
-                        
-                supabase.table("cuenta_corriente_empresas").insert({
-                    "empresa_id": empresa_id,
-                    "tipo": "DEBITO",
-                    "monto": final_price,
-                    "descripcion": f"Viaje de {emp_user_nombre} (Ref: {viaje_id[:8]})",
-                    "referencia_viaje_id": viaje_id
-                }).execute()
-        except BaseException as e:
-            # Not blocking the finish, just log or print
-            print("Error recording corporate debt:", e)
+    cliente_id = viaje.get("cliente_id") if not viaje.get("usado_viaje_gratis") else None
 
-    # 6. Lógica de Comisión (Billetera)
     chofer_data = viaje.get("choferes")
+    comision_deduccion = 0.0
     if chofer_data and chofer_data.get("tipo_pago") == "comision":
         pct_comision = float(chofer_data.get("valor_pago", 0))
-        deduccion = final_price * (pct_comision / 100)
-        nuevo_saldo = float(chofer_data.get("saldo", 0)) - deduccion
-        supabase.table("choferes").update({"saldo": nuevo_saldo}).eq("id", chofer_data["id"]).execute()
-
-    # 7. SISTEMA DE PUNTOS
-    if viaje.get("cliente_id") and not viaje.get("usado_viaje_gratis"):
+        comision_deduccion = final_price * (pct_comision / 100)
+    
+    puntos_ganados = 0
+    if cliente_id:
         import math
         puntos_ganados = math.floor(final_price / 1000) * 10
         
-        if puntos_ganados > 0:
-            cliente_id = viaje["cliente_id"]
-            # Obtener puntos actuales
-            u_resp = supabase.table("usuarios").select("nombre, puntos_actuales, viajes_gratis, telefono").eq("id", cliente_id).execute()
-            if u_resp.data:
-                user_data = u_resp.data[0]
-                total_puntos = int(user_data.get("puntos_actuales") or 0) + puntos_ganados
-                nuevos_viajes_gratis = int(user_data.get("viajes_gratis") or 0)
-                
-                # Verificar si alcanza 100
-                if total_puntos >= 100:
-                    total_puntos -= 100
-                    nuevos_viajes_gratis += 1
-                    
-                    # Notificar Viaje Gratis via WhatsApp
-                    nombre_pasajero = user_data.get("nombre", "Pasajero")
-                    wpp_msg = f"🎉 ¡Felicidades {nombre_pasajero}! Por llegar a 100 puntos, ¡tienes un viaje gratis! Canjéalo cuando quieras. 🚗💨"
-                    ai_inst = viaje.get("origen", {}).get("ai_instance", "viajesnea")
-                    if user_data.get("telefono"):
-                        background_tasks.add_task(send_whatsapp_message, ai_inst, user_data["telefono"], wpp_msg)
+    rpc_payload = {
+        "p_viaje_id": viaje_id,
+        "p_final_price": final_price,
+        "p_wait_minutes": wait_minutes,
+        "p_wait_cost": wait_cost,
+        "p_puntos_ganados": puntos_ganados,
+        "p_cliente_id": cliente_id,
+        "p_empresa_id": empresa_id,
+        "p_chofer_id": chofer_data["id"] if chofer_data else None,
+        "p_comision_deduccion": comision_deduccion
+    }
+    
+    rpc_resp = supabase.rpc("finalizar_viaje_transaccional", rpc_payload).execute()
+    rpc_res = rpc_resp.data
 
-                # Actualizar Usuario
-                supabase.table("usuarios").update({
-                    "puntos_actuales": total_puntos,
-                    "viajes_gratis": nuevos_viajes_gratis
-                }).eq("id", cliente_id).execute()
-
-                # Registrar Historial
-                supabase.table("historial_puntos").insert({
-                    "user_id": cliente_id,
-                    "viaje_id": viaje_id,
-                    "puntos": puntos_ganados,
-                    "tipo": "ACUMULACION",
-                    "descripcion": f"Puntos por viaje #{viaje_id[:8]}"
-                }).execute()
-
-                # Actualizar viaje con puntos generados
-                update_data["puntos_generados"] = puntos_ganados
-                supabase.table("viajes").update({"puntos_generados": puntos_ganados}).eq("id", viaje_id).execute()
-
-    # 8. Disparar notificaciones (Ticket)
+    # Notificar Viaje Gratis via WhatsApp si ocurrió en el RPC
+    if rpc_res and isinstance(rpc_res, dict) and rpc_res.get("viaje_gratis_ganado"):
+        u_resp = supabase.table("usuarios").select("nombre, telefono").eq("id", cliente_id).execute()
+        if u_resp.data:
+             user_data = u_resp.data[0]
+             nombre_pasajero = user_data.get("nombre", "Pasajero")
+             wpp_msg = f"🎉 ¡Felicidades {nombre_pasajero}! Por llegar a 100 puntos, ¡tienes un viaje gratis! Canjéalo cuando quieras. 🚗💨"
+             ai_inst = viaje.get("origen", {}).get("ai_instance", "viajesnea")
+             if user_data.get("telefono"):
+                 background_tasks.add_task(send_whatsapp_message, ai_inst, user_data["telefono"], wpp_msg)
+    
+    # 8. Disparar notificaciones finales (Ticket)
     background_tasks.add_task(notificar_finalizacion_v2, viaje_id, calc_res, wait_minutes)
     
-    return {"message": "Viaje finalizado con éxito.", "final_price": final_price, "wait_minutes": wait_minutes, "puntos_generados": update_data.get("puntos_generados", 0)}
+    return {"message": "Viaje finalizado con éxito.", "final_price": final_price, "wait_minutes": wait_minutes, "puntos_generados": puntos_ganados}
 
 def notificar_finalizacion_v2(viaje_id: str, calc_res: dict, wait_minutes: int):
     # 1. Obtener datos del viaje
@@ -309,12 +266,15 @@ def notificar_finalizacion_v2(viaje_id: str, calc_res: dict, wait_minutes: int):
 
 @router.post("/viajes/{viaje_id}/notificar-finalizacion")
 def notificar_finalizacion(viaje_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_chofer)):
+    chofer_user_id = claims.get("sub")
     # 1. Obtener datos del viaje
-    v_resp = supabase.table("viajes").select("*").eq("id", viaje_id).execute()
+    v_resp = supabase.table("viajes").select("*, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
     if not v_resp.data:
          return {"message": "Viaje no encontrado para notificar"}
     
     viaje = v_resp.data[0]
+    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
+         raise HTTPException(status_code=403, detail="No tienes permiso para este viaje.")
     origen_data = viaje.get("origen", {})
     pasajero_phone = origen_data.get("cliente_telefono")
     ai_instance = origen_data.get("ai_instance", "viajesnea")
@@ -350,11 +310,13 @@ def notificar_llegada(viaje_id: str, background_tasks: BackgroundTasks, claims: 
     chofer_user_id = claims.get("sub")
     
     # 1. Obtener datos del viaje
-    v_resp = supabase.table("viajes").select("*").eq("id", viaje_id).execute()
+    v_resp = supabase.table("viajes").select("*, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
     if not v_resp.data:
          raise HTTPException(status_code=404, detail="Viaje no encontrado.")
     
     viaje = v_resp.data[0]
+    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
+         raise HTTPException(status_code=403, detail="No tienes permiso para modificar este viaje.")
     pasajero_phone = viaje.get("origen", {}).get("cliente_telefono")
     ai_instance = viaje.get("origen", {}).get("ai_instance", "viajesnea")
     
@@ -387,12 +349,15 @@ def notificar_llegada(viaje_id: str, background_tasks: BackgroundTasks, claims: 
 
 @router.post("/viajes/{viaje_id}/cancelar")
 def cancelar_viaje(viaje_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_chofer)):
+    chofer_user_id = claims.get("sub")
     # 1. Obtener datos del viaje
-    v_resp = supabase.table("viajes").select("*").eq("id", viaje_id).execute()
+    v_resp = supabase.table("viajes").select("*, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
     if not v_resp.data:
          raise HTTPException(status_code=404, detail="Viaje no encontrado.")
     
     viaje = v_resp.data[0]
+    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
+         raise HTTPException(status_code=403, detail="No tienes permiso para cancelar este viaje.")
     pasajero_phone = viaje.get("origen", {}).get("cliente_telefono")
     ai_instance = viaje.get("origen", {}).get("ai_instance", "viajesnea")
     

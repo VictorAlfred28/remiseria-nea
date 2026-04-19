@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, Any, List, Optional
 import secrets
 import string
@@ -68,6 +68,7 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
             "patente": data.patente,
             "dni": data.dni,
             "estado": "inactivo",
+            "estado_validacion": "aprobado",  # Por admin se aprueba directo
             "tipo_pago": data.tipo_pago,
             "valor_pago": data.valor_pago
         }).execute()
@@ -99,6 +100,77 @@ def get_choferes(claims: Dict[str, Any] = Depends(get_current_admin)):
         .eq("organizacion_id", org_id) \
         .execute()
     return response.data
+
+@router.get("/choferes/pendientes")
+def get_choferes_pendientes(claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Obtener todos los choferes en estado pendiente.
+    """
+    org_id = claims.get("organizacion_id")
+    response = supabase.table("choferes") \
+        .select("*, usuarios(nombre, email, telefono, direccion)") \
+        .eq("organizacion_id", org_id) \
+        .eq("estado_validacion", "pendiente") \
+        .execute()
+    return response.data
+
+from app.core.evolution import send_whatsapp_message
+from app.core.config import settings
+
+@router.post("/choferes/{chofer_id}/aprobar")
+def aprobar_chofer(chofer_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Aprueba un chofer pendiente.
+    """
+    org_id = claims.get("organizacion_id")
+    c_check = supabase.table("choferes").select("id, usuario_id, usuarios(telefono, nombre)").eq("id", chofer_id).eq("organizacion_id", org_id).single().execute()
+    if not c_check.data:
+        raise HTTPException(status_code=404, detail="Chofer no encontrado")
+        
+    u_id = c_check.data["usuario_id"]
+    telefono = c_check.data["usuarios"]["telefono"] if c_check.data.get("usuarios") else None
+    nombre = c_check.data["usuarios"]["nombre"] if c_check.data.get("usuarios") else "Chofer"
+
+    # Actualizar estado_validacion en choferes
+    supabase.table("choferes").update({"estado_validacion": "aprobado", "estado": "activo"}).eq("id", chofer_id).execute()
+    # Actualizar estado y activo en usuarios
+    supabase.table("usuarios").update({"estado": "aprobado", "activo": True}).eq("id", u_id).execute()
+
+    if telefono:
+        msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Viajes NEA ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
+        def _send_sync_admin():
+            import asyncio
+            asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
+        background_tasks.add_task(_send_sync_admin)
+
+    return {"message": "Chofer aprobado exitosamente"}
+
+@router.post("/choferes/{chofer_id}/rechazar")
+def rechazar_chofer(chofer_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Rechaza un chofer pendiente.
+    """
+    org_id = claims.get("organizacion_id")
+    c_check = supabase.table("choferes").select("id, usuario_id, usuarios(telefono, nombre)").eq("id", chofer_id).eq("organizacion_id", org_id).single().execute()
+    if not c_check.data:
+        raise HTTPException(status_code=404, detail="Chofer no encontrado")
+        
+    u_id = c_check.data["usuario_id"]
+    telefono = c_check.data["usuarios"]["telefono"] if c_check.data.get("usuarios") else None
+    nombre = c_check.data["usuarios"]["nombre"] if c_check.data.get("usuarios") else "Chofer"
+
+    supabase.table("choferes").update({"estado_validacion": "rechazado"}).eq("id", chofer_id).execute()
+    supabase.table("usuarios").update({"estado": "rechazado", "activo": False}).eq("id", u_id).execute()
+
+    if telefono:
+        msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Viajes NEA ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
+        def _send_sync_admin():
+            import asyncio
+            asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
+        background_tasks.add_task(_send_sync_admin)
+
+    return {"message": "Chofer rechazado"}
+
 
 class ChoferUpdate(BaseModel):
     nombre: Optional[str] = None

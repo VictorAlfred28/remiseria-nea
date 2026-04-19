@@ -13,6 +13,7 @@ import { supabase } from "../lib/supabase";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import BolsaAdminTab from "../components/bolsa/BolsaAdminTab";
+import SolicitudesChoferesAdmin from "../components/SolicitudesChoferesAdmin";
 
 // Fijar el icono de Leaflet para Vite
 import L from "leaflet";
@@ -30,6 +31,7 @@ L.Icon.Default.mergeOptions({
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("choferes");
   const [activeSubTab, setActiveSubTab] = useState("validacion"); // 'caja' o 'validacion'
+  const [activeSubTabChoferes, setActiveSubTabChoferes] = useState("pendientes"); // 'pendientes' o 'alta'
   
   // States Formularios Alta
   const [nombre, setNombre] = useState('');
@@ -414,51 +416,72 @@ export default function AdminDashboard() {
         {activeTab === "bolsa" && <BolsaAdminTab />}
         
         {activeTab === "choferes" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div>
-              <h2 className="text-2xl font-black mb-2 text-white">Alta Especializada</h2>
-              <p className="text-zinc-400 mb-6 text-sm">Crea la cuenta del chofer y configura su rentabilidad.</p>
-              {errorMsg && <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-lg text-sm">{errorMsg}</div>}
-              <form onSubmit={handleAltaChofer} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-4">
-                     <input type="text" required value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre Completo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
-                     <input type="tel" required value={telefono} onChange={e=>setTelefono(e.target.value)} placeholder="Teléfono" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+             <div className="flex bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-800 w-fit mb-8">
+                 <button 
+                     onClick={() => setActiveSubTabChoferes("pendientes")}
+                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeSubTabChoferes === 'pendientes' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                 >
+                     📋 Solicitudes Pendientes
+                 </button>
+                 <button 
+                     onClick={() => setActiveSubTabChoferes("alta")}
+                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeSubTabChoferes === 'alta' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                 >
+                     ⚙️ Alta Especializada
+                 </button>
+             </div>
+
+             {activeSubTabChoferes === "pendientes" ? (
+                 <SolicitudesChoferesAdmin />
+             ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                  <div>
+                    <h2 className="text-2xl font-black mb-2 text-white">Alta Especializada</h2>
+                    <p className="text-zinc-400 mb-6 text-sm">Crea la cuenta del chofer internamente y de forma directa sin pasar por revisión.</p>
+                    {errorMsg && <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-lg text-sm">{errorMsg}</div>}
+                    <form onSubmit={handleAltaChofer} className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                           <input type="text" required value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre Completo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                           <input type="tel" required value={telefono} onChange={e=>setTelefono(e.target.value)} placeholder="Teléfono" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo Electrónico" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                           <input type="text" required value={dni} onChange={e=>setDni(e.target.value)} placeholder="Número de DNI" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <input type="text" required value={vehiculo} onChange={e=>setVehiculo(e.target.value)} placeholder="Vehículo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                           <input type="text" required value={patente} onChange={e=>setPatente(e.target.value)} placeholder="Patente" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none uppercase" />
+                        </div>
+                        <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
+                            <div className="grid grid-cols-2 gap-4">
+                                <select value={tipoPago} onChange={e => setTipoPago(e.target.value)} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none">
+                                    <option value="comision">Por Comisión (%)</option>
+                                    <option value="base">Base Fija Semanal ($)</option>
+                                </select>
+                                <input type="number" required value={valorPago} onChange={e => setValorPago(Number(e.target.value))} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none" />
+                            </div>
+                        </div>
+                        <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50">
+                            {loading ? "Procesando..." : "Crear Conductor Aprobado"}
+                        </button>
+                    </form>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo Electrónico" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
-                     <input type="text" required value={dni} onChange={e=>setDni(e.target.value)} placeholder="Número de DNI" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                  <div className="flex flex-col items-center justify-center p-6 border-l border-zinc-800">
+                     {createdChofer ? (
+                         <div className="w-full bg-green-950/30 border border-green-500/40 p-6 rounded-2xl">
+                             <h3 className="text-xl font-bold text-green-400 mb-4 flex items-center gap-2"><CheckCircle2/> Alta Exitosa</h3>
+                             <div className="bg-black/50 p-4 rounded-xl border border-zinc-700 font-mono">
+                                 <p className="text-xs text-zinc-500 uppercase mb-1">USUARIO</p>
+                                 <p className="text-blue-300 mb-3">{createdChofer.email}</p>
+                                 <p className="text-xs text-zinc-500 uppercase mb-1">CONTRASEÑA TEMPORAL</p>
+                                 <p className="text-green-300 text-lg">{createdChofer.password_temporal}</p>
+                             </div>
+                         </div>
+                     ) : <p className="text-zinc-600 text-center">Toda alta realizada en esta pestaña se aprueba directamente.</p>}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <input type="text" required value={vehiculo} onChange={e=>setVehiculo(e.target.value)} placeholder="Vehículo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
-                     <input type="text" required value={patente} onChange={e=>setPatente(e.target.value)} placeholder="Patente" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none uppercase" />
-                  </div>
-                  <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
-                      <div className="grid grid-cols-2 gap-4">
-                          <select value={tipoPago} onChange={e => setTipoPago(e.target.value)} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none">
-                              <option value="comision">Por Comisión (%)</option>
-                              <option value="base">Base Fija Semanal ($)</option>
-                          </select>
-                          <input type="number" required value={valorPago} onChange={e => setValorPago(Number(e.target.value))} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none" />
-                      </div>
-                  </div>
-                  <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50">
-                      {loading ? "Procesando..." : "Crear Conductor"}
-                  </button>
-              </form>
-            </div>
-            <div className="flex flex-col items-center justify-center p-6 border-l border-zinc-800">
-               {createdChofer ? (
-                   <div className="w-full bg-green-950/30 border border-green-500/40 p-6 rounded-2xl">
-                       <h3 className="text-xl font-bold text-green-400 mb-4 flex items-center gap-2"><CheckCircle2/> Alta Exitosa</h3>
-                       <div className="bg-black/50 p-4 rounded-xl border border-zinc-700 font-mono">
-                           <p className="text-xs text-zinc-500 uppercase mb-1">USUARIO</p>
-                           <p className="text-blue-300 mb-3">{createdChofer.email}</p>
-                           <p className="text-xs text-zinc-500 uppercase mb-1">CONTRASEÑA TEMPORAL</p>
-                           <p className="text-green-300 text-lg">{createdChofer.password_temporal}</p>
-                       </div>
-                   </div>
-               ) : <p className="text-zinc-600 text-center">Completa el formulario.</p>}
-            </div>
+                </div>
+             )}
           </div>
         )}
 

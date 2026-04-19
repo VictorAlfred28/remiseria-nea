@@ -46,6 +46,23 @@ async def test_wpp(phone: str):
              return {"error": str(e)}
 
 from pydantic import BaseModel
+from typing import Optional
+
+class RegistroChoferRequest(BaseModel):
+    id: str
+    organizacion_id: str
+    email: str
+    nombre: str
+    telefono: str
+    direccion: Optional[str] = None
+    vehiculo: Optional[str] = None
+    patente: Optional[str] = None
+    licencia_numero: Optional[str] = None
+    licencia_categoria: Optional[str] = None
+    licencia_vencimiento: Optional[str] = None
+    documentos: list = []
+    tiene_vehiculo: bool = True
+
 
 class RegistroPerfilRequest(BaseModel):
     id: str
@@ -62,13 +79,28 @@ def crear_perfil_publico(req: RegistroPerfilRequest, background_tasks: Backgroun
     Se asume que Auth ya fue creado en Supabase por el cliente.
     """
     try:
+        # Validación de Organización: verificar que exista para evitar basureo o inyección en SaaS
+        org_check = supabase.table("organizaciones").select("id").eq("id", req.organizacion_id).execute()
+        if not org_check.data:
+            # Fallback seguro: obtener la por defecto
+            org_default = supabase.table("organizaciones").select("id").limit(1).execute()
+            if not org_default.data:
+                raise HTTPException(status_code=500, detail="El sistema no tiene una organización configurada.")
+            req.organizacion_id = org_default.data[0]["id"]
+
         resp = supabase.table("usuarios").insert({
             "id": req.id,
             "organizacion_id": req.organizacion_id,
             "email": req.email,
             "nombre": req.nombre,
             "telefono": req.telefono,
-            "rol": req.rol
+            "rol": "cliente"  # SEC: JAMÁS confiar del body para asignar roles. Fuerza cliente.
+        }).execute()
+        
+        # Opcional: Escribir explícitamente en user_roles
+        supabase.table("user_roles").insert({
+            "user_id": req.id,
+            "role": "cliente"
         }).execute()
         
         # Enviar mensaje de bienvenida por WhatsApp en segundo plano
@@ -100,6 +132,66 @@ def crear_perfil_publico(req: RegistroPerfilRequest, background_tasks: Backgroun
         return {"status": "ok", "perfil": resp.data}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/registro/chofer")
+def crear_perfil_chofer(req: RegistroChoferRequest, background_tasks: BackgroundTasks):
+    """
+    Crea el perfil de chofer en estado 'pendiente'.
+    Se asume que Auth ya fue creado, pero NO se habilita el acceso hasta aprobación.
+    """
+    try:
+        # Validación de Organización Server-Side
+        org_check = supabase.table("organizaciones").select("id").eq("id", req.organizacion_id).execute()
+        if not org_check.data:
+            org_default = supabase.table("organizaciones").select("id").limit(1).execute()
+            if not org_default.data:
+                raise HTTPException(status_code=500, detail="Sin organización.")
+            req.organizacion_id = org_default.data[0]["id"]
+
+        # 1. Crear en usuarios (con estado pendiente y rol chofer asegurados)
+        u_resp = supabase.table("usuarios").insert({
+            "id": req.id,
+            "organizacion_id": req.organizacion_id,
+            "email": req.email,
+            "nombre": req.nombre,
+            "telefono": req.telefono,
+            "direccion": req.direccion,
+            "rol": "chofer",     # SEC: Hardcoded
+            "estado": "pendiente" # SEC: Hardcoded
+        }).execute()
+        
+        # 2. Asignar rol a user_roles
+        supabase.table("user_roles").insert({
+            "user_id": req.id,
+            "role": "chofer"
+        }).execute()
+
+        # 3. Crear en choferes
+        c_resp = supabase.table("choferes").insert({
+            "organizacion_id": req.organizacion_id,
+            "usuario_id": req.id,
+            "vehiculo": req.vehiculo,
+            "patente": req.patente,
+            "licencia_numero": req.licencia_numero,
+            "licencia_categoria": req.licencia_categoria,
+            "licencia_vencimiento": req.licencia_vencimiento,
+            "documentos": req.documentos,
+            "tiene_vehiculo": req.tiene_vehiculo,
+            "estado_validacion": "pendiente"
+        }).execute()
+
+        # Notificar Admin por WhatsApp (Opcional, enviando al teléfono de emergencia o admin)
+        if hasattr(settings, "EMERGENCY_PHONE") and settings.EMERGENCY_PHONE:
+            msg = f"NUEVA SOLICITUD DE CHOFER 🚖\n\nEl usuario *{req.nombre}* ha enviado una solicitud para ser chofer. Revisa el panel de admistración para aprobarlo."
+            # Call Evolution API background task
+            def _send_sync_admin():
+                asyncio.run(send_whatsapp_message("Viejes-Nea", settings.EMERGENCY_PHONE, msg))
+            background_tasks.add_task(_send_sync_admin)
+
+        return {"status": "ok", "chofer": c_resp.data}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error creando solicitud de chofer: {str(e)}")
+
 
 @router.get("/viajes/{viaje_id}/tracking")
 def get_viaje_tracking(viaje_id: str):

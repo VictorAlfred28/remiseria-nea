@@ -22,6 +22,8 @@ class Usuario(BaseModel):
     telefono: Optional[str] = None
     rol: str
     activo: bool
+    estado: str = "aprobado"
+    direccion: Optional[str] = None
     puntos_actuales: int = 0
     viajes_gratis: int = 0
 
@@ -31,10 +33,16 @@ class Chofer(BaseModel):
     id: UUID
     organizacion_id: UUID
     usuario_id: UUID
-    vehiculo: str
-    patente: str
+    vehiculo: Optional[str] = None
+    patente: Optional[str] = None
     dni: Optional[str] = None
-    estado: str
+    estado: Optional[str] = None
+    estado_validacion: str = "pendiente"
+    licencia_numero: Optional[str] = None
+    licencia_categoria: Optional[str] = None
+    licencia_vencimiento: Optional[str] = None
+    documentos: List[Dict[str, Any]] = []
+    tiene_vehiculo: bool = True
     lat: Optional[float] = None
     lng: Optional[float] = None
     tipo_pago: Optional[str] = "comision"

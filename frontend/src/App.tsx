@@ -8,6 +8,7 @@ import ComercioDashboard from "./pages/ComercioDashboard";
 import PromocionDetalle from "./pages/PromocionDetalle";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import RegisterChofer from "./pages/RegisterChofer";
 import LiveTracker from "./pages/LiveTracker";
 import TariffPrintView from "./pages/TariffPrintView";
 import { useAuthStore } from "./store/useAuthStore";
@@ -92,6 +93,7 @@ function App() {
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+            <Route path="/registro-conductor" element={user ? <Navigate to="/" /> : <RegisterChofer />} />
             
             <Route path="/track/:viajeId" element={<LiveTracker />} />
             

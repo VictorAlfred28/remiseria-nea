@@ -32,6 +32,24 @@ export default function Login() {
       }
 
       if (data.session) {
+        // Verificar estado de aprobación para choferes
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('rol, estado')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (userData?.rol === 'chofer') {
+            if (userData.estado === 'pendiente') {
+                await supabase.auth.signOut();
+                throw new Error("Tu solicitud para ser chofer se encuentra en revisión. Te notificaremos cuando sea aprobada.");
+            }
+            if (userData.estado === 'rechazado') {
+                await supabase.auth.signOut();
+                throw new Error("Tu solicitud para ser chofer ha sido rechazada por la administración.");
+            }
+        }
+
         localStorage.setItem('sb-access-token', data.session.access_token);
         await checkSession();
         
@@ -207,10 +225,20 @@ export default function Login() {
            <p className="text-zinc-400 text-sm">¿Sos pasajero y no tenés cuenta?</p>
            <button 
              onClick={() => navigate('/register')}
-             className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium mt-1"
+             className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium mt-1 mb-3"
            >
-             Crear cuenta nueva
+             Crear cuenta de pasajero
            </button>
+
+           <div className="border-t border-zinc-800/50 pt-3">
+              <p className="text-zinc-500 text-xs mt-1">¿Querés manejar con nosotros?</p>
+              <button 
+                onClick={() => navigate('/registro-conductor')}
+                className="text-green-400 hover:text-green-300 transition-colors text-sm font-medium mt-1"
+              >
+                Registrate como chofer
+              </button>
+           </div>
         </div>
 
       </div>

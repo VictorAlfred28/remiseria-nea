@@ -8,8 +8,9 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Car, MapPin, History, ChevronRight, ArrowLeft,
   User, Phone, CheckCircle2, XCircle, Loader2, Truck,
-  Navigation, RefreshCw
+  Navigation, RefreshCw, Briefcase, PlusCircle
 } from 'lucide-react';
+import BolsaTitularTab from '../bolsa/BolsaTitularTab';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 const token = () => localStorage.getItem('sb-access-token') ?? '';
@@ -31,7 +32,7 @@ interface Viaje {
 interface GPS { lat: number | null; lng: number | null; disponible: boolean; estado_chofer?: string }
 
 // ─── Sub-screens ──────────────────────────────────────────────────────────────
-type Screen = 'lista' | 'detalle' | 'ubicacion' | 'historial';
+type Screen = 'lista' | 'detalle' | 'ubicacion' | 'historial' | 'bolsa';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const estadoBadge = (estado: string) => {
@@ -137,8 +138,15 @@ export default function MiFlotaTab() {
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
           <Truck className="text-blue-400" size={20} /> Mi Flota
         </h2>
-        <button
-          onClick={loadVehicles}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setScreen('bolsa')}
+            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 rounded-lg text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all shadow-lg"
+          >
+            <Briefcase size={12} /> Bolsa
+          </button>
+          <button
+            onClick={loadVehicles}
           disabled={loading}
           className="text-zinc-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all"
           title="Actualizar"
@@ -258,9 +266,17 @@ export default function MiFlotaTab() {
               <CheckCircle2 className="ml-auto text-emerald-500" size={18} />
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-zinc-500">
-              <XCircle size={16} />
-              <span className="text-sm italic">Sin chofer asignado. Contactá al administrador.</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-zinc-500">
+                <XCircle size={16} />
+                <span className="text-sm italic">Sin chofer asignado.</span>
+              </div>
+              <button 
+                onClick={() => setScreen('bolsa')}
+                className="w-full mt-2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
+              >
+                <PlusCircle size={14} /> Publicar Vacante
+              </button>
             </div>
           )}
         </div>
@@ -452,6 +468,13 @@ export default function MiFlotaTab() {
         </div>
       </div>
     </div>
+  );
+
+  if (screen === 'bolsa') return (
+    <BolsaTitularTab 
+      vehicleId={selected?.id} 
+      onBack={() => setScreen(selected ? 'detalle' : 'lista')} 
+    />
   );
 
   return null;

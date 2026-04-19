@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight } from "lucide-react";
+import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase } from "lucide-react";
 import TariffManager from "../components/TariffManager";
 import ReservationTable from "../components/ReservationTable";
 import EmpresasAdmin from "../components/EmpresasAdmin";
@@ -12,6 +12,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import BolsaAdminTab from "../components/bolsa/BolsaAdminTab";
 
 // Fijar el icono de Leaflet para Vite
 import L from "leaflet";
@@ -168,7 +169,12 @@ export default function AdminDashboard() {
     if (activeTab === 'fleet') fetchFleetDrivers();
     if (activeTab === 'viajes') fetchActiveTrips();
     if (activeTab === 'clientes') fetchClientesPuntos();
+    if (activeTab === 'bolsa') fetchBolsaAdmin();
   }, [activeTab, orgId]);
+
+  const fetchBolsaAdmin = async () => {
+      // Opcional: podrías disparar un refresco forzado aquí si el componente no lo hace solo
+  };
 
   const fetchClientesPuntos = async () => {
     if (!orgId) return;
@@ -391,6 +397,9 @@ export default function AdminDashboard() {
         <button onClick={() => setActiveTab("comercios")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'comercios' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Store size={18} /> Validar Comercios
         </button>
+        <button onClick={() => setActiveTab("bolsa")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'bolsa' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <Briefcase size={18} /> Bolsa de Empleos
+        </button>
         <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <History size={18} /> Historial Global
         </button>
@@ -402,6 +411,7 @@ export default function AdminDashboard() {
         {activeTab === "reservas" && <ReservationTable />}
         {activeTab === "empresas" && <EmpresasAdmin />}
         {activeTab === "comercios" && <ComerciosAdmin />}
+        {activeTab === "bolsa" && <BolsaAdminTab />}
         
         {activeTab === "choferes" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

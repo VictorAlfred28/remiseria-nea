@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 import { 
@@ -18,6 +18,7 @@ import {
 } from "../services/api";
 import BilleteraChofer from "../components/BilleteraChofer";
 import WeatherWidget from "../components/WeatherWidget";
+import BolsaChoferTab from "../components/bolsa/BolsaChoferTab";
 import { calculateDistance } from "../utils/geo";
 
 // Componente visual puro para el timer. Previene el renderizado del parent completo.
@@ -555,6 +556,7 @@ export default function ChoferDashboard() {
           { id: 'caja', icon: Wallet, label: 'Mi Caja', color: 'text-emerald-400' },
           { id: 'tarifas', icon: Zap, label: 'Tarifario', color: 'text-yellow-400' },
           { id: 'comercios', icon: Store, label: 'Comercios', color: 'text-orange-400' },
+          { id: 'bolsa', icon: Briefcase, label: 'Bolsa', color: 'text-blue-500' },
           { id: 'premios', icon: Gift, label: 'Premios', color: 'text-purple-400' },
           { id: 'ajustes', icon: Settings, label: 'Ajustes', color: 'text-zinc-400' },
         ].map((tab: any) => (
@@ -1030,6 +1032,12 @@ export default function ChoferDashboard() {
                      ))
                  )}
             </div>
+          </div>
+        )}
+
+        {activeTab === "bolsa" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <BolsaChoferTab />
           </div>
         )}
 

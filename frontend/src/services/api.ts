@@ -195,3 +195,44 @@ export const rejectPagoAdmin = async (pagoId: string, observaciones: string) => 
 };
 
 // --- END: NUEVO SISTEMA PAGOS CHOFER ---
+
+// --- BOLSA DE EMPLEOS ---
+export const getBolsaOfertasCercanas = async () => {
+    const res = await api.get("/bolsa/ofertas");
+    return res.data;
+};
+
+export const aplicarOfertaBolsa = async (ofertaId: string, mensaje: string) => {
+    const res = await api.post(`/bolsa/ofertas/${ofertaId}/aplicar`, { mensaje });
+    return res.data;
+};
+
+export const getMisPostulacionesBolsa = async () => {
+    const res = await api.get("/bolsa/mis-postulaciones");
+    return res.data;
+};
+
+export const createOfertaBolsa = async (data: { vehicle_id?: string, titulo: string, descripcion?: string, requisitos?: string }) => {
+    const res = await api.post("/bolsa/ofertas", data);
+    return res.data;
+};
+
+export const getMisOfertasBolsa = async () => {
+    const res = await api.get("/bolsa/mis-ofertas");
+    return res.data;
+};
+
+export const getBolsaAdminOfertas = async () => {
+    const res = await api.get("/bolsa/admin/ofertas");
+    return res.data;
+};
+
+export const aprobarPostulacionBolsa = async (postId: string, mensaje?: string) => {
+    const res = await api.post(`/bolsa/admin/postulaciones/${postId}/aprobar`, { mensaje_admin: mensaje });
+    return res.data;
+};
+
+export const rechazarPostulacionBolsa = async (postId: string, mensaje?: string) => {
+    const res = await api.post(`/bolsa/admin/postulaciones/${postId}/rechazar`, { mensaje_admin: mensaje });
+    return res.data;
+};

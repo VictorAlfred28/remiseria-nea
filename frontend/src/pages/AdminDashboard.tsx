@@ -88,6 +88,14 @@ export default function AdminDashboard() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [updatingFleet, setUpdatingFleet] = useState(false);
+
+  // States Alta de Titular
+  const [titularNombre, setTitularNombre] = useState('');
+  const [titularEmail, setTitularEmail] = useState('');
+  const [titularTelefono, setTitularTelefono] = useState('');
+  const [loadingTitular, setLoadingTitular] = useState(false);
+  const [createdTitular, setCreatedTitular] = useState<{ id: string, nombre: string, email: string, password_temporal: string } | null>(null);
+  const [titularError, setTitularError] = useState('');
   
   // States Clientes y Puntos
   const [clientesPuntos, setClientesPuntos] = useState<any[]>([]);
@@ -401,6 +409,9 @@ export default function AdminDashboard() {
         </button>
         <button onClick={() => setActiveTab("bolsa")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'bolsa' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Briefcase size={18} /> Bolsa de Empleos
+        </button>
+        <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'titulares' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <Car size={18} /> Alta de Titulares
         </button>
         <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <History size={18} /> Historial Global
@@ -873,6 +884,96 @@ export default function AdminDashboard() {
                  </div>
                </div>
              )}
+          </div>
+        )}
+
+        {activeTab === "titulares" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div>
+                <h2 className="text-2xl font-black mb-1 text-white">Alta de Titular</h2>
+                <p className="text-zinc-400 mb-6 text-sm">Registra al dueño de un vehículo. El sistema le generará una contraseña temporal y le enviará un WhatsApp de invitación.</p>
+                {titularError && <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-lg text-sm">{titularError}</div>}
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setLoadingTitular(true); setTitularError(''); setCreatedTitular(null);
+                  try {
+                    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+                    const resp = await fetch(`${apiBase}/admin/create-titular`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+                      },
+                      body: JSON.stringify({ nombre: titularNombre, email: titularEmail, telefono: titularTelefono })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) throw new Error(data.detail || 'Error al crear titular');
+                    setCreatedTitular(data);
+                    setTitularNombre(''); setTitularEmail(''); setTitularTelefono('');
+                  } catch (err: any) {
+                    setTitularError(err.message);
+                  } finally {
+                    setLoadingTitular(false);
+                  }
+                }} className="flex flex-col gap-4">
+                  <input
+                    type="text" required
+                    value={titularNombre} onChange={e => setTitularNombre(e.target.value)}
+                    placeholder="Nombre Completo"
+                    className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-orange-500"
+                  />
+                  <input
+                    type="email" required
+                    value={titularEmail} onChange={e => setTitularEmail(e.target.value)}
+                    placeholder="Correo Electrónico"
+                    className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-orange-500"
+                  />
+                  <input
+                    type="tel" required
+                    value={titularTelefono} onChange={e => setTitularTelefono(e.target.value)}
+                    placeholder="Teléfono (con código de país, ej: 549...)"
+                    className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-orange-500"
+                  />
+                  <div className="bg-zinc-900/50 border border-orange-900/30 p-4 rounded-xl text-sm text-orange-300/80">
+                    <p className="font-bold mb-1">ℹ️ Información de Acceso</p>
+                    <p>El titular recibirá un WhatsApp con sus credenciales. Deberá iniciar sesión y luego puede cambiar su contraseña desde el perfil.</p>
+                  </div>
+                  <button type="submit" disabled={loadingTitular} className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                    {loadingTitular ? <Loader2 className="animate-spin" size={20} /> : "🚗 Crear Titular"}
+                  </button>
+                </form>
+              </div>
+              <div className="flex flex-col items-center justify-center p-6 border-l border-zinc-800">
+                {createdTitular ? (
+                  <div className="w-full bg-orange-950/20 border border-orange-500/30 p-6 rounded-2xl">
+                    <h3 className="text-xl font-bold text-orange-400 mb-4 flex items-center gap-2"><CheckCircle2 />Titular Creado</h3>
+                    <p className="text-zinc-400 text-sm mb-4">El titular ya puede ingresar a la plataforma y gestionar su flota.</p>
+                    <div className="bg-black/50 p-4 rounded-xl border border-zinc-700 font-mono space-y-3">
+                      <div>
+                        <p className="text-xs text-zinc-500 uppercase mb-1">Nombre</p>
+                        <p className="text-white font-bold">{createdTitular.nombre}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500 uppercase mb-1">Usuario / Email</p>
+                        <p className="text-orange-300">{createdTitular.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500 uppercase mb-1">Contraseña Temporal</p>
+                        <p className="text-green-300 text-lg tracking-widest">{createdTitular.password_temporal}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setCreatedTitular(null)} className="mt-4 w-full text-sm text-zinc-500 hover:text-white transition-colors">Crear otro titular →</button>
+                  </div>
+                ) : (
+                  <div className="text-center text-zinc-600 space-y-3">
+                    <Car size={48} className="mx-auto opacity-20" />
+                    <p className="text-sm">Al crear un titular, el sistema generará credenciales automáticas y lo notificará por WhatsApp.</p>
+                    <p className="text-xs text-zinc-700">El titular luego podrá ver su flota, asignar choferes y publicar en la Bolsa de Empleos.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

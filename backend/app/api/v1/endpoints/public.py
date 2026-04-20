@@ -114,6 +114,11 @@ def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
             "usuario_id": u_id,
             "vehiculo": req.get("vehiculo"),
             "patente": req.get("patente"),
+            "tiene_vehiculo": req.get("tiene_vehiculo", False),
+            "licencia_numero": req.get("licencia_numero"),
+            "licencia_categoria": req.get("licencia_categoria"),
+            "licencia_vencimiento": req.get("licencia_vencimiento"),
+            "documentos": req.get("documentos", []),
             "estado_validacion": "pendiente"
         }).execute()
 

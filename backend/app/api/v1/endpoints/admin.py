@@ -148,7 +148,8 @@ def aprobar_chofer(chofer_id: str, background_tasks: BackgroundTasks, claims: Di
     nombre = c_check.data["usuarios"]["nombre"] if c_check.data.get("usuarios") else "Chofer"
 
     # Actualizar estado_validacion en choferes
-    supabase.table("choferes").update({"estado_validacion": "aprobado", "estado": "activo"}).eq("id", chofer_id).execute()
+    # Nota: El estado debe ser 'disponible' para cumplir con el check constraint (disponible, ocupado, inactivo)
+    supabase.table(\"choferes\").update({\"estado_validacion\": \"aprobado\", \"estado\": \"disponible\"}).eq(\"id\", chofer_id).execute()
     # Actualizar estado y activo en usuarios
     supabase.table("usuarios").update({"estado": "aprobado", "activo": True}).eq("id", u_id).execute()
 

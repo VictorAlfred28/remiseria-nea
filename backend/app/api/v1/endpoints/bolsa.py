@@ -198,42 +198,48 @@ async def aprobar_postulacion(
     post = p_res.data
     chofer = post["chofer"]
     oferta = post["oferta"]
-    vehicle_id = oferta["vehicle_id"]
-    
-    if not vehicle_id:
-        raise HTTPException(status_code=400, detail="La oferta no tiene un vehículo asociado para asignar.")
+    vehicle_id = oferta.get("vehicle_id")
 
-    # 2. Transacción de cierre (Simulada via updates secuenciales)
-    # 2a. Asignar chofer al vehículo
-    v_res = supabase.table("vehicles").update({"driver_id": chofer["id"]}).eq("id", vehicle_id).execute()
-    
+    # 2. Transacción de cierre
+    v_patente = None
+    if vehicle_id:
+        # 2a. Asignar chofer al vehículo (solo si la oferta tiene vehículo)
+        v_res = supabase.table("vehicles").update({"driver_id": chofer["id"]}).eq("id", vehicle_id).execute()
+        v_patente = v_res.data[0]["patente"] if v_res.data else None
+
     # 2b. Aprobar postulación
     supabase.table("bolsa_postulaciones").update({
-        "estado": "aprobado", 
+        "estado": "aprobado",
         "aprobado_por": admin_id
     }).eq("id", str(post_id)).execute()
-    
+
     # 2c. Rechazar el resto de postulaciones para esta oferta
     supabase.table("bolsa_postulaciones").update({"estado": "rechazado"})\
         .eq("oferta_id", oferta["id"])\
         .neq("id", str(post_id))\
         .execute()
-        
+
     # 2d. Cerrar oferta
     supabase.table("bolsa_empleos").update({"estado": "cerrada"}).eq("id", oferta["id"]).execute()
 
     # 3. Notificaciones WhatsApp
-    instance = "principal" # o settings.EVOLUTION_INSTANCE_NAME si existe
-    
-    # Al Chofer
-    msg_chofer = f"✨ ¡Felicidades {chofer['nombre']}! Tu postulación ha sido APROBADA por administración. Se te ha asignado al vehículo con patente {v_res.data[0]['patente']}. Contactate con tu titular {oferta['titular']['nombre']}."
-    bg.add_task(send_whatsapp_message, instance, chofer["telefono"], msg_chofer)
-    
-    # Al Titular
-    msg_titular = f"✅ Administración ha asignado un chofer para tu vacante: {chofer['nombre']} ya figura como conductor oficial de tu vehículo {v_res.data[0]['patente']}."
-    bg.add_task(send_whatsapp_message, instance, oferta["titular"]["telefono"], msg_titular)
+    instance = "principal"
+    titular_nombre = oferta.get("titular", {}).get("nombre", "el titular")
+    titular_telefono = oferta.get("titular", {}).get("telefono")
 
-    return {"status": "approved", "vehicle": v_res.data[0]}
+    if v_patente:
+        msg_chofer = f"✨ ¡Felicidades {chofer['nombre']}! Tu postulación fue APROBADA. Se te asignó el vehículo patente {v_patente}. Coordiná con {titular_nombre}."
+        msg_titular = f"✅ ¡Match aprobado! {chofer['nombre']} es el nuevo conductor de tu vehículo {v_patente}."
+    else:
+        msg_chofer = f"✨ ¡Felicidades {chofer['nombre']}! Tu postulación fue APROBADA. Coordiná los detalles con {titular_nombre}."
+        msg_titular = f"✅ ¡Match aprobado! {chofer['nombre']} fue seleccionado para tu vacante. Coordiná con él para comenzar."
+
+    if chofer.get("telefono"):
+        bg.add_task(send_whatsapp_message, instance, chofer["telefono"], msg_chofer)
+    if titular_telefono:
+        bg.add_task(send_whatsapp_message, instance, titular_telefono, msg_titular)
+
+    return {"status": "approved", "vehicle_id": vehicle_id, "patente": v_patente}
 
 @router.post("/admin/postulaciones/{post_id}/rechazar")
 async def rechazar_postulacion(

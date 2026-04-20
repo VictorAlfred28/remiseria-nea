@@ -110,7 +110,7 @@ async def get_ofertas_abiertas(claims: Dict[str, Any] = Depends(get_current_chof
     org_id = claims.get("organizacion_id")
     
     res = supabase.table("bolsa_empleos")\
-        .select("*, titular:usuarios(nombre, telefono), vehicle:vehicles(marca, modelo, patente)")\
+        .select("*, titular:usuarios!bolsa_empleos_titular_id_fkey(nombre, telefono), vehicle:vehicles(marca, modelo, patente)")\
         .eq("organizacion_id", org_id)\
         .eq("estado", "abierta")\
         .execute()
@@ -149,7 +149,7 @@ async def get_mis_postulaciones(claims: Dict[str, Any] = Depends(get_current_cho
     chofer_id = claims.get("sub")
     
     res = supabase.table("bolsa_postulaciones")\
-        .select("*, oferta:bolsa_empleos(*, titular:usuarios(nombre), vehicle:vehicles(marca, modelo, patente))")\
+        .select("*, oferta:bolsa_empleos(*, titular:usuarios!bolsa_empleos_titular_id_fkey(nombre), vehicle:vehicles(marca, modelo, patente))")\
         .eq("chofer_id", chofer_id)\
         .execute()
         
@@ -187,7 +187,7 @@ async def aprobar_postulacion(
     
     # 1. Obtener datos de la postulación y oferta
     p_res = supabase.table("bolsa_postulaciones")\
-        .select("*, chofer:usuarios(id, nombre, telefono), oferta:bolsa_empleos(*, titular:usuarios(nombre, telefono))")\
+        .select("*, chofer:usuarios!bolsa_postulaciones_chofer_id_fkey(id, nombre, telefono), oferta:bolsa_empleos(*, titular:usuarios!bolsa_empleos_titular_id_fkey(nombre, telefono))")\
         .eq("id", str(post_id))\
         .single()\
         .execute()

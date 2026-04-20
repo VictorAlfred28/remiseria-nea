@@ -6,8 +6,9 @@ export const api = axios.create({
 });
 
 // Interceptor para inyectar token JWT de Supabase
+// Usar sessionStorage por seguridad (no persiste entre sesiones del navegador)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("sb-access-token");
+  const token = sessionStorage.getItem("sb-access-token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

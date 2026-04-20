@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('sb-access-token');
+    sessionStorage.removeItem('sb-access-token');
     set({ user: null, role: null, roles: [], orgId: null, isLoading: false });
   },
 
@@ -58,8 +58,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      // Save token for axios
-      localStorage.setItem('sb-access-token', session.access_token);
+      // Save token for axios using secure sessionStorage
+      sessionStorage.setItem('sb-access-token', session.access_token);
 
       // 1. Perfil base con rol legado
       const { data: userData, error: userError } = await supabase

@@ -54,7 +54,21 @@ export default function Login() {
         await checkSession();
         
         const redirectUrl = searchParams.get('redirect');
-        navigate(redirectUrl || '/');
+        if (redirectUrl) {
+          navigate(redirectUrl);
+        } else {
+          // Navegar directamente al dashboard según el rol para evitar race condition en "/"
+          const rol = userData?.rol;
+          if (rol === 'admin' || rol === 'superadmin') {
+            navigate('/admin');
+          } else if (rol === 'chofer') {
+            navigate('/chofer');
+          } else if (rol === 'comercio') {
+            navigate('/comercio');
+          } else {
+            navigate('/cliente');
+          }
+        }
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al iniciar sesión');

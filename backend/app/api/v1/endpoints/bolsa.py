@@ -166,7 +166,7 @@ async def admin_get_todo(claims: Dict[str, Any] = Depends(get_current_admin)):
     org_id = claims.get("organizacion_id")
     
     res = supabase.table("bolsa_empleos")\
-        .select("*, titular:usuarios(nombre), vehicle:vehicles(marca, modelo, patente), postulaciones:bolsa_postulaciones(*, chofer:usuarios(id, nombre, telefono, email))")\
+        .select("*, titular:usuarios(nombre), vehicle:vehicles(marca, modelo, patente), postulaciones:bolsa_postulaciones(*, chofer:usuarios!bolsa_postulaciones_chofer_id_fkey(id, nombre, telefono, email))")\
         .eq("organizacion_id", org_id)\
         .order("created_at", desc=True)\
         .execute()

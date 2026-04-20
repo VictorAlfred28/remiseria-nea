@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
+import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import { supabase } from "../lib/supabase";
 import { 
     api,
@@ -54,7 +55,8 @@ const LocalWaitTimer = ({ isActive }: { isActive: boolean }) => {
 };
 
 export default function ChoferDashboard() {
-  const { user } = useAuthStore();
+  const { user, roles } = useAuthStore();
+  const esTitular = roles.includes('titular');
   const orgId = user?.organizacion_id;
   const [isOnline, setIsOnline] = useState(false);
   const [viajeActivo, setViajeActivo] = useState<any>(null);
@@ -558,6 +560,7 @@ export default function ChoferDashboard() {
           { id: 'comercios', icon: Store, label: 'Comercios', color: 'text-orange-400' },
           { id: 'bolsa', icon: Briefcase, label: 'Bolsa', color: 'text-blue-500' },
           { id: 'premios', icon: Gift, label: 'Premios', color: 'text-purple-400' },
+          ...(esTitular ? [{ id: 'flota', icon: Truck, label: 'Mi Flota', color: 'text-orange-400' }] : []),
           { id: 'ajustes', icon: Settings, label: 'Ajustes', color: 'text-zinc-400' },
         ].map((tab: any) => (
           <button
@@ -1110,6 +1113,12 @@ export default function ChoferDashboard() {
                   </form>
                </div>
             </div>
+        )}
+
+        {/* TAB: MI FLOTA — Solo visible si el chofer también es titular */}
+        {activeTab === "flota" && esTitular && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <MiFlotaTab />
           </div>
         )}
       </div>

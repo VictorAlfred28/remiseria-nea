@@ -60,6 +60,28 @@ def get_my_vehicles(claims: Dict[str, Any] = Depends(get_current_titular)):
 
 
 # ============================================================
+# GET /
+# Solo admin/superadmin ve todos los vehículos de su organización.
+# ============================================================
+
+@router.get("/")
+def get_all_vehicles(claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Retorna todos los vehículos de la organización del admin.
+    Incluye datos del titular y del chofer.
+    """
+    org_id = claims.get("organizacion_id")
+
+    resp = supabase.table("vehicles") \
+        .select("*, titular:titular_id(id, nombre, telefono), driver:driver_id(id, nombre, telefono)") \
+        .eq("organizacion_id", org_id) \
+        .order("created_at", desc=True) \
+        .execute()
+
+    return resp.data
+
+
+# ============================================================
 # POST /vehicles/create
 # Solo admin crea vehículos; notifica al titular por WA.
 # ============================================================

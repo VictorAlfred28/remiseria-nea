@@ -14,6 +14,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import BolsaAdminTab from "../components/bolsa/BolsaAdminTab";
 import SolicitudesChoferesAdmin from "../components/SolicitudesChoferesAdmin";
+import FlotaAdminTab from "../components/FlotaAdminTab";
 
 // Fijar el icono de Leaflet para Vite
 import L from "leaflet";
@@ -411,7 +412,10 @@ export default function AdminDashboard() {
           <Briefcase size={18} /> Bolsa de Empleos
         </button>
         <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'titulares' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
-          <Car size={18} /> Alta de Titulares
+          <Users size={18} /> Alta de Titulares
+        </button>
+        <button onClick={() => setActiveTab("flota_global")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'flota_global' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <Truck size={18} /> Flota Global (🔧 Mant.)
         </button>
         <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <History size={18} /> Historial Global
@@ -425,6 +429,7 @@ export default function AdminDashboard() {
         {activeTab === "empresas" && <EmpresasAdmin />}
         {activeTab === "comercios" && <ComerciosAdmin />}
         {activeTab === "bolsa" && <BolsaAdminTab />}
+        {activeTab === "flota_global" && <FlotaAdminTab />}
         
         {activeTab === "choferes" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">

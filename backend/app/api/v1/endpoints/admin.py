@@ -846,3 +846,17 @@ def create_titular(
         email=data.email,
         password_temporal=password
     )
+
+@router.get("/usuarios/rol/{rol}")
+def get_usuarios_por_rol(rol: str, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Lista todos los usuarios con un rol específico dentro de la organización del admin.
+    Útil para dropdowns de selección de titular o chofer.
+    """
+    org_id = claims.get("organizacion_id")
+    resp = supabase.table("usuarios")\
+        .select("id, nombre, email, telefono")\
+        .eq("organizacion_id", org_id)\
+        .eq("rol", rol)\
+        .execute()
+    return resp.data

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from app.db.supabase import supabase
 from app.core.evolution import send_whatsapp_message
 import asyncio

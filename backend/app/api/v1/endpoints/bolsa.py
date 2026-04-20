@@ -77,9 +77,11 @@ async def get_mis_ofertas(claims: Dict[str, Any] = Depends(get_current_titular))
     """Lista las ofertas del titular con sus postulaciones."""
     titular_id = claims.get("sub")
     
-    # Obtenemos ofertas con postulaciones (JOIN)
+    # Obtenemos ofertas con postulaciones (JOIN con FK explícita para evitar PGRST201)
+    # bolsa_postulaciones tiene 2 FK a usuarios (chofer_id y aprobado_por).
+    # PostgREST requiere el hint con el nombre del constraint para resolver la ambigüedad.
     res = supabase.table("bolsa_empleos")\
-        .select("*, vehicles(marca, modelo, patente), postulaciones:bolsa_postulaciones(*, chofer:usuarios(nombre, telefono))")\
+        .select("*, vehicles(marca, modelo, patente), postulaciones:bolsa_postulaciones(*, chofer:usuarios!bolsa_postulaciones_chofer_id_fkey(nombre, telefono))")\
         .eq("titular_id", titular_id)\
         .execute()
         

@@ -380,6 +380,9 @@ export default function AdminDashboard() {
         <button onClick={() => setActiveTab("choferes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'choferes' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Car size={18} /> Alta de Choferes
         </button>
+        <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'titulares' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <Users size={18} /> Alta de Titulares
+        </button>
         <button onClick={() => setActiveTab("viajes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'viajes' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <MapIcon size={18} /> Rastreo en Vivo
           {onlineDrivers.length > 0 && <span className="bg-green-500 text-black px-2 py-0.5 rounded-full text-xs animate-pulse">{onlineDrivers.length}</span>}
@@ -410,9 +413,6 @@ export default function AdminDashboard() {
         </button>
         <button onClick={() => setActiveTab("bolsa")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'bolsa' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Briefcase size={18} /> Bolsa de Empleos
-        </button>
-        <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'titulares' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
-          <Users size={18} /> Alta de Titulares
         </button>
         <button onClick={() => setActiveTab("flota_global")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'flota_global' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <Truck size={18} /> Flota Global (🔧 Mant.)

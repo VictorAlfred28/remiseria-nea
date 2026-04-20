@@ -3,7 +3,7 @@
 ## 📋 Descripción
 
 Script SQL que **elimina TODOS los datos** de la base de datos manteniendo únicamente:
-- ✅ Admin: `vicoralfredo2498@gmail.com`
+- ✅ Admin: `victoralfredo2498@gmail.com`
 - ✅ Su organización asociada
 - ✅ Configuración del sistema
 
@@ -82,6 +82,7 @@ SELECT count(*) as total_orgs FROM organizaciones;
 
 -- Ver que el admin existe
 SELECT id, email, nombre, rol FROM usuarios;
+-- Resultado: victoralfredo2498@gmail.com | admin
 ```
 
 ---
@@ -92,7 +93,7 @@ SELECT id, email, nombre, rol FROM usuarios;
 → Ejecutar el script de nuevo (idempotente, seguro)
 
 ### Admin no existe
-→ Cambiar email en línea 19: `WHERE email = 'vicoralfredo2498@gmail.com'`
+→ Verificar que el email en la BD sea `victoralfredo2498@gmail.com`
 
 ### Script muy lento
 → Puede tomar 1-2 minutos si hay muchos datos
@@ -114,7 +115,7 @@ SELECT id, email, nombre, rol FROM usuarios;
 ✅ LIMPIEZA DE BASE DE DATOS COMPLETADA
    • Usuarios restantes: 1
    • Organización: [Nombre de la remisería]
-   • Admin: vicoralfredo2498@gmail.com
+   • Admin: victoralfredo2498@gmail.com
 ```
 
 ---

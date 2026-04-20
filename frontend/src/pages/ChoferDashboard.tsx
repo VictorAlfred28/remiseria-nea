@@ -1113,6 +1113,7 @@ export default function ChoferDashboard() {
                   </form>
                </div>
             </div>
+          </div>
         )}
 
         {/* TAB: MI FLOTA — Solo visible si el chofer también es titular */}

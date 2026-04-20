@@ -11,6 +11,8 @@ import {
   Navigation, RefreshCw, Briefcase, PlusCircle
 } from 'lucide-react';
 import BolsaTitularTab from '../bolsa/BolsaTitularTab';
+import MantenimientoTab from '../titular/MantenimientoTab';
+import TramitesTab from '../titular/TramitesTab';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 const token = () => localStorage.getItem('sb-access-token') ?? '';
@@ -32,7 +34,7 @@ interface Viaje {
 interface GPS { lat: number | null; lng: number | null; disponible: boolean; estado_chofer?: string }
 
 // ─── Sub-screens ──────────────────────────────────────────────────────────────
-type Screen = 'lista' | 'detalle' | 'ubicacion' | 'historial' | 'bolsa';
+type Screen = 'lista' | 'detalle' | 'ubicacion' | 'historial' | 'bolsa' | 'mantenimiento' | 'tramites';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const estadoBadge = (estado: string) => {
@@ -308,6 +310,26 @@ export default function MiFlotaTab() {
           <span className="text-sm font-medium text-zinc-300">Historial viajes</span>
           {!selected.driver && <span className="text-[10px] text-zinc-600">Requiere chofer asignado</span>}
         </button>
+
+        <button
+          onClick={() => setScreen('mantenimiento')}
+          className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-blue-500/30 hover:bg-zinc-900/80 transition-all group"
+        >
+          <div className="bg-blue-600/20 p-2.5 rounded-lg group-hover:bg-blue-600/30 transition-colors">
+            <span className="text-xl">🔧</span>
+          </div>
+          <span className="text-sm font-medium text-zinc-300">Mantenimiento</span>
+        </button>
+
+        <button
+          onClick={() => setScreen('tramites')}
+          className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-teal-500/30 hover:bg-zinc-900/80 transition-all group"
+        >
+          <div className="bg-teal-600/20 p-2.5 rounded-lg group-hover:bg-teal-600/30 transition-colors">
+            <span className="text-xl">📄</span>
+          </div>
+          <span className="text-sm font-medium text-zinc-300">Trámites / VTV</span>
+        </button>
       </div>
     </div>
   );
@@ -468,6 +490,24 @@ export default function MiFlotaTab() {
           ))}
         </div>
       </div>
+    </div>
+  );
+
+  if (screen === 'mantenimiento') return (
+    <div className="space-y-4 animate-in fade-in duration-300">
+      <button onClick={goBack} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors">
+        <ArrowLeft size={16} /> Volver al vehículo
+      </button>
+      <MantenimientoTab vehiculos={vehicles.map(v => ({ id: v.id, marca: v.marca, modelo: v.modelo, patente: v.patente }))} />
+    </div>
+  );
+
+  if (screen === 'tramites') return (
+    <div className="space-y-4 animate-in fade-in duration-300">
+      <button onClick={goBack} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm transition-colors">
+        <ArrowLeft size={16} /> Volver al vehículo
+      </button>
+      <TramitesTab vehiculos={vehicles.map(v => ({ id: v.id, marca: v.marca, modelo: v.modelo, patente: v.patente }))} />
     </div>
   );
 

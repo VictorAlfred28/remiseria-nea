@@ -19,6 +19,12 @@ class OfertaCreate(BaseModel):
     titulo: str
     descripcion: Optional[str] = None
     requisitos: Optional[str] = None
+    # Nuevos campos según UI
+    experiencia_chofer: Optional[str] = None  # sin_experiencia, 1-3, 3-5, +5
+    turnos_disponibles: Optional[list] = []
+    preferencia_contacto: Optional[str] = None  # whatsapp, telefono, email
+    contacto_valor: Optional[str] = None
+    tipo_publicacion: Optional[str] = "vehiculo_busca_chofer"  # vehiculo_busca_chofer | chofer_busca_vehiculo
 
 class PostulacionCreate(BaseModel):
     mensaje: Optional[str] = None
@@ -33,33 +39,37 @@ class PostulacionAction(BaseModel):
 
 @router.post("/ofertas")
 async def crear_oferta(
-    oferta: OfertaCreate, 
-    claims: Dict[str, Any] = Depends(get_current_titular)
+    oferta: OfertaCreate,
+    claims: Dict[str, Any] = Depends(get_current_user)  # titular o chofer
 ):
-    """Crea una vacante para un vehículo."""
-    titular_id = claims.get("sub")
+    """Crea una vacante de empleo. Abierto a titulares y choferes."""
+    user_id = claims.get("sub")
     org_id = claims.get("organizacion_id")
-    
-    # 1. Si hay vehicle_id, validar que pertenezca al titular
-    if oferta.vehicle_id:
-        v_check = supabase.table("vehicles").select("id").eq("id", str(oferta.vehicle_id)).eq("titular_id", titular_id).execute()
+    rol = claims.get("rol", "")
+
+    # Solo valida propiedad del vehículo si se indica uno y el usuario no es admin
+    if oferta.vehicle_id and rol not in ("admin", "superadmin"):
+        v_check = supabase.table("vehicles").select("id").eq("id", str(oferta.vehicle_id)).eq("titular_id", user_id).execute()
         if not v_check.data:
             raise HTTPException(status_code=403, detail="El vehículo no te pertenece.")
 
-    # 2. Insertar oferta
     res = supabase.table("bolsa_empleos").insert({
         "organizacion_id": org_id,
-        "titular_id": titular_id,
+        "titular_id": user_id,
         "vehicle_id": str(oferta.vehicle_id) if oferta.vehicle_id else None,
         "titulo": oferta.titulo,
         "descripcion": oferta.descripcion,
         "requisitos": oferta.requisitos,
+        "experiencia_chofer": oferta.experiencia_chofer,
+        "turnos_disponibles": oferta.turnos_disponibles,
+        "preferencia_contacto": oferta.preferencia_contacto,
+        "contacto_valor": oferta.contacto_valor,
+        "tipo_publicacion": oferta.tipo_publicacion,
         "estado": "abierta"
     }).execute()
-    
+
     if not res.data:
         raise HTTPException(status_code=500, detail="Error al crear la oferta.")
-        
     return res.data[0]
 
 @router.get("/mis-ofertas")

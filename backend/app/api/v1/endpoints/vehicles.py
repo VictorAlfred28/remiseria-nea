@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 
-from app.core.security import get_current_titular, get_current_admin
+from app.core.security import get_current_titular, get_current_admin, get_current_user, has_role
 from app.core.evolution import send_whatsapp_message
 from app.core.config import settings
 from app.db.supabase import supabase
@@ -40,23 +40,52 @@ class AssignDriverRequest(BaseModel):
 
 # ============================================================
 # GET /vehicles/my
-# Solo vehículos donde el usuario autenticado es titular.
+# Retorna vehículos según el rol:
+# - titular: vehículos donde titular_id = usuario_id
+# - chofer: vehículos donde driver_id = usuario_id  (asignados por aprobación en bolsa)
+# - admin/superadmin: todos los vehículos de su org
 # ============================================================
 
 @router.get("/my")
-def get_my_vehicles(claims: Dict[str, Any] = Depends(get_current_titular)):
+def get_my_vehicles(claims: Dict[str, Any] = Depends(get_current_user)):
     """
-    Retorna la flota completa del titular autenticado con datos del chofer asignado.
+    Retorna la flota del usuario según su rol.
+    - Titular: sus vehículos propios
+    - Chofer: vehículos asignados (via bolsa o admin)
+    - Admin: todos los vehículos de su organización
     """
-    titular_id = claims.get("sub")
-
-    resp = supabase.table("vehicles") \
-        .select("*, driver:driver_id(id, nombre, telefono)") \
-        .eq("titular_id", titular_id) \
-        .order("created_at", desc=True) \
-        .execute()
-
-    return resp.data
+    user_id = claims.get("sub")
+    org_id = claims.get("organizacion_id")
+    
+    # Admin/Superadmin: ver todos los vehículos de su org
+    if has_role(claims, "admin") or has_role(claims, "superadmin"):
+        resp = supabase.table("vehicles") \
+            .select("*, titular:titular_id(id, nombre, telefono), driver:driver_id(id, nombre, telefono)") \
+            .eq("organizacion_id", org_id) \
+            .order("created_at", desc=True) \
+            .execute()
+        return resp.data
+    
+    # Titular: solo vehículos donde es titular
+    if has_role(claims, "titular"):
+        resp = supabase.table("vehicles") \
+            .select("*, driver:driver_id(id, nombre, telefono)") \
+            .eq("titular_id", user_id) \
+            .order("created_at", desc=True) \
+            .execute()
+        return resp.data
+    
+    # Chofer: vehículos donde es driver (asignados por bolsa o admin)
+    if has_role(claims, "chofer"):
+        resp = supabase.table("vehicles") \
+            .select("*, titular:titular_id(id, nombre, telefono)") \
+            .eq("driver_id", user_id) \
+            .order("created_at", desc=True) \
+            .execute()
+        return resp.data
+    
+    # Otros roles: no tienen vehículos
+    return []
 
 
 # ============================================================

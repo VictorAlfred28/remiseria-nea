@@ -15,7 +15,7 @@ import MantenimientoTab from '../titular/MantenimientoTab';
 import TramitesTab from '../titular/TramitesTab';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-const token = () => localStorage.getItem('sb-access-token') ?? '';
+const token = () => sessionStorage.getItem('sb-access-token') ?? '';
 
 const apiFetch = (path: string) =>
   fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token()}` } });

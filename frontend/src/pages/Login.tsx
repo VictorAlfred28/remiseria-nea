@@ -33,11 +33,21 @@ export default function Login() {
 
       if (data.session) {
         // Verificar estado de aprobación para choferes
-        const { data: userData } = await supabase
+        const { data: userData, error: profileError } = await supabase
           .from('usuarios')
           .select('rol, estado')
           .eq('id', data.session.user.id)
           .single();
+
+        if (profileError) {
+          console.error("Error al obtener perfil:", profileError);
+          // Si el perfil no existe o falla la query (ej. 500), informamos al usuario
+          if (profileError.code === 'PGRST116') {
+             throw new Error("No se encontró un perfil de usuario asociado a esta cuenta. Por favor, contacta al soporte.");
+          } else {
+             throw new Error(`Error de sistema (${profileError.code || '500'}). Tu sesión se inició pero no pudimos cargar tu perfil.`);
+          }
+        }
 
         if (userData?.rol === 'chofer') {
             if (userData.estado === 'pendiente') {

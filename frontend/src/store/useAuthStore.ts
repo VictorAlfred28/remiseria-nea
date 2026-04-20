@@ -68,16 +68,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .eq('id', session.user.id)
         .single();
 
-      if (userError || !userData) {
-        set({ user: null, role: null, roles: [], isLoading: false });
+      if (userError) {
+        console.error('Error fetching user profile:', userError);
+        // Si hay sesión pero no perfil, permitimos seguir pero notificamos
+        set({
+          user: session.user,
+          role: null,
+          roles: [],
+          orgId: null,
+          isLoading: false,
+        });
+        return;
+      }
+
+      if (!userData) {
+        console.warn('No user profile found in "usuarios" table for ID:', session.user.id);
+        set({
+          user: session.user,
+          role: null,
+          roles: [],
+          orgId: null,
+          isLoading: false,
+        });
         return;
       }
 
       // 2. Lista extendida de roles desde user_roles (multi-rol)
-      const { data: rolesData } = await supabase
+      const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id);
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+      }
 
       const rolesList: string[] = rolesData?.map((r: any) => r.role) ?? [];
 
@@ -90,6 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
     } catch (err) {
+      console.error('Fatal error in checkSession:', err);
       set({ user: null, role: null, roles: [], orgId: null, isLoading: false });
     }
   }

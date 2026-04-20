@@ -9,7 +9,8 @@ import logging
 from app.db.supabase import supabase
 from app.core.evolution import send_whatsapp_message
 from app.core.config import settings
-from app.core.security import get_current_admin, get_current_user
+from app.core.security import get_current_admin, get_current_user, has_role
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ async def test_wpp(phone: str, claims: Dict[str, Any] = Depends(get_current_admi
 def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
     """
     Crea el perfil en public.usuarios con validaciones de seguridad.
+    SECURITY FIX: Validates that organizacion_id exists and accepts new registrations.
     """
     try:
         u_id = req.get("id")
@@ -63,6 +65,20 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
         email = req.get("email")
         nombre = req.get("nombre")
         tel = req.get("telefono")
+        
+        # SECURITY: Validate organizacion_id exists
+        if not org_id:
+            raise HTTPException(status_code=400, detail="organizacion_id es requerido")
+        
+        org_check = supabase.table("organizaciones").select("id, acepta_registros_publicos").eq("id", org_id).execute()
+        if not org_check.data:
+            logger.warning(f"Registration attempt with non-existent org_id: {org_id}")
+            raise HTTPException(status_code=400, detail="Organización no válida")
+        
+        org = org_check.data[0]
+        if not org.get("acepta_registros_publicos", True):  # Default to accepting if field missing
+            logger.warning(f"Registration attempt on closed org_id: {org_id}")
+            raise HTTPException(status_code=400, detail="Esta organización no acepta registros públicos en este momento")
         
         # Security: Email validation (RFC 5322 simplified)
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -101,7 +117,7 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
             "role": "cliente"
         }).execute()
         
-        logger.info(f"New user registered: {u_id}")
+        logger.info(f"New user registered: {u_id} in org: {org_id}")
         return {"status": "ok", "perfil": resp.data}
     except HTTPException:
         raise
@@ -113,6 +129,7 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
 def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
     """
     Crea el perfil de chofer en estado 'pendiente'.
+    SECURITY FIX: Validates that organizacion_id exists and accepts public driver registrations.
     """
     try:
         u_id = req.get("id")
@@ -120,6 +137,20 @@ def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
         email = req.get("email")
         nombre = req.get("nombre")
         tel = req.get("telefono")
+
+        # SECURITY: Validate organizacion_id exists
+        if not org_id:
+            raise HTTPException(status_code=400, detail="organizacion_id es requerido")
+        
+        org_check = supabase.table("organizaciones").select("id, acepta_registros_publicos").eq("id", org_id).execute()
+        if not org_check.data:
+            logger.warning(f"Driver registration attempt with non-existent org_id: {org_id}")
+            raise HTTPException(status_code=400, detail="Organización no válida")
+        
+        org = org_check.data[0]
+        if not org.get("acepta_registros_publicos", True):
+            logger.warning(f"Driver registration attempt on closed org_id: {org_id}")
+            raise HTTPException(status_code=400, detail="Esta organización no acepta registros de choferes en este momento")
 
         # 1. Crear en usuarios
         supabase.table("usuarios").insert({
@@ -152,13 +183,57 @@ def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
             "estado_validacion": "pendiente"
         }).execute()
 
+        logger.info(f"New driver registered: {u_id} in org: {org_id}")
         return {"status": "ok", "chofer": c_resp.data}
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Driver registration error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/viajes/{viaje_id}/tracking")
-def get_viaje_tracking(viaje_id: str):
-    v_resp = supabase.table("viajes").select("id, estado, origen, destino, chofer_id, precio, organizacion_id").eq("id", viaje_id).execute()
+def get_viaje_tracking(viaje_id: str, claims: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Obtiene el tracking de un viaje específico.
+    Validaciones: 
+      - El usuario debe ser autenticado
+      - El usuario debe tener acceso a este viaje (titular, chofer, cliente, o admin de la org)
+    SECURITY: Prevents enumeration of all trips by unauthorized users.
+    """
+    user_id = claims.get("sub")
+    org_id = claims.get("organizacion_id")
+    
+    # 1. Obtener viaje con validación de organización
+    v_resp = supabase.table("viajes") \
+        .select("id, estado, origen, destino, chofer_id, cliente_id, precio, organizacion_id, titular_id") \
+        .eq("id", viaje_id) \
+        .eq("organizacion_id", org_id) \
+        .execute()
+    
     if not v_resp.data:
-         raise HTTPException(status_code=404, detail="Viaje no encontrado.")
-    return v_resp.data[0]
+        raise HTTPException(status_code=404, detail="Viaje no encontrado.")
+    
+    viaje = v_resp.data[0]
+    
+    # 2. Validar permisos: cliente, chofer, titular del vehículo, o admin
+    is_cliente = viaje.get("cliente_id") == user_id
+    is_chofer = viaje.get("chofer_id") == user_id
+    is_admin = has_role(claims, "admin") or has_role(claims, "superadmin")
+    
+    # Check if user is titular of the vehicle (if applicable)
+    is_titular = False
+    if viaje.get("titular_id"):
+        is_titular = viaje.get("titular_id") == user_id
+    
+    if not (is_cliente or is_chofer or is_titular or is_admin):
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este viaje.")
+    
+    # Return tracking info (safe to return origen/destino for authorized users)
+    return {
+        "id": viaje["id"],
+        "estado": viaje["estado"],
+        "origen": viaje["origen"],
+        "destino": viaje["destino"],
+        "chofer_id": viaje["chofer_id"],
+        "precio": viaje["precio"]
+    }

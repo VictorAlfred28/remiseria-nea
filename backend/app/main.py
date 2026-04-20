@@ -26,8 +26,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Added PATCH and OPTIONS
+    allow_headers=["Content-Type", "Authorization", "x-webhook-secret"],  # Added webhook header
     max_age=3600,
 )
 
@@ -36,18 +36,31 @@ from apscheduler.triggers.cron import CronTrigger
 
 @app.on_event("startup")
 async def start_reminder_loop():
-    # Iniciamos el Scheduler de forma segura para FastAPI
-    scheduler = AsyncIOScheduler(timezone=pytz.timezone('America/Argentina/Buenos_Aires'))
+    """Inicializa el scheduler de recordatorios.
     
-    # Programar la tarea todos los días a las 08:00 AM
-    scheduler.add_job(
-        procesar_y_enviar_recordatorios,
-        trigger=CronTrigger(hour=8, minute=0),
-        id="recordatorios_matutinos",
-        replace_existing=True
-    )
-    
-    scheduler.start()
+    SECURITY & RELIABILITY:
+    - Error handling to prevent startup failure if scheduler fails
+    - Proper timezone configuration for Argentina
+    - Graceful degradation if scheduler can't start
+    """
+    try:
+        # Iniciamos el Scheduler de forma segura para FastAPI
+        scheduler = AsyncIOScheduler(timezone=pytz.timezone('America/Argentina/Buenos_Aires'))
+        
+        # Programar la tarea todos los días a las 08:00 AM
+        scheduler.add_job(
+            procesar_y_enviar_recordatorios,
+            trigger=CronTrigger(hour=8, minute=0),
+            id="recordatorios_matutinos",
+            replace_existing=True
+        )
+        
+        scheduler.start()
+        print("[INFO] Reminder scheduler started successfully (08:00 AM daily)")
+    except Exception as e:
+        print(f"[WARNING] Failed to start reminder scheduler: {e}")
+        # Don't crash the whole app if scheduler fails
+        # In production, alert ops team about this failure
     print("APScheduler iniciado. Recordatorios programados para las 08:00 AM (ART).")
 
 @app.get("/")

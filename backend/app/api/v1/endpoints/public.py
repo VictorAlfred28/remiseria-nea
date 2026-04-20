@@ -18,9 +18,11 @@ def get_default_organization():
 
 import httpx
 from app.core.config import settings
+from app.core.security import get_current_admin
+from typing import Dict, Any
 
 @router.get("/test-wpp/{phone}")
-async def test_wpp(phone: str):
+async def test_wpp(phone: str, claims: Dict[str, Any] = Depends(get_current_admin)):
     """
     Endpoint de debug para verificar respuesta de Evolution API
     """

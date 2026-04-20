@@ -51,7 +51,7 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
 
     # 3. Insertar Perfil Usuario (como Chofer)
     try:
-        user_insert = supabase.table("usuarios").insert({
+        supabase.table("usuarios").insert({
             "id": user_id,
             "organizacion_id": org_id,
             "email": data.email,
@@ -59,8 +59,16 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
             "telefono": data.telefono,
             "rol": "chofer"
         }).execute()
-        
-        # 4. Insertar Perfil Chofer (Vehículo y Pago)
+    except Exception as e:
+        # Rollback: borrar Auth user si falla usuarios
+        try:
+            supabase.auth.admin.delete_user(user_id)
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"Falla creando perfil de usuario: {str(e)}")
+
+    # 4. Insertar Perfil Chofer (Vehículo y Pago)
+    try:
         chofer_insert = supabase.table("choferes").insert({
             "organizacion_id": org_id,
             "usuario_id": user_id,
@@ -81,12 +89,20 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
         )
 
     except Exception as e:
-        # Mecanismo de Rollback básico del Auth user para no dejar basura si falla SQL
+        # Rollback completo: borrar choferes (si se insertó parcial) → usuarios → Auth
         try:
-             supabase.auth.admin.delete_user(user_id)
+            supabase.table("choferes").delete().eq("usuario_id", user_id).execute()
         except:
-             pass
-        raise HTTPException(status_code=500, detail=f"Falla insertando roles: {str(e)}")
+            pass
+        try:
+            supabase.table("usuarios").delete().eq("id", user_id).execute()
+        except:
+            pass
+        try:
+            supabase.auth.admin.delete_user(user_id)
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"Falla insertando perfil chofer: {str(e)}")
 
 
 @router.get("/choferes")

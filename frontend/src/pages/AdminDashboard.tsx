@@ -908,7 +908,7 @@ export default function AdminDashboard() {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('sb-access-token')}`
                       },
                       body: JSON.stringify({ nombre: titularNombre, email: titularEmail, telefono: titularTelefono })
                     });

@@ -4,6 +4,7 @@ import secrets
 import string
 
 from app.core.security import get_current_admin
+from app.core.validators import validar_registro_admin
 from app.db.supabase import supabase
 from app.schemas.domain import Chofer, Promocion, ChoferRegistroCompleto
 from pydantic import BaseModel, EmailStr
@@ -30,32 +31,14 @@ def create_chofer(data: ChoferRegistroCompleto, claims: Dict[str, Any] = Depends
     """
     Carga de un nuevo Chofer por parte del Administrador.
     ACEPTAR: ChoferRegistroCompleto (unificado)
-    SEGURIDAD: Valida email único, DNI único por org, licencia vencimiento > hoy
+    VALIDACIÓN: Centralizada en validar_registro_admin() (fuente única de verdad)
     ESTADO: estado_validacion='aprobado' (admin aprueba directo)
     """
     org_id = claims.get("organizacion_id")
     
-    # Validación: Organización coincida
-    if data.organizacion_id != org_id:
-        raise HTTPException(status_code=403, detail="No autorizado para esta organización")
-    
-    # Validación: Email único por org
-    existing_email = supabase.table("usuarios") \
-        .select("id") \
-        .eq("organizacion_id", org_id) \
-        .eq("email", data.email) \
-        .execute()
-    if existing_email.data:
-        raise HTTPException(status_code=400, detail="Email ya registrado en esta organización")
-    
-    # Validación: DNI único por org
-    existing_dni = supabase.table("choferes") \
-        .select("id") \
-        .eq("organizacion_id", org_id) \
-        .eq("dni", data.dni) \
-        .execute()
-    if existing_dni.data:
-        raise HTTPException(status_code=400, detail="DNI ya registrado en esta organización")
+    # ✅ VALIDACIÓN CENTRALIZADA: Una sola llamada reemplaza todas las validaciones
+    # Valida: org_id match, email único, DNI único, licencia vencimiento, patente formato, etc.
+    validar_registro_admin(data, org_id)
     
     # 1. Generar Contraseña Aleatoria Compleja
     alphabet = string.ascii_letters + string.digits
@@ -80,7 +63,7 @@ def create_chofer(data: ChoferRegistroCompleto, claims: Dict[str, Any] = Depends
             "email": data.email,
             "nombre": data.nombre,
             "telefono": data.telefono,
-            "direccion": data.direccion,  # Nuevo campo
+            "direccion": data.direccion,
             "rol": "chofer",
             "estado": "aprobado"  # Admin aprueba directo
         }).execute()

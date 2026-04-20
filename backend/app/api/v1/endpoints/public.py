@@ -9,6 +9,7 @@ import uuid
 
 from app.db.supabase import supabase
 from app.schemas.domain import ChoferRegistroCompleto
+from app.core.validators import validar_registro_publico
 from app.core.evolution import send_whatsapp_message
 from app.core.config import settings
 from app.core.security import get_current_admin, get_current_user, has_role
@@ -132,61 +133,28 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
     """
     REGISTRO PÚBLICO de chofer (sin autenticación).
     ACEPTAR: ChoferRegistroCompleto (unificado con /admin/chofer)
-    SEGURIDAD: Valida email único, DNI único por org, licencia vencimiento > hoy, acepta_registros_publicos
+    VALIDACIÓN: Centralizada en validar_registro_publico() (fuente única de verdad)
     ESTADO: estado_validacion='pendiente' (requiere aprobación admin)
     
     DIFERENCIAS CON /admin/chofer:
     - estado_validacion = 'pendiente' (requiere approval)
     - usuario.estado = 'pendiente' (no aprobado aún)
-    - Licencia puede ser opcional si tiene_vehiculo=False (validación flexible)
     """
     try:
         u_id = data.id if hasattr(data, 'id') else str(uuid.uuid4())
         org_id = data.organizacion_id
-        email = data.email
-        nombre = data.nombre
-        tel = data.telefono
-        dni = data.dni
 
-        # SECURITY: Validate organizacion_id exists
-        if not org_id:
-            raise HTTPException(status_code=400, detail="organizacion_id es requerido")
-        
-        org_check = supabase.table("organizaciones").select("id, acepta_registros_publicos").eq("id", org_id).execute()
-        if not org_check.data:
-            logger.warning(f"Driver registration attempt with non-existent org_id: {org_id}")
-            raise HTTPException(status_code=400, detail="Organización no válida")
-        
-        org = org_check.data[0]
-        if not org.get("acepta_registros_publicos", True):
-            logger.warning(f"Driver registration attempt on closed org_id: {org_id}")
-            raise HTTPException(status_code=400, detail="Esta organización no acepta registros de choferes en este momento")
-
-        # SECURITY: Email único por org
-        existing_email = supabase.table("usuarios") \
-            .select("id") \
-            .eq("organizacion_id", org_id) \
-            .eq("email", email) \
-            .execute()
-        if existing_email.data:
-            raise HTTPException(status_code=400, detail="Email ya registrado en esta organización")
-        
-        # SECURITY: DNI único por org
-        existing_dni = supabase.table("choferes") \
-            .select("id") \
-            .eq("organizacion_id", org_id) \
-            .eq("dni", dni) \
-            .execute()
-        if existing_dni.data:
-            raise HTTPException(status_code=400, detail="DNI ya registrado en esta organización")
+        # ✅ VALIDACIÓN CENTRALIZADA: Una sola llamada reemplaza todas las validaciones
+        # Valida: org existe, acepta_registros_publicos, email único, DNI único, licencia vencimiento, patente, etc.
+        validar_registro_publico(data)
 
         # 1. Crear en usuarios (estado='pendiente' para registro público)
         supabase.table("usuarios").insert({
             "id": u_id,
             "organizacion_id": org_id,
-            "email": email,
-            "nombre": nombre,
-            "telefono": tel,
+            "email": data.email,
+            "nombre": data.nombre,
+            "telefono": data.telefono,
             "direccion": data.direccion,
             "rol": "chofer",
             "estado": "pendiente"  # Requiere aprobación

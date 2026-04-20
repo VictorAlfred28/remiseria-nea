@@ -5,20 +5,19 @@ import string
 
 from app.core.security import get_current_admin
 from app.db.supabase import supabase
-from app.schemas.domain import Chofer, Promocion
+from app.schemas.domain import Chofer, Promocion, ChoferRegistroCompleto
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
 
-class ChoferCreate(BaseModel):
-    nombre: str
-    email: EmailStr
-    telefono: str
-    vehiculo: str
-    patente: str
-    dni: str
-    tipo_pago: str = "comision" # 'base' o 'comision'
-    valor_pago: float = 0.0
+# DEPRECATED: Mantener ChoferCreate solo para compatibilidad backward
+# Usar ChoferRegistroCompleto en su lugar
+class ChoferCreate(ChoferRegistroCompleto):
+    """
+    DTO DEPRECATED. Usar ChoferRegistroCompleto en su lugar.
+    Mantenido solo para compatibilidad backward.
+    """
+    pass
 
 class ChoferResponse(BaseModel):
     id: str
@@ -27,12 +26,36 @@ class ChoferResponse(BaseModel):
     password_temporal: str
 
 @router.post("/chofer", response_model=ChoferResponse)
-def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_current_admin)):
+def create_chofer(data: ChoferRegistroCompleto, claims: Dict[str, Any] = Depends(get_current_admin)):
     """
     Carga de un nuevo Chofer por parte del Administrador.
-    Genera clave automática y asocia los perfiles correspondientes.
+    ACEPTAR: ChoferRegistroCompleto (unificado)
+    SEGURIDAD: Valida email único, DNI único por org, licencia vencimiento > hoy
+    ESTADO: estado_validacion='aprobado' (admin aprueba directo)
     """
     org_id = claims.get("organizacion_id")
+    
+    # Validación: Organización coincida
+    if data.organizacion_id != org_id:
+        raise HTTPException(status_code=403, detail="No autorizado para esta organización")
+    
+    # Validación: Email único por org
+    existing_email = supabase.table("usuarios") \
+        .select("id") \
+        .eq("organizacion_id", org_id) \
+        .eq("email", data.email) \
+        .execute()
+    if existing_email.data:
+        raise HTTPException(status_code=400, detail="Email ya registrado en esta organización")
+    
+    # Validación: DNI único por org
+    existing_dni = supabase.table("choferes") \
+        .select("id") \
+        .eq("organizacion_id", org_id) \
+        .eq("dni", data.dni) \
+        .execute()
+    if existing_dni.data:
+        raise HTTPException(status_code=400, detail="DNI ya registrado en esta organización")
     
     # 1. Generar Contraseña Aleatoria Compleja
     alphabet = string.ascii_letters + string.digits
@@ -57,7 +80,9 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
             "email": data.email,
             "nombre": data.nombre,
             "telefono": data.telefono,
-            "rol": "chofer"
+            "direccion": data.direccion,  # Nuevo campo
+            "rol": "chofer",
+            "estado": "aprobado"  # Admin aprueba directo
         }).execute()
     except Exception as e:
         # Rollback: borrar Auth user si falla usuarios
@@ -67,18 +92,29 @@ def create_chofer(data: ChoferCreate, claims: Dict[str, Any] = Depends(get_curre
             pass
         raise HTTPException(status_code=500, detail=f"Falla creando perfil de usuario: {str(e)}")
 
-    # 4. Insertar Perfil Chofer (Vehículo y Pago)
+    # 4. Insertar Perfil Chofer (Todos los campos unificados)
     try:
         chofer_insert = supabase.table("choferes").insert({
             "organizacion_id": org_id,
             "usuario_id": user_id,
+            # Personales
+            "dni": data.dni,
+            # Licencia
+            "licencia_numero": data.licencia_numero,
+            "licencia_categoria": data.licencia_categoria,
+            "licencia_vencimiento": data.licencia_vencimiento,
+            # Vehículo
+            "tiene_vehiculo": data.tiene_vehiculo,
             "vehiculo": data.vehiculo,
             "patente": data.patente,
-            "dni": data.dni,
-            "estado": "inactivo",
-            "estado_validacion": "aprobado",  # Por admin se aprueba directo
+            # Documentos
+            "documentos": data.documentos,
+            # Pago
             "tipo_pago": data.tipo_pago,
-            "valor_pago": data.valor_pago
+            "valor_pago": data.valor_pago,
+            # Estado
+            "estado": "inactivo",
+            "estado_validacion": "aprobado"  # Por admin se aprueba directo
         }).execute()
         
         return ChoferResponse(

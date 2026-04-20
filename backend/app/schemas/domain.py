@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from datetime import datetime
@@ -50,6 +50,45 @@ class Chofer(BaseModel):
     saldo: float = 0.0
     limite_deuda: float = -2000.0
 
+    model_config = ConfigDict(from_attributes=True)
+
+class ChoferRegistroCompleto(BaseModel):
+    """
+    DTO UNIFICADO para registro de choferes (público y admin).
+    Estructura única que ambos endpoints utilizan, con diferencias en validación/estado.
+    SEGURIDAD: organizacion_id requerido, validación de unicidad (email, dni) por org.
+    """
+    # PERSONALES (requeridos)
+    nombre: str = Field(..., min_length=2, description="Nombre completo del chofer")
+    email: EmailStr = Field(..., description="Email único por organización")
+    telefono: str = Field(..., min_length=10, description="Teléfono de contacto")
+    
+    # DOCUMENTO (requerido)
+    dni: str = Field(..., description="DNI único por organización")
+    
+    # DIRECCIÓN (opcional, principalmente para admin)
+    direccion: Optional[str] = Field(None, description="Dirección de residencia")
+    
+    # LICENCIA (validación diferenciada: requerida en público, opcional en admin)
+    licencia_numero: Optional[str] = Field(None, description="Número de licencia de conducir")
+    licencia_categoria: Optional[str] = Field(None, description="Categoría de licencia (A, B, C, D, E)")
+    licencia_vencimiento: Optional[str] = Field(None, description="Fecha vencimiento licencia (YYYY-MM-DD)")
+    
+    # VEHÍCULO
+    tiene_vehiculo: bool = Field(False, description="¿Tiene vehículo propio?")
+    vehiculo: Optional[str] = Field(None, description="Marca y modelo del vehículo")
+    patente: Optional[str] = Field(None, description="Patente/dominio del vehículo")
+    
+    # DOCUMENTOS (lista de URLs o referencias a storage)
+    documentos: List[Dict[str, Any]] = Field(default_factory=list, description="Documentación (DNI frente/dorso, antecedentes, etc)")
+    
+    # PAGO (principalmente admin)
+    tipo_pago: str = Field("comision", description="Tipo: 'base' o 'comision'")
+    valor_pago: float = Field(0.0, description="Valor en base o comisión porcentaje")
+    
+    # ORGANIZACIÓN (requerido)
+    organizacion_id: UUID = Field(..., description="ID de la organización")
+    
     model_config = ConfigDict(from_attributes=True)
 
 class Viaje(BaseModel):

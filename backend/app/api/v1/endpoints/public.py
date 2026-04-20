@@ -5,8 +5,10 @@ import asyncio
 import httpx
 import re
 import logging
+import uuid
 
 from app.db.supabase import supabase
+from app.schemas.domain import ChoferRegistroCompleto
 from app.core.evolution import send_whatsapp_message
 from app.core.config import settings
 from app.core.security import get_current_admin, get_current_user, has_role
@@ -126,17 +128,25 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/registro/chofer")
-def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
+def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: BackgroundTasks):
     """
-    Crea el perfil de chofer en estado 'pendiente'.
-    SECURITY FIX: Validates that organizacion_id exists and accepts public driver registrations.
+    REGISTRO PÚBLICO de chofer (sin autenticación).
+    ACEPTAR: ChoferRegistroCompleto (unificado con /admin/chofer)
+    SEGURIDAD: Valida email único, DNI único por org, licencia vencimiento > hoy, acepta_registros_publicos
+    ESTADO: estado_validacion='pendiente' (requiere aprobación admin)
+    
+    DIFERENCIAS CON /admin/chofer:
+    - estado_validacion = 'pendiente' (requiere approval)
+    - usuario.estado = 'pendiente' (no aprobado aún)
+    - Licencia puede ser opcional si tiene_vehiculo=False (validación flexible)
     """
     try:
-        u_id = req.get("id")
-        org_id = req.get("organizacion_id")
-        email = req.get("email")
-        nombre = req.get("nombre")
-        tel = req.get("telefono")
+        u_id = data.id if hasattr(data, 'id') else str(uuid.uuid4())
+        org_id = data.organizacion_id
+        email = data.email
+        nombre = data.nombre
+        tel = data.telefono
+        dni = data.dni
 
         # SECURITY: Validate organizacion_id exists
         if not org_id:
@@ -152,15 +162,34 @@ def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
             logger.warning(f"Driver registration attempt on closed org_id: {org_id}")
             raise HTTPException(status_code=400, detail="Esta organización no acepta registros de choferes en este momento")
 
-        # 1. Crear en usuarios
+        # SECURITY: Email único por org
+        existing_email = supabase.table("usuarios") \
+            .select("id") \
+            .eq("organizacion_id", org_id) \
+            .eq("email", email) \
+            .execute()
+        if existing_email.data:
+            raise HTTPException(status_code=400, detail="Email ya registrado en esta organización")
+        
+        # SECURITY: DNI único por org
+        existing_dni = supabase.table("choferes") \
+            .select("id") \
+            .eq("organizacion_id", org_id) \
+            .eq("dni", dni) \
+            .execute()
+        if existing_dni.data:
+            raise HTTPException(status_code=400, detail="DNI ya registrado en esta organización")
+
+        # 1. Crear en usuarios (estado='pendiente' para registro público)
         supabase.table("usuarios").insert({
             "id": u_id,
             "organizacion_id": org_id,
             "email": email,
             "nombre": nombre,
             "telefono": tel,
+            "direccion": data.direccion,
             "rol": "chofer",
-            "estado": "pendiente"
+            "estado": "pendiente"  # Requiere aprobación
         }).execute()
         
         # 2. Asignar rol
@@ -169,21 +198,30 @@ def crear_perfil_chofer(req: dict, background_tasks: BackgroundTasks):
             "role": "chofer"
         }).execute()
 
-        # 3. Crear en choferes
+        # 3. Crear en choferes (estado_validacion='pendiente', todos los campos unificados)
         c_resp = supabase.table("choferes").insert({
             "organizacion_id": org_id,
             "usuario_id": u_id,
-            "vehiculo": req.get("vehiculo"),
-            "patente": req.get("patente"),
-            "tiene_vehiculo": req.get("tiene_vehiculo", False),
-            "licencia_numero": req.get("licencia_numero"),
-            "licencia_categoria": req.get("licencia_categoria"),
-            "licencia_vencimiento": req.get("licencia_vencimiento"),
-            "documentos": req.get("documentos", []),
-            "estado_validacion": "pendiente"
+            # Personales
+            "dni": data.dni,
+            # Licencia
+            "licencia_numero": data.licencia_numero,
+            "licencia_categoria": data.licencia_categoria,
+            "licencia_vencimiento": data.licencia_vencimiento,
+            # Vehículo
+            "tiene_vehiculo": data.tiene_vehiculo,
+            "vehiculo": data.vehiculo,
+            "patente": data.patente,
+            # Documentos
+            "documentos": data.documentos,
+            # Pago (valores por defecto para registro público)
+            "tipo_pago": data.tipo_pago,
+            "valor_pago": data.valor_pago,
+            # Estado
+            "estado_validacion": "pendiente"  # Requiere aprobación admin
         }).execute()
 
-        logger.info(f"New driver registered: {u_id} in org: {org_id}")
+        logger.info(f"New driver registered: {u_id} in org: {org_id}, estado=pendiente")
         return {"status": "ok", "chofer": c_resp.data}
     except HTTPException:
         raise

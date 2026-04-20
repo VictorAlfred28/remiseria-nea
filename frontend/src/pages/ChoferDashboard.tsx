@@ -297,8 +297,17 @@ export default function ChoferDashboard() {
   useEffect(() => {
     let logInterval: any;
     if (isOnline && choferIdReal && choferCoords && orgId) {
-        const logUbicacion = async () => {
+        const updateUbicacion = async () => {
             try {
+                // 1. Actualizar la tabla choferes (para que titulares vean en tiempo real)
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+                const token = sessionStorage.getItem('sb-access-token');
+                await fetch(`${apiUrl}/chofer/ubicacion/actualizar?lat=${choferCoords.lat}&lng=${choferCoords.lng}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                // 2. También guardar en ubicaciones_logs para histórico
                 await supabase.from('ubicaciones_logs').insert({
                     chofer_id: choferIdReal,
                     organizacion_id: orgId,
@@ -307,8 +316,9 @@ export default function ChoferDashboard() {
                 });
             } catch (err: any) {}
         };
-        logUbicacion();
-        logInterval = setInterval(logUbicacion, 60000);
+        updateUbicacion();
+        // Actualizar cada 30 segundos en lugar de 60 para mayor precisión
+        logInterval = setInterval(updateUbicacion, 30000);
     }
     return () => { if (logInterval) clearInterval(logInterval); };
   }, [isOnline, choferIdReal, (choferCoords?.lat), (choferCoords?.lng), orgId]);

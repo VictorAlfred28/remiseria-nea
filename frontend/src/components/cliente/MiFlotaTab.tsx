@@ -98,7 +98,7 @@ export default function MiFlotaTab() {
   const loadGps = useCallback(async (vehicleId: string) => {
     setLoading(true); setError(null);
     try {
-      const res = await apiFetch(`/titular/vehiculos/${vehicleId}`);
+      const res = await apiFetch(`/vehicles/${vehicleId}`);
       if (!res.ok) throw new Error('No se pudo cargar la ubicación.');
       const data = await res.json();
       // El backend retorna ubicacion_actual: { lat, lng, estado_chofer }

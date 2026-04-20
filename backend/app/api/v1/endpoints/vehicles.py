@@ -302,6 +302,61 @@ def assign_driver(
 
 
 # ============================================================
+# GET /vehicles/{vehicle_id}
+# Detalle del vehículo + ubicación GPS en tiempo real
+# Accesible por titular OR chofer asignado OR admin
+# ============================================================
+
+@router.get("/{vehicle_id}")
+def get_vehicle_detail(vehicle_id: str, claims: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Retorna detalle completo del vehículo incluyendo ubicación GPS actual del chofer.
+    Accesible por:
+      - Titular: si es propietario (titular_id = user_id)
+      - Chofer: si está asignado (driver_id = user_id)
+      - Admin/Superadmin: siempre
+    """
+    user_id = claims.get("sub")
+    
+    # Obtener vehículo
+    v_resp = supabase.table("vehicles") \
+        .select("*, titular:titular_id(id, nombre, telefono), driver:driver_id(id, nombre, telefono)") \
+        .eq("id", vehicle_id) \
+        .execute()
+    
+    if not v_resp.data:
+        raise HTTPException(status_code=404, detail="Vehículo no encontrado.")
+    
+    vehicle = v_resp.data[0]
+    
+    # Verificar permisos: titular, chofer asignado, o admin
+    is_titular = vehicle.get("titular_id") == user_id
+    is_assigned_driver = vehicle.get("driver") and vehicle["driver"].get("id") == user_id
+    is_admin = has_role(claims, "admin") or has_role(claims, "superadmin")
+    
+    if not (is_titular or is_assigned_driver or is_admin):
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este vehículo.")
+    
+    # Obtener ubicación GPS actual del chofer asignado
+    ubicacion = None
+    driver_info = vehicle.get("driver")
+    if driver_info and driver_info.get("id"):
+        ch_resp = supabase.table("choferes") \
+            .select("lat, lng, estado") \
+            .eq("usuario_id", driver_info["id"]) \
+            .execute()
+        
+        if ch_resp.data:
+            ubicacion = {
+                "lat": ch_resp.data[0].get("lat"),
+                "lng": ch_resp.data[0].get("lng"),
+                "estado_chofer": ch_resp.data[0].get("estado"),
+            }
+    
+    return {**vehicle, "ubicacion_actual": ubicacion}
+
+
+# ============================================================
 # GET /vehicles/{vehicle_id}/trips
 # Accesible por el titular del vehículo o admin.
 # NO modifica el sistema de viajes, solo lee.

@@ -42,6 +42,11 @@ export default function AdminDashboard() {
   const [vehiculo, setVehiculo] = useState('');
   const [patente, setPatente] = useState('');
   const [dni, setDni] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [licenciaNumero, setLicenciaNumero] = useState('');
+  const [licenciaCategoria, setLicenciaCategoria] = useState('B');
+  const [licenciaVencimiento, setLicenciaVencimiento] = useState('');
+  const [tieneVehiculo, setTieneVehiculo] = useState(true);
   const [tipoPago, setTipoPago] = useState('comision'); // 'base' o 'comision'
   const [valorPago, setValorPago] = useState(20); // 20% por defecto
   
@@ -311,11 +316,22 @@ export default function AdminDashboard() {
       setLoading(true); setErrorMsg(''); setCreatedChofer(null);
       try {
           const res = await createChofer({ 
-              nombre, email, telefono, vehiculo, patente, dni,
-              tipo_pago: tipoPago, valor_pago: Number(valorPago)
+              nombre, email, telefono, dni, direccion,
+              tiene_vehiculo: tieneVehiculo,
+              vehiculo: tieneVehiculo ? vehiculo : undefined, 
+              patente: tieneVehiculo ? patente : undefined, 
+              licencia_numero: licenciaNumero,
+              licencia_categoria: licenciaCategoria,
+              licencia_vencimiento: licenciaVencimiento,
+              documentos: [],
+              tipo_pago: tipoPago, 
+              valor_pago: Number(valorPago),
+              organizacion_id: orgId
           });
           setCreatedChofer(res);
-          setNombre(''); setEmail(''); setTelefono(''); setVehiculo(''); setPatente(''); setDni('');
+          setNombre(''); setEmail(''); setTelefono(''); setDni(''); setDireccion('');
+          setVehiculo(''); setPatente(''); setTieneVehiculo(true);
+          setLicenciaNumero(''); setLicenciaCategoria('B'); setLicenciaVencimiento('');
           setTipoPago('comision'); setValorPago(20);
       } catch (err: any) {
           setErrorMsg(err.response?.data?.detail || "Error creando chofer.");
@@ -486,10 +502,36 @@ export default function AdminDashboard() {
                            <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo Electrónico" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                            <input type="text" required value={dni} onChange={e=>setDni(e.target.value)} placeholder="Número de DNI" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                           <input type="text" required value={vehiculo} onChange={e=>setVehiculo(e.target.value)} placeholder="Vehículo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
-                           <input type="text" required value={patente} onChange={e=>setPatente(e.target.value)} placeholder="Patente" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none uppercase" />
+                        <input type="text" required value={direccion} onChange={e=>setDireccion(e.target.value)} placeholder="Dirección Física" className="w-full bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                        
+                        <div className="border-t border-zinc-800 pt-4 mt-2">
+                           <p className="text-sm font-semibold text-zinc-300 mb-3">Información de Vehículo</p>
+                           <div className="flex items-center gap-3 mb-4">
+                              <input type="checkbox" checked={tieneVehiculo} onChange={e=>setTieneVehiculo(e.target.checked)} className="w-5 h-5 accent-blue-500 rounded cursor-pointer" />
+                              <label className="text-sm text-zinc-300">Tiene vehículo propio</label>
+                           </div>
+                           {tieneVehiculo && (
+                              <div className="grid grid-cols-2 gap-4">
+                                 <input type="text" value={vehiculo} onChange={e=>setVehiculo(e.target.value)} placeholder="Vehículo (Marca/Modelo)" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                                 <input type="text" value={patente} onChange={e=>setPatente(e.target.value)} placeholder="Patente" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none uppercase" />
+                              </div>
+                           )}
                         </div>
+
+                        <div className="border-t border-zinc-800 pt-4 mt-2">
+                           <p className="text-sm font-semibold text-zinc-300 mb-3">Licencia de Conducir</p>
+                           <div className="grid grid-cols-3 gap-4">
+                              <input type="text" value={licenciaNumero} onChange={e=>setLicenciaNumero(e.target.value)} placeholder="Número de Licencia" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                              <select value={licenciaCategoria} onChange={e => setLicenciaCategoria(e.target.value)} className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white text-sm outline-none">
+                                 <option value="B">B (Particular)</option>
+                                 <option value="D1">D1 (Profesional)</option>
+                                 <option value="D2">D2 (Pasajeros)</option>
+                                 <option value="D">D (Otra)</option>
+                              </select>
+                              <input type="date" value={licenciaVencimiento} onChange={e=>setLicenciaVencimiento(e.target.value)} className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
+                           </div>
+                        </div>
+
                         <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
                             <div className="grid grid-cols-2 gap-4">
                                 <select value={tipoPago} onChange={e => setTipoPago(e.target.value)} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none">

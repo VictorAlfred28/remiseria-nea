@@ -23,12 +23,19 @@ export const getChoferes = async () => {
 export const createChofer = async (choferData: { 
     nombre: string, 
     email: string, 
-    telefono: string, 
-    vehiculo: string, 
-    patente: string,
+    telefono: string,
     dni: string,
+    direccion?: string,
+    licencia_numero?: string,
+    licencia_categoria?: string,
+    licencia_vencimiento?: string,
+    tiene_vehiculo: boolean,
+    vehiculo?: string, 
+    patente?: string,
+    documentos?: Array<{tipo: string, url: string, fileName: string}>,
     tipo_pago: string,
-    valor_pago: number
+    valor_pago: number,
+    organizacion_id?: string
 }) => {
     const res = await api.post("/admin/chofer", choferData);
     return res.data;

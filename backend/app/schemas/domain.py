@@ -61,6 +61,9 @@ class ChoferRegistroCompleto(BaseModel):
     NOTA: Validaciones complejas (teléfono formato, email único, DNI único) 
     se hacen en validators.py, NO en Pydantic. Pydantic solo hace validaciones básicas.
     """
+    # ID AUTENTICACIÓN (opcional, provisto por frontend supabase auth)
+    id: Optional[str] = Field(None, description="Auth User ID provisto por frontend")
+    
     # PERSONALES (requeridos)
     nombre: str = Field(..., min_length=2, description="Nombre completo del chofer")
     email: EmailStr = Field(..., description="Email único por organización")

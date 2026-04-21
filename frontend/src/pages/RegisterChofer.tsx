@@ -120,6 +120,7 @@ export default function RegisterChofer() {
               'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+              id: userId,
               nombre: nombre,
               email: email,
               telefono: telefono,

@@ -196,8 +196,8 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
             "licencia_vencimiento": data.licencia_vencimiento,
             # Vehículo
             "tiene_vehiculo": data.tiene_vehiculo,
-            "vehiculo": data.vehiculo,
-            "patente": data.patente,
+            "vehiculo": data.vehiculo if data.vehiculo is not None else "",
+            "patente": data.patente if data.patente is not None else "",
             # Documentos
             "documentos": data.documentos,
             # Pago (valores por defecto para registro público)

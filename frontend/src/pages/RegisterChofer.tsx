@@ -11,39 +11,44 @@ export default function RegisterChofer() {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  // Paso 1: Datos
+  // Paso 1: Datos Personales + DNI
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [dni, setDni] = useState('');
   const [direccion, setDireccion] = useState('');
   const [password, setPassword] = useState('');
 
-  // Paso 2: Licencia
-  const [licenciaNumero, setLicenciaNumero] = useState('');
-  const [licenciaCategoria, setLicenciaCategoria] = useState('D1'); // default pasajero
-  const [licenciaVencimiento, setLicenciaVencimiento] = useState('');
-
-  // Paso 3: Documentación
-  const [frenteFile, setFrenteFile] = useState<File | null>(null);
-  const [dorsoFile, setDorsoFile] = useState<File | null>(null);
-  const [antecedentesFile, setAntecedentesFile] = useState<File | null>(null);
-
-  // Paso 4: Vehículo
+  // Paso 2: Vehículo
   const [tieneVehiculo, setTieneVehiculo] = useState(true);
   const [vehiculoMarcaModelo, setVehiculoMarcaModelo] = useState('');
   const [patente, setPatente] = useState('');
 
+  // Paso 3: Licencia
+  const [licenciaNumero, setLicenciaNumero] = useState('');
+  const [licenciaCategoria, setLicenciaCategoria] = useState('B');
+  const [licenciaVencimiento, setLicenciaVencimiento] = useState('');
+
+  // Paso 4: Documentación
+  const [frenteFile, setFrenteFile] = useState<File | null>(null);
+  const [dorsoFile, setDorsoFile] = useState<File | null>(null);
+  const [antecedentesFile, setAntecedentesFile] = useState<File | null>(null);
+
   const nextStep = () => {
     setErrorMsg('');
-    if (step === 1 && (!nombre || !email || !telefono || !direccion || !password)) {
-      setErrorMsg('Por favor completa todos los datos personales.');
+    if (step === 1 && (!nombre || !email || !telefono || !dni || !direccion || !password)) {
+      setErrorMsg('Por favor completa todos los datos personales (nombre, email, teléfono, DNI, dirección, contraseña).');
       return;
     }
-    if (step === 2 && (!licenciaNumero || !licenciaCategoria || !licenciaVencimiento)) {
-      setErrorMsg('Completa la información de tu licencia.');
+    if (step === 2 && tieneVehiculo && (!vehiculoMarcaModelo || !patente)) {
+      setErrorMsg('Completa marca, modelo y patente del vehículo.');
       return;
     }
-    if (step === 3 && (!frenteFile || !dorsoFile || !antecedentesFile)) {
+    if (step === 3 && (!licenciaNumero || !licenciaCategoria || !licenciaVencimiento)) {
+      setErrorMsg('Completa la información de tu licencia (número, categoría, fecha vencimiento).');
+      return;
+    }
+    if (step === 4 && (!frenteFile || !dorsoFile || !antecedentesFile)) {
       setErrorMsg('Debes subir todos los documentos requeridos (Frente, Dorso, y Antecedentes).');
       return;
     }
@@ -106,8 +111,8 @@ export default function RegisterChofer() {
       }
 
       // 4. Mudar al backend para que registre en public.usuarios y public.choferes
-      const vehiculoFinal = tieneVehiculo ? vehiculoMarcaModelo : "Busca vehículo";
-      const patenteFinal = tieneVehiculo ? patente.toUpperCase() : "N/A";
+      const vehiculoFinal = tieneVehiculo ? vehiculoMarcaModelo : null;
+      const patenteFinal = tieneVehiculo ? patente.toUpperCase() : null;
 
       const profileResp = await fetch(`${apiBase}/public/registro/chofer`, {
           method: 'POST',
@@ -115,11 +120,10 @@ export default function RegisterChofer() {
               'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-              id: userId,
-              organizacion_id: organizacionId,
-              email: email,
               nombre: nombre,
+              email: email,
               telefono: telefono,
+              dni: dni,
               direccion: direccion,
               vehiculo: vehiculoFinal,
               patente: patenteFinal,
@@ -127,7 +131,10 @@ export default function RegisterChofer() {
               licencia_categoria: licenciaCategoria,
               licencia_vencimiento: licenciaVencimiento,
               documentos: uploadedDocs,
-              tiene_vehiculo: tieneVehiculo
+              tiene_vehiculo: tieneVehiculo,
+              tipo_pago: 'comision',
+              valor_pago: 0.0,
+              organizacion_id: organizacionId
           })
       });
 
@@ -204,11 +211,11 @@ export default function RegisterChofer() {
                 <button onClick={() => navigate('/login')} className="p-2 text-zinc-500 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 rounded-lg transition-colors"><ArrowLeft size={18}/></button>
                 <div>
                    <h1 className="text-xl font-black tracking-tight text-white">Alta Chofer</h1>
-                   <p className="text-xs text-zinc-400">Paso {step} de 4</p>
+                   <p className="text-xs text-zinc-400">Paso {step} de 5</p>
                 </div>
             </div>
             <div className="flex items-center gap-1">
-                {[1,2,3,4].map(num => (
+                {[1,2,3,4,5].map(num => (
                    <div key={num} className={`w-3 h-3 rounded-full transition-colors ${step >= num ? 'bg-blue-500' : 'bg-zinc-800'}`} />
                 ))}
             </div>
@@ -222,7 +229,7 @@ export default function RegisterChofer() {
 
         <form onSubmit={handleRegister} className="space-y-6">
           
-          {/* STEP 1 */}
+          {/* STEP 1: DATOS PERSONALES + DNI */}
           {step === 1 && (
             <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
                <h2 className="text-lg font-bold text-white mb-2">1. Datos Personales</h2>
@@ -243,6 +250,15 @@ export default function RegisterChofer() {
                  <input type="text" required value={telefono} onChange={e => setTelefono(e.target.value)}
                    className="w-full pl-11 pr-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
                    placeholder="Teléfono (Ej: 3794123456)" />
+               </div>
+
+               <div className="relative">
+                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                   <User size={18} className="text-zinc-500" />
+                 </div>
+                 <input type="text" required value={dni} onChange={e => setDni(e.target.value)}
+                   className="w-full pl-11 pr-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
+                   placeholder="Número de DNI (sin puntos)" />
                </div>
 
                <div className="relative">
@@ -274,53 +290,10 @@ export default function RegisterChofer() {
             </div>
           )}
 
-          {/* STEP 2 */}
+          {/* STEP 2: VEHÍCULO */}
           {step === 2 && (
             <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
-               <h2 className="text-lg font-bold text-white mb-2">2. Carnet de Conducir</h2>
-               
-               <div>
-                  <label className="text-xs text-zinc-500 ml-1 block mb-1">Número de Licencia</label>
-                  <input type="text" required value={licenciaNumero} onChange={e => setLicenciaNumero(e.target.value)}
-                   className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
-                   placeholder="Ej: 30123456" />
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                   <div>
-                       <label className="text-xs text-zinc-500 ml-1 block mb-1">Categoría</label>
-                       <select value={licenciaCategoria} onChange={e => setLicenciaCategoria(e.target.value)} className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500">
-                           <option value="D1">D1 (Profesional)</option>
-                           <option value="D2">D2 (Profesional Pasajeros)</option>
-                           <option value="B1">B1 (Particular)</option>
-                           <option value="Otra">Otra</option>
-                       </select>
-                   </div>
-                   <div>
-                       <label className="text-xs text-zinc-500 ml-1 block mb-1">Vencimiento</label>
-                       <input type="date" required value={licenciaVencimiento} onChange={e => setLicenciaVencimiento(e.target.value)}
-                        className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 transition-all text-white outline-none" />
-                   </div>
-               </div>
-            </div>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
-               <h2 className="text-lg font-bold text-white mb-2">3. Subida de Documentos</h2>
-               <p className="text-xs text-zinc-400 mb-4">Asegúrate de que las fotos sean claras y legibles.</p>
-               
-               <FileUploader label="Licencia de Conducir (Frente)" file={frenteFile} setFile={setFrenteFile} />
-               <FileUploader label="Licencia de Conducir (Dorso)" file={dorsoFile} setFile={setDorsoFile} />
-               <FileUploader label="Certificado Antecedentes Penales" file={antecedentesFile} setFile={setAntecedentesFile} />
-            </div>
-          )}
-
-          {/* STEP 4 */}
-          {step === 4 && (
-            <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
-               <h2 className="text-lg font-bold text-white mb-2">4. Vehículo</h2>
+               <h2 className="text-lg font-bold text-white mb-2">2. Información del Vehículo</h2>
                
                <div className="bg-zinc-950/50 border border-zinc-800 p-5 rounded-xl">
                     <label className="flex items-center gap-3 cursor-pointer mb-2">
@@ -350,6 +323,94 @@ export default function RegisterChofer() {
             </div>
           )}
 
+          {/* STEP 3: LICENCIA */}
+          {step === 3 && (
+            <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
+               <h2 className="text-lg font-bold text-white mb-2">3. Licencia de Conducir</h2>
+               
+               <div>
+                  <label className="text-xs text-zinc-500 ml-1 block mb-1">Número de Licencia</label>
+                  <input type="text" required value={licenciaNumero} onChange={e => setLicenciaNumero(e.target.value)}
+                   className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
+                   placeholder="Ej: 30123456" />
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                   <div>
+                       <label className="text-xs text-zinc-500 ml-1 block mb-1">Categoría</label>
+                       <select value={licenciaCategoria} onChange={e => setLicenciaCategoria(e.target.value)} className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500">
+                           <option value="B">B (Particular)</option>
+                           <option value="D1">D1 (Profesional)</option>
+                           <option value="D2">D2 (Profesional Pasajeros)</option>
+                           <option value="D">D (Otra)</option>
+                       </select>
+                   </div>
+                   <div>
+                       <label className="text-xs text-zinc-500 ml-1 block mb-1">Vencimiento</label>
+                       <input type="date" required value={licenciaVencimiento} onChange={e => setLicenciaVencimiento(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 transition-all text-white outline-none" />
+                   </div>
+               </div>
+            </div>
+          )}
+
+          {/* STEP 4: DOCUMENTOS */}
+          {step === 4 && (
+            <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
+               <h2 className="text-lg font-bold text-white mb-2">4. Documentación</h2>
+               <p className="text-xs text-zinc-400 mb-4">Asegúrate de que las fotos sean claras y legibles.</p>
+               
+               <FileUploader label="Licencia de Conducir (Frente)" file={frenteFile} setFile={setFrenteFile} />
+               <FileUploader label="Licencia de Conducir (Dorso)" file={dorsoFile} setFile={setDorsoFile} />
+               <FileUploader label="Certificado Antecedentes Penales" file={antecedentesFile} setFile={setAntecedentesFile} />
+            </div>
+          )}
+
+          {/* STEP 5: CONFIRMACIÓN */}
+          {step === 5 && (
+            <div className="space-y-4 animate-in slide-in-from-right-4 fade-in">
+               <h2 className="text-lg font-bold text-white mb-2">5. Confirmación</h2>
+               <p className="text-sm text-zinc-300 mb-4">Revisa tu información antes de enviar la solicitud</p>
+               
+               <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-4 space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">Nombre</span>
+                     <span className="text-white font-semibold">{nombre}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">Email</span>
+                     <span className="text-white font-semibold">{email}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">Teléfono</span>
+                     <span className="text-white font-semibold">{telefono}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">DNI</span>
+                     <span className="text-white font-semibold">{dni}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">Dirección</span>
+                     <span className="text-white font-semibold">{direccion}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-zinc-800">
+                     <span className="text-zinc-400">Licencia</span>
+                     <span className="text-white font-semibold">{licenciaNumero || 'No especificada'}</span>
+                  </div>
+                  {tieneVehiculo && (
+                     <div className="flex justify-between py-2 border-b border-zinc-800">
+                        <span className="text-zinc-400">Vehículo</span>
+                        <span className="text-white font-semibold">{vehiculoMarcaModelo} ({patente})</span>
+                     </div>
+                  )}
+               </div>
+               
+               <div className="bg-blue-950/30 border border-blue-800 rounded-lg p-3 text-xs text-blue-200">
+                  ✓ Tus datos serán revisados por nuestro equipo. Recibirás una notificación cuando tu solicitud sea aprobada.
+               </div>
+            </div>
+          )}
+
           <div className="pt-4 border-t border-zinc-800/80 flex gap-3">
              {step > 1 && (
                 <button type="button" onClick={prevStep} disabled={loading} className="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50">
@@ -357,7 +418,7 @@ export default function RegisterChofer() {
                 </button>
              )}
              
-             {step < 4 ? (
+             {step < 5 ? (
                 <button type="button" onClick={nextStep} className="flex-1 px-6 py-3.5 bg-white text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2">
                     Siguiente <ChevronRight size={18} />
                 </button>

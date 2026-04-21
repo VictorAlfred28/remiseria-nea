@@ -153,7 +153,7 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
         logger.info(f"Licencia vencimiento: {data.licencia_vencimiento}")
         
         u_id = data.id if hasattr(data, 'id') else str(uuid.uuid4())
-        org_id = data.organizacion_id
+        org_id = str(data.organizacion_id)
 
         # ✅ VALIDACIÓN CENTRALIZADA: Una sola llamada reemplaza todas las validaciones
         # Valida: org existe, acepta_registros_publicos, email único, DNI único, licencia vencimiento, patente, etc.

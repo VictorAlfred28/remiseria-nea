@@ -141,14 +141,28 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
     - usuario.estado = 'pendiente' (no aprobado aún)
     """
     try:
+        # 📋 LOG DE REQUEST: Capturar todos los datos recibidos
+        logger.info(f"=== DRIVER REGISTRATION REQUEST ===")
+        logger.info(f"Nombre: {data.nombre}")
+        logger.info(f"Email: {data.email}")
+        logger.info(f"DNI: {data.dni}")
+        logger.info(f"Teléfono: {data.telefono}")
+        logger.info(f"Organización ID: {data.organizacion_id}")
+        logger.info(f"Tiene vehículo: {data.tiene_vehiculo}")
+        logger.info(f"Patente: {data.patente}")
+        logger.info(f"Licencia vencimiento: {data.licencia_vencimiento}")
+        
         u_id = data.id if hasattr(data, 'id') else str(uuid.uuid4())
         org_id = data.organizacion_id
 
         # ✅ VALIDACIÓN CENTRALIZADA: Una sola llamada reemplaza todas las validaciones
         # Valida: org existe, acepta_registros_publicos, email único, DNI único, licencia vencimiento, patente, etc.
+        logger.info(f"Starting validation for driver registration...")
         validar_registro_publico(data)
+        logger.info(f"✓ All validations passed")
 
         # 1. Crear en usuarios (estado='pendiente' para registro público)
+        logger.info(f"Creating user record in database...")
         supabase.table("usuarios").insert({
             "id": u_id,
             "organizacion_id": org_id,
@@ -159,14 +173,18 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
             "rol": "chofer",
             "estado": "pendiente"  # Requiere aprobación
         }).execute()
+        logger.info(f"✓ User created: {u_id}")
         
         # 2. Asignar rol
+        logger.info(f"Assigning chofer role...")
         supabase.table("user_roles").insert({
             "user_id": u_id,
             "role": "chofer"
         }).execute()
+        logger.info(f"✓ Role assigned")
 
         # 3. Crear en choferes (estado_validacion='pendiente', todos los campos unificados)
+        logger.info(f"Creating driver record in database...")
         c_resp = supabase.table("choferes").insert({
             "organizacion_id": org_id,
             "usuario_id": u_id,
@@ -188,14 +206,18 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
             # Estado
             "estado_validacion": "pendiente"  # Requiere aprobación admin
         }).execute()
+        logger.info(f"✓ Driver record created: {u_id}")
 
-        logger.info(f"New driver registered: {u_id} in org: {org_id}, estado=pendiente")
+        logger.info(f"✅ New driver registered: {u_id} in org: {org_id}, estado=pendiente")
         return {"status": "ok", "chofer": c_resp.data}
-    except HTTPException:
+    except HTTPException as he:
+        logger.error(f"❌ HTTP Exception during driver registration: {he.status_code} - {he.detail}")
         raise
     except Exception as e:
-        logger.error(f"Driver registration error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"❌ Unexpected error during driver registration: {type(e).__name__}: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=400, detail=f"Error en registro: {str(e)}")
 
 @router.get("/viajes/{viaje_id}/tracking")
 def get_viaje_tracking(viaje_id: str, claims: Dict[str, Any] = Depends(get_current_user)):

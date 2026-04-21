@@ -6,8 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.core.reminders import procesar_y_enviar_recordatorios
+from app.core.middleware import ErrorLoggingMiddleware
 
 app = FastAPI(title=settings.PROJECT_NAME)
+
+# 🔍 Add error logging middleware FIRST (executes last)
+app.add_middleware(ErrorLoggingMiddleware)
 
 app.include_router(api_router, prefix="/api/v1")
 

@@ -364,7 +364,7 @@ def validar_registro_admin(data: ChoferRegistroCompleto, org_id_claims: UUID) ->
         
         # 1. Validar que org_id en claims coincida con data
         logger.info(f"Validating organization authorization: {data.organizacion_id} == {org_id_claims}")
-        if data.organizacion_id != org_id_claims:
+        if str(data.organizacion_id) != str(org_id_claims):
             logger.warning(f"❌ Organization mismatch: data={data.organizacion_id}, claims={org_id_claims}")
             raise ValidacionError(
                 status_code=403,

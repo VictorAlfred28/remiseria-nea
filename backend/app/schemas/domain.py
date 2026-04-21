@@ -57,11 +57,14 @@ class ChoferRegistroCompleto(BaseModel):
     DTO UNIFICADO para registro de choferes (público y admin).
     Estructura única que ambos endpoints utilizan, con diferencias en validación/estado.
     SEGURIDAD: organizacion_id requerido, validación de unicidad (email, dni) por org.
+    
+    NOTA: Validaciones complejas (teléfono formato, email único, DNI único) 
+    se hacen en validators.py, NO en Pydantic. Pydantic solo hace validaciones básicas.
     """
     # PERSONALES (requeridos)
     nombre: str = Field(..., min_length=2, description="Nombre completo del chofer")
     email: EmailStr = Field(..., description="Email único por organización")
-    telefono: str = Field(..., min_length=10, description="Teléfono de contacto")
+    telefono: str = Field(..., description="Teléfono de contacto (validación en validators.py)")
     
     # DOCUMENTO (requerido)
     dni: str = Field(..., description="DNI único por organización")

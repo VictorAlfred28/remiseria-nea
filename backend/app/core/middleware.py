@@ -101,11 +101,12 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
             )
             
             # Retornar error 500 estructurado
+            from fastapi.encoders import jsonable_encoder
             return JSONResponse(
                 status_code=500,
-                content={
+                content=jsonable_encoder({
                     "detail": "Internal server error",
                     "error_type": type(e).__name__,
                     "request_id": request_id
-                }
+                })
             )

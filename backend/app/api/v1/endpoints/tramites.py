@@ -111,7 +111,8 @@ async def actualizar_tramite(
     claims: Dict[str, Any] = Depends(get_current_user)
 ):
     """Actualiza datos de un trámite (útil para renovar un documento o cambiar estado)."""
-    update_data = {k: v for k, v in body.dict().items() if v is not None}
+    from fastapi.encoders import jsonable_encoder
+    update_data = {k: v for k, v in jsonable_encoder(body).items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Nada que actualizar.")
     res = supabase.table("tramites").update(update_data).eq("id", str(tramite_id)).execute()

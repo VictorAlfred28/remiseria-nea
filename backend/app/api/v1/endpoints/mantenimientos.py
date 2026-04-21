@@ -104,7 +104,8 @@ async def actualizar_mantenimiento(
     if not v_check.data:
         raise HTTPException(status_code=403, detail="No tienes permiso para editar este registro.")
 
-    update_data = {k: v for k, v in body.dict().items() if v is not None}
+    from fastapi.encoders import jsonable_encoder
+    update_data = {k: v for k, v in jsonable_encoder(body).items() if v is not None}
     res = supabase.table("mantenimientos").update(update_data).eq("id", str(mto_id)).execute()
     return res.data[0] if res.data else {"status": "ok"}
 

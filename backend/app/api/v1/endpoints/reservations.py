@@ -38,10 +38,8 @@ def create_reservation(data: ReservationCreate, claims: Dict[str, Any] = Depends
     """Permite a un admin crear una reserva manual."""
     org_id = claims.get("organizacion_id")
     
-    nuevo = data.dict()
-    # Pydantic serializa date/time como objetos, convertir a str ISO para Supabase
-    nuevo["fecha_viaje"] = data.fecha_viaje.isoformat()
-    nuevo["hora_viaje"] = data.hora_viaje.isoformat()
+    from fastapi.encoders import jsonable_encoder
+    nuevo = jsonable_encoder(data)
     nuevo["organizacion_id"] = org_id
     
     resp = supabase.table("reservations").insert(nuevo).execute()

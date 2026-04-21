@@ -112,7 +112,8 @@ def get_destinations(claims: Dict[str, Any] = Depends(get_current_user)):
 @router.post("/destinations", response_model=FixedDestinationResponse)
 def create_destination(data: FixedDestinationCreate, claims: Dict[str, Any] = Depends(get_current_admin)):
     """Crea un nuevo destino fijo."""
-    resp = supabase.table("fixed_destinations").insert(data.dict()).execute()
+    from fastapi.encoders import jsonable_encoder
+    resp = supabase.table("fixed_destinations").insert(jsonable_encoder(data)).execute()
     return resp.data[0]
 
 @router.delete("/destinations/{dest_id}")

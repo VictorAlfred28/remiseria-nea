@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu cuenta está pendiente de aprobación</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { background-color: #18181b; padding: 30px 20px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .content { padding: 40px 30px; color: #3f3f46; line-height: 1.6; }
+        .content h2 { color: #18181b; font-size: 20px; margin-top: 0; }
+        .status-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .status-box p { margin: 0; color: #92400e; font-weight: 500; }
+        .footer { background-color: #fafafa; padding: 20px; text-align: center; color: #a1a1aa; font-size: 13px; border-top: 1px solid #f4f4f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Viajes NEA</h1>
+        </div>
+        <div class="content">
+            <h2>Hola, {{ nombre }}</h2>
+            <p>Hemos recibido tu solicitud de registro en Viajes NEA de manera exitosa. Actualmente tu perfil se encuentra en etapa de validación por nuestro equipo administrativo.</p>
+            
+            <div class="status-box">
+                <p>Estado actual: <strong>Pendiente de Aprobación</strong></p>
+            </div>
+            
+            <p>Te notificaremos por este mismo medio tan pronto como tu cuenta sea habilitada para ingresar a la plataforma. Este proceso suele demorar menos de 24 horas.</p>
+            <p>Gracias por tu paciencia y por querer formar parte de nuestra comunidad.</p>
+            
+            <p style="margin-top: 30px;">Atentamente,<br><strong>El equipo de Viajes NEA</strong></p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Viajes NEA. Todos los derechos reservados.</p>
+            <p>Si no solicitaste esta cuenta, puedes ignorar este correo de forma segura.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu cuenta ha sido aprobada</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { background-color: #18181b; padding: 30px 20px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .content { padding: 40px 30px; color: #3f3f46; line-height: 1.6; }
+        .content h2 { color: #18181b; font-size: 20px; margin-top: 0; }
+        .status-box { background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .status-box p { margin: 0; color: #065f46; font-weight: 500; }
+        .btn { display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin-top: 15px; }
+        .footer { background-color: #fafafa; padding: 20px; text-align: center; color: #a1a1aa; font-size: 13px; border-top: 1px solid #f4f4f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Viajes NEA</h1>
+        </div>
+        <div class="content">
+            <h2>¡Hola, {{ nombre }}!</h2>
+            <p>Nos complace informarte que tu solicitud de cuenta ha sido revisada y <strong>aprobada exitosamente</strong> por nuestro equipo administrativo.</p>
+            
+            <div class="status-box">
+                <p>Estado actual: <strong>Aprobado</strong></p>
+            </div>
+            
+            <p>Ya tienes acceso total a tu panel y puedes comenzar a utilizar todos los beneficios de la plataforma. Para ingresar, simplemente haz clic en el botón debajo e inicia sesión con el correo y contraseña que registraste.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ login_url }}" class="btn">Ingresar a mi Cuenta</a>
+            </div>
+            
+            <p style="margin-top: 30px;">¡Bienvenido a bordo!<br><strong>El equipo de Viajes NEA</strong></p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Viajes NEA. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

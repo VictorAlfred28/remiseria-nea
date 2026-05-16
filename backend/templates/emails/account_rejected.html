@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualización sobre tu cuenta</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { background-color: #18181b; padding: 30px 20px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .content { padding: 40px 30px; color: #3f3f46; line-height: 1.6; }
+        .content h2 { color: #18181b; font-size: 20px; margin-top: 0; }
+        .status-box { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .status-box p { margin: 0; color: #991b1b; font-weight: 500; }
+        .footer { background-color: #fafafa; padding: 20px; text-align: center; color: #a1a1aa; font-size: 13px; border-top: 1px solid #f4f4f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Viajes NEA</h1>
+        </div>
+        <div class="content">
+            <h2>Hola, {{ nombre }}</h2>
+            <p>Tras una revisión exhaustiva de los datos y documentos provistos en tu solicitud de registro, lamentamos informarte que la misma no ha sido aprobada en esta ocasión.</p>
+            
+            <div class="status-box">
+                <p>Estado actual: <strong>Rechazado</strong></p>
+            </div>
+            
+            <p>Este resultado puede deberse a discrepancias en la documentación, falta de requisitos indispensables, o políticas internas de adhesión a la red de Viajes NEA.</p>
+            <p>Si consideras que esto es un error o deseas proveer documentación adicional, por favor comunícate con nuestro equipo de soporte respondiendo directamente a este correo.</p>
+            
+            <p style="margin-top: 30px;">Atentamente,<br><strong>El equipo de Viajes NEA</strong></p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Viajes NEA. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     WEBHOOK_SECRET: str | None = None
     FRONTEND_URL: str = "http://localhost:5173"
     SUPABASE_JWT_SECRET: str | None = None
+    GMAIL_EMAIL: str | None = None
+    GMAIL_APP_PASSWORD: str | None = None
 
     class Config:
         env_file = ".env"

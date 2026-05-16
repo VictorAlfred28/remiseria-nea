@@ -5,6 +5,7 @@ import string
 
 from app.core.security import get_current_admin
 from app.core.validators import validar_registro_admin
+from app.services import email_service
 from app.db.supabase import supabase
 from app.schemas.domain import Chofer, Promocion, ChoferRegistroCompleto
 from pydantic import BaseModel, EmailStr
@@ -955,6 +956,11 @@ def aprobar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims: 
                 asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
             background_tasks.add_task(_send_sync_admin)
 
+    # Enviar correo de aprobación a todos los usuarios (chofer o cliente)
+    email_addr = usuario.get("email")
+    if email_addr:
+        background_tasks.add_task(email_service.send_account_approved, email_addr, nombre)
+
     return {"message": f"Usuario ({rol}) aprobado exitosamente"}
 
 @router.post("/usuarios/{usuario_id}/rechazar")
@@ -991,5 +997,9 @@ def rechazar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims:
                 import asyncio
                 asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
             background_tasks.add_task(_send_sync_admin)
+
+    # Enviar correo de rechazo a todos los usuarios (chofer o cliente)
+    if email:
+        background_tasks.add_task(email_service.send_account_rejected, email, nombre)
 
     return {"message": f"Usuario ({rol}) rechazado"}

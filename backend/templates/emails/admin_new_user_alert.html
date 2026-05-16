@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo registro pendiente de aprobación</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .header { background-color: #0f172a; padding: 25px 20px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+        .content { padding: 35px 30px; color: #334155; line-height: 1.6; }
+        .content h2 { color: #0f172a; font-size: 18px; margin-top: 0; margin-bottom: 25px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .info-table th { text-align: left; padding: 12px 15px; background-color: #f1f5f9; color: #475569; font-weight: 600; border-bottom: 1px solid #e2e8f0; width: 35%; }
+        .info-table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-weight: 500; }
+        .btn { display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; text-align: center; width: calc(100% - 48px); }
+        .footer { background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Panel Administrativo | Viajes NEA</h1>
+        </div>
+        <div class="content">
+            <h2>Nuevo usuario registrado</h2>
+            <p>Se ha detectado un nuevo registro en la plataforma que requiere revisión manual.</p>
+            
+            <table class="info-table">
+                <tr>
+                    <th>Nombre</th>
+                    <td>{{ nuevo_usuario_nombre }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ nuevo_usuario_email }}</td>
+                </tr>
+                <tr>
+                    <th>Teléfono</th>
+                    <td>{{ nuevo_usuario_telefono }}</td>
+                </tr>
+                <tr>
+                    <th>Rol Solicitado</th>
+                    <td style="text-transform: capitalize; color: #2563eb;">{{ nuevo_usuario_rol }}</td>
+                </tr>
+            </table>
+            
+            <p style="margin-bottom: 25px;">Por favor, ingresa al panel de control para revisar los documentos adjuntos (si los hay) y proceder con la aprobación o rechazo de esta solicitud.</p>
+            
+            <a href="{{ admin_url }}" class="btn">Ir al Panel de Validación</a>
+        </div>
+        <div class="footer">
+            <p>Este es un correo automático generado por el sistema de Viajes NEA.</p>
+        </div>
+    </div>
+</body>
+</html>

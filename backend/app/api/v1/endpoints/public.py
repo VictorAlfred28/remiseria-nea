@@ -13,6 +13,7 @@ from app.core.validators import validar_registro_publico
 from app.core.evolution import send_whatsapp_message
 from app.core.config import settings
 from app.core.security import get_current_admin, get_current_user, has_role
+from app.services import email_service
 
 
 logger = logging.getLogger(__name__)
@@ -114,6 +115,10 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
             "role": "cliente"
         }).execute()
         
+        # Enviar correos
+        background_tasks.add_task(email_service.send_account_registered, email, nombre)
+        background_tasks.add_task(email_service.send_admin_alert, email, nombre, tel, "cliente")
+        
         logger.info(f"New user registered: {u_id} in org: {org_id}")
         return {"status": "ok", "perfil": resp.data}
     except HTTPException:
@@ -201,6 +206,10 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
             "estado_validacion": "pendiente"  # Requiere aprobación admin
         }).execute()
         logger.info(f"✓ Driver record created: {u_id}")
+
+        # Enviar correos
+        background_tasks.add_task(email_service.send_account_registered, data.email, data.nombre)
+        background_tasks.add_task(email_service.send_admin_alert, data.email, data.nombre, data.telefono, "chofer")
 
         logger.info(f"✅ New driver registered: {u_id} in org: {org_id}, estado=pendiente")
         return {"status": "ok", "chofer": c_resp.data}

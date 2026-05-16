@@ -49,14 +49,26 @@ export default function Login() {
           }
         }
 
-        if (userData?.rol === 'chofer') {
-            if (userData.estado === 'pendiente') {
+        const isPrimarySuperAdmin = userData?.rol === 'superadmin' && data.session.user.email === 'agentech.nea@gmail.com';
+
+        // Verificar estado de aprobación administrativa (excepto para superadmin principal)
+        if (!isPrimarySuperAdmin) {
+            if (userData?.estado === 'pendiente') {
                 await supabase.auth.signOut();
-                throw new Error("Tu solicitud para ser chofer se encuentra en revisión. Te notificaremos cuando sea aprobada.");
+                if (userData?.rol === 'chofer') {
+                    throw new Error("Tu solicitud para ser chofer se encuentra en revisión. Te notificaremos cuando sea aprobada.");
+                } else {
+                    throw new Error("Tu cuenta fue registrada correctamente y está pendiente de aprobación administrativa.");
+                }
             }
-            if (userData.estado === 'rechazado') {
+            
+            if (userData?.estado === 'rechazado') {
                 await supabase.auth.signOut();
-                throw new Error("Tu solicitud para ser chofer ha sido rechazada por la administración.");
+                if (userData?.rol === 'chofer') {
+                    throw new Error("Tu solicitud para ser chofer ha sido rechazada por la administración.");
+                } else {
+                    throw new Error("Tu solicitud de cuenta ha sido rechazada por la administración.");
+                }
             }
         }
 

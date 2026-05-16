@@ -276,9 +276,9 @@ def validar_campos_comunes(data: ChoferRegistroCompleto) -> None:
         logger.info(f"[1/6] Validating organization...")
         validar_organizacion_existe(data.organizacion_id)
         
-        # 2. Validar email único
-        logger.info(f"[2/6] Validating email uniqueness...")
-        validar_email_unico(data.email, data.organizacion_id)
+        # 2. Validar email único (DESACTIVADO: el trigger ahora crea el perfil antes, por lo que siempre existirá. Se delega a on_conflict en el UPSERT)
+        # logger.info(f"[2/6] Validating email uniqueness...")
+        # validar_email_unico(data.email, data.organizacion_id)
         
         # 3. Validar DNI único
         logger.info(f"[3/6] Validating DNI uniqueness...")

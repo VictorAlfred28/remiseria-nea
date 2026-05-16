@@ -238,7 +238,15 @@ def update_chofer(chofer_id: str, data: ChoferUpdate, claims: Dict[str, Any] = D
     if data.nombre: u_update["nombre"] = data.nombre
     if data.email: u_update["email"] = data.email
     if data.telefono: u_update["telefono"] = data.telefono
-    if data.activo is not None: u_update["activo"] = data.activo
+    if data.activo is not None: 
+        # Proteccion SuperAdmin
+        u_data = supabase.table("usuarios").select("rol, email").eq("id", u_id).execute()
+        if u_data.data:
+            user_rol = u_data.data[0].get("rol")
+            user_email = u_data.data[0].get("email")
+            if (user_rol == "superadmin" or user_email == "agentech.nea@gmail.com") and not data.activo:
+                raise HTTPException(status_code=403, detail="Acción denegada: No se puede desactivar al SuperAdmin principal.")
+        u_update["activo"] = data.activo
     
     if u_update:
         supabase.table("usuarios").update(u_update).eq("id", u_id).execute()
@@ -275,6 +283,14 @@ def delete_chofer(chofer_id: str, claims: Dict[str, Any] = Depends(get_current_a
         raise HTTPException(status_code=404, detail="Chofer no encontrado")
         
     u_id = c_data.data["usuario_id"]
+    
+    # Proteccion SuperAdmin
+    u_data = supabase.table("usuarios").select("rol, email").eq("id", u_id).execute()
+    if u_data.data:
+        user_rol = u_data.data[0].get("rol")
+        user_email = u_data.data[0].get("email")
+        if user_rol == "superadmin" or user_email == "agentech.nea@gmail.com":
+            raise HTTPException(status_code=403, detail="Acción denegada: No se puede eliminar al SuperAdmin principal.")
 
     # 2. Borrar Chofer (La tabla tiene FK a usuarios cascade? si no, borrar manual)
     supabase.table("choferes").delete().eq("id", chofer_id).execute()
@@ -879,3 +895,101 @@ def get_usuarios_por_rol(rol: str, claims: Dict[str, Any] = Depends(get_current_
         .eq("rol", rol)\
         .execute()
     return resp.data
+
+
+# ============================================================
+# MÓDULO: APROBACIÓN DE USUARIOS (Validación en dos pasos)
+# ============================================================
+
+@router.get("/usuarios/pendientes")
+def get_usuarios_pendientes(claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Obtener todos los usuarios en estado pendiente de aprobación administrativa.
+    """
+    org_id = claims.get("organizacion_id")
+    response = supabase.table("usuarios") \
+        .select("id, nombre, email, telefono, rol, creado_en") \
+        .eq("organizacion_id", org_id) \
+        .eq("estado", "pendiente") \
+        .order("creado_en", desc=True) \
+        .execute()
+    return response.data
+
+@router.post("/usuarios/{usuario_id}/aprobar")
+def aprobar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Aprueba un usuario pendiente (general). Mantiene compatibilidad con choferes.
+    """
+    import datetime
+    org_id = claims.get("organizacion_id")
+    admin_id = claims.get("sub")
+    
+    # Verificar
+    check = supabase.table("usuarios").select("id, rol, nombre, telefono").eq("id", usuario_id).eq("organizacion_id", org_id).execute()
+    if not check.data:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario = check.data[0]
+    rol = usuario.get("rol")
+    telefono = usuario.get("telefono")
+    nombre = usuario.get("nombre", "Usuario")
+
+    update_payload = {
+        "estado": "aprobado",
+        "activo": True,
+        "approved_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "approved_by": admin_id
+    }
+    supabase.table("usuarios").update(update_payload).eq("id", usuario_id).execute()
+    
+    if rol == "chofer":
+        supabase.table("choferes").update({
+            "estado_validacion": "aprobado", 
+            "estado": "disponible"
+        }).eq("usuario_id", usuario_id).execute()
+        
+        if telefono:
+            msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Viajes NEA ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
+            def _send_sync_admin():
+                import asyncio
+                asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
+            background_tasks.add_task(_send_sync_admin)
+
+    return {"message": f"Usuario ({rol}) aprobado exitosamente"}
+
+@router.post("/usuarios/{usuario_id}/rechazar")
+def rechazar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Rechaza un usuario pendiente (general). Mantiene compatibilidad con choferes.
+    """
+    org_id = claims.get("organizacion_id")
+    
+    check = supabase.table("usuarios").select("id, rol, nombre, telefono, email").eq("id", usuario_id).eq("organizacion_id", org_id).execute()
+    if not check.data:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario = check.data[0]
+    rol = usuario.get("rol")
+    email = usuario.get("email")
+    telefono = usuario.get("telefono")
+    nombre = usuario.get("nombre", "Usuario")
+
+    if rol == "superadmin" or email == "agentech.nea@gmail.com":
+        raise HTTPException(status_code=403, detail="Acción denegada: No se puede rechazar o desactivar al SuperAdmin principal.")
+
+    update_payload = {
+        "estado": "rechazado",
+        "activo": False
+    }
+    supabase.table("usuarios").update(update_payload).eq("id", usuario_id).execute()
+    
+    if rol == "chofer":
+        supabase.table("choferes").update({"estado_validacion": "rechazado"}).eq("usuario_id", usuario_id).execute()
+        if telefono:
+            msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Viajes NEA ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
+            def _send_sync_admin():
+                import asyncio
+                asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
+            background_tasks.add_task(_send_sync_admin)
+
+    return {"message": f"Usuario ({rol}) rechazado"}

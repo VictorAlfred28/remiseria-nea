@@ -100,20 +100,14 @@ def crear_perfil_publico(req: dict, background_tasks: BackgroundTasks):
             logger.warning(f"Invalid phone format attempted")
             raise HTTPException(status_code=400, detail="Invalid phone format")
         
-        # Security: Check for existing email (prevent duplicates)
-        existing = supabase.table("usuarios").select("id").eq("email", email).execute()
-        if existing.data:
-            logger.warning(f"Duplicate email registration attempt: {email}")
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        resp = supabase.table("usuarios").insert({
+        resp = supabase.table("usuarios").upsert({
             "id": u_id,
             "organizacion_id": org_id,
             "email": email,
             "nombre": nombre,
             "telefono": tel,
             "rol": "cliente"
-        }).execute()
+        }, on_conflict="id").execute()
         
         supabase.table("user_roles").insert({
             "user_id": u_id,
@@ -163,7 +157,7 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
 
         # 1. Crear en usuarios (estado='pendiente' para registro público)
         logger.info(f"Creating user record in database...")
-        supabase.table("usuarios").insert({
+        supabase.table("usuarios").upsert({
             "id": u_id,
             "organizacion_id": org_id,
             "email": data.email,
@@ -172,7 +166,7 @@ def crear_perfil_chofer(data: ChoferRegistroCompleto, background_tasks: Backgrou
             "direccion": data.direccion,
             "rol": "chofer",
             "estado": "pendiente"  # Requiere aprobación
-        }).execute()
+        }, on_conflict="id").execute()
         logger.info(f"✓ User created: {u_id}")
         
         # 2. Asignar rol

@@ -15,6 +15,7 @@ import "leaflet/dist/leaflet.css";
 import BolsaAdminTab from "../components/bolsa/BolsaAdminTab";
 import SolicitudesChoferesAdmin from "../components/SolicitudesChoferesAdmin";
 import FlotaAdminTab from "../components/FlotaAdminTab";
+import ValidacionUsuariosAdmin from "../components/ValidacionUsuariosAdmin";
 
 // Fijar el icono de Leaflet para Vite
 import L from "leaflet";
@@ -458,6 +459,9 @@ export default function AdminDashboard() {
         <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
           <History size={18} /> Historial Global
         </button>
+        <button onClick={() => setActiveTab("validacion")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'validacion' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>
+          <CheckCircle2 size={18} /> Validar Usuarios
+        </button>
       </div>
 
       <div className="bg-zinc-950/50 p-6 md:p-8 rounded-2xl border border-zinc-800/80">
@@ -467,6 +471,7 @@ export default function AdminDashboard() {
         {activeTab === "empresas" && <EmpresasAdmin />}
         {activeTab === "comercios" && <ComerciosAdmin />}
         {activeTab === "bolsa" && <BolsaAdminTab />}
+        {activeTab === "validacion" && <ValidacionUsuariosAdmin />}
         
         {activeTab === "choferes" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">

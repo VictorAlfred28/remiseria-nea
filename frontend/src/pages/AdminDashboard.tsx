@@ -418,48 +418,48 @@ export default function AdminDashboard() {
         Panel de Administración <span className="text-[#0D6EFD] font-light">| UBI</span>
       </h1>
       
-      <div className="flex gap-4 mb-8 border-b border-white/10 pb-4 overflow-x-auto scrollbar-hide">
-        <button onClick={() => setActiveTab("choferes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'choferes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+      <div className="flex flex-nowrap gap-4 mb-8 border-b border-white/10 pb-4 overflow-x-auto scrollbar-hide scroll-smooth w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <button onClick={() => setActiveTab("choferes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'choferes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Car size={18} /> Alta de Choferes
         </button>
-        <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'titulares' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("titulares")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'titulares' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Users size={18} /> Alta de Titulares
         </button>
-        <button onClick={() => setActiveTab("viajes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'viajes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("viajes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'viajes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <MapIcon size={18} /> Rastreo en Vivo
           {onlineDrivers.length > 0 && <span className="bg-[#00D4FF] text-[#030712] px-2 py-0.5 rounded-full text-xs font-black animate-pulse">{onlineDrivers.length}</span>}
         </button>
-        <button onClick={() => setActiveTab("promos")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'promos' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("promos")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'promos' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Tag size={18} /> Promociones y Premios
         </button>
-        <button onClick={() => { setActiveTab("fleet"); setActiveFleetSubTab("control"); }} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'fleet' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => { setActiveTab("fleet"); setActiveFleetSubTab("control"); }} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'fleet' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Truck size={18} /> Gestión de Flota
         </button>
-        <button onClick={() => setActiveTab("reservas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'reservas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("reservas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'reservas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Calendar size={18} /> Reservas Inteligentes
         </button>
-        <button onClick={() => setActiveTab("tarifas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'tarifas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("tarifas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'tarifas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Zap size={18} /> Tarifario IA
         </button>
-        <button onClick={() => setActiveTab("gestion_pagos")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'gestion_pagos' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("gestion_pagos")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'gestion_pagos' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Wallet size={18} /> Gestión de Pagos
         </button>
-        <button onClick={() => setActiveTab("clientes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'clientes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("clientes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'clientes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Gift size={18} /> Clientes y Puntos
         </button>
-        <button onClick={() => setActiveTab("empresas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'empresas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("empresas")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'empresas' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Building size={18} /> Empresa Adheridas
         </button>
-        <button onClick={() => setActiveTab("comercios")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'comercios' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("comercios")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'comercios' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Store size={18} /> Validar Comercios
         </button>
-        <button onClick={() => setActiveTab("bolsa")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'bolsa' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("bolsa")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'bolsa' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Briefcase size={18} /> Bolsa de Empleos
         </button>
-        <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'liquidaciones' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("liquidaciones")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'liquidaciones' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <History size={18} /> Historial Global
         </button>
-        <button onClick={() => setActiveTab("validacion")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'validacion' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
+        <button onClick={() => setActiveTab("validacion")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'validacion' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <CheckCircle2 size={18} /> Validar Usuarios
         </button>
       </div>

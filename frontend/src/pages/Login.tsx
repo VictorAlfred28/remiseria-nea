@@ -119,19 +119,20 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full min-h-[100dvh] overflow-y-auto flex flex-col items-center bg-[#03080f]"
+      className="w-full h-[100dvh] overflow-hidden flex flex-col items-center bg-[#03080f]"
       style={{ 
-        WebkitOverflowScrolling: 'touch',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div className="w-full flex flex-col flex-1" style={{ maxWidth: '600px' }}>
+      <div className="w-full flex flex-col h-full" style={{ maxWidth: '600px' }}>
         
         {/* IMAGEN SUPERIOR (Flujo normal) */}
         <div 
-          className="w-full relative flex-shrink-0 bg-[#04102a]"
+          className="w-full relative flex-shrink bg-[#04102a] flex items-end"
           style={{ 
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            minHeight: '20vh',
+            maxHeight: '40vh'
           }}
         >
           <img
@@ -139,7 +140,8 @@ export default function Login() {
             alt="UBI Traslados"
             style={{
               width: '100%',
-              height: 'auto',
+              height: '100%',
+              maxHeight: '40vh',
               objectFit: 'contain',
               display: 'block',
             }}
@@ -150,12 +152,12 @@ export default function Login() {
         {/* FORMULARIO (Flujo normal, se mueve junto con la imagen) */}
         <div
           id="login-form-section"
-          className="flex-1 w-full relative z-10"
+          className="flex-shrink-0 w-full relative z-10 flex flex-col"
           style={{
             background: '#0d1829',
             borderTopLeftRadius: '28px',
             borderTopRightRadius: '28px',
-            marginTop: '-28px', /* Superpone el formulario sobre el borde de la imagen para unión perfecta */
+            marginTop: '-20px', /* Superpone el formulario sobre el borde de la imagen para unión perfecta */
             boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
           }}
         >
@@ -168,118 +170,118 @@ export default function Login() {
               }}
             />
 
-            <div className="w-full max-w-[430px] mx-auto px-6 pt-8 pb-10">
-            <div className="text-center mb-6">
-              <h1 id="login-title" className="text-2xl font-black text-white tracking-tight">
+            <div className="w-full max-w-[430px] mx-auto px-5 pt-5 pb-4">
+            <div className="text-center mb-4">
+              <h1 id="login-title" className="text-xl font-black text-white tracking-tight">
                 {isResetView ? 'Recuperar Acceso' : 'Iniciar sesión'}
               </h1>
-              <p className="text-sm mt-1 text-[#8da4c4]">
+              <p className="text-xs mt-1 text-[#8da4c4]">
                 {isResetView ? 'Te enviaremos un enlace de recuperación' : 'Accedé a tu cuenta para continuar'}
               </p>
             </div>
 
             {errorMsg && (
-              <div id="login-error" className="mb-5 text-sm px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 animate-in fade-in">
+              <div id="login-error" className="mb-3 text-xs px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 animate-in fade-in">
                 {errorMsg === 'Invalid login credentials' ? 'El correo o la contraseña son incorrectos.' : errorMsg}
               </div>
             )}
 
             {resetSuccess ? (
-              <div className="flex flex-col items-center text-center py-8 px-4 bg-green-500/5 rounded-2xl border border-green-500/20">
-                <CheckCircle2 size={48} className="text-green-400 mb-3" />
-                <p className="font-bold text-lg text-white mb-1">¡Correo enviado!</p>
-                <p className="text-sm text-green-300/80">Revisá tu bandeja de entrada (y spam) para restablecer tu contraseña.</p>
+              <div className="flex flex-col items-center text-center py-5 px-4 bg-green-500/5 rounded-2xl border border-green-500/20">
+                <CheckCircle2 size={40} className="text-green-400 mb-2" />
+                <p className="font-bold text-base text-white mb-1">¡Correo enviado!</p>
+                <p className="text-xs text-green-300/80">Revisá tu bandeja de entrada para restablecer tu contraseña.</p>
                 <button
                   onClick={() => { setIsResetView(false); setResetSuccess(false); }}
-                  className="mt-6 text-sm text-blue-400 underline font-medium"
+                  className="mt-4 text-xs text-blue-400 underline font-medium"
                 >
                   Volver al inicio de sesión
                 </button>
               </div>
             ) : isResetView ? (
-              <form onSubmit={handleResetPassword} className="space-y-4 animate-in slide-in-from-right-4 fade-in">
+              <form onSubmit={handleResetPassword} className="space-y-3 animate-in slide-in-from-right-4 fade-in">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <Mail size={18} className="text-[#4a6fa5]" />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Mail size={16} className="text-[#4a6fa5]" />
                   </div>
                   <input
                     type="email" required placeholder="Correo electrónico"
                     value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 text-sm rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
                   />
                 </div>
                 <button type="submit" disabled={loading}
-                  className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-3 text-sm bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  {loading ? <Loader2 size={20} className="animate-spin" /> : 'Enviar Enlace de Recuperación'}
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : 'Enviar Enlace'}
                 </button>
                 <button type="button" onClick={() => { setIsResetView(false); setErrorMsg(''); }}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-[#8da4c4] hover:text-white transition"
+                  className="w-full flex items-center justify-center gap-2 py-1.5 text-xs text-[#8da4c4] hover:text-white transition"
                 >
-                  <ArrowLeft size={16} /> Volver a Iniciar Sesión
+                  <ArrowLeft size={14} /> Volver
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleLogin} className="space-y-4 animate-in slide-in-from-left-4 fade-in">
+              <form onSubmit={handleLogin} className="space-y-3 animate-in slide-in-from-left-4 fade-in">
                 <div>
-                  <label htmlFor="login-email" className="block text-sm font-medium text-[#c3d4e8] mb-2">
+                  <label htmlFor="login-email" className="block text-xs font-medium text-[#c3d4e8] mb-1.5">
                     Correo electrónico
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                      <Mail size={18} className="text-[#4a6fa5]" />
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Mail size={16} className="text-[#4a6fa5]" />
                     </div>
                     <input
                       id="login-email" type="email" required placeholder="Correo electrónico"
                       value={email} onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-11 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                      className="w-full pl-10 pr-4 py-3 text-sm rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label htmlFor="login-password" className="block text-sm font-medium text-[#c3d4e8]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="login-password" className="block text-xs font-medium text-[#c3d4e8]">
                       Contraseña
                     </label>
                     <button type="button" onClick={() => { setIsResetView(true); setErrorMsg(''); }}
-                      className="text-xs font-medium text-[#0D6EFD] hover:text-blue-400 transition"
+                      className="text-[11px] font-medium text-[#0D6EFD] hover:text-blue-400 transition"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                      <Lock size={18} className="text-[#4a6fa5]" />
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Lock size={16} className="text-[#4a6fa5]" />
                     </div>
                     <input
                       id="login-password" type={showPassword ? 'text' : 'password'} required placeholder="Contraseña"
                       value={password} onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-11 pr-12 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                      className="w-full pl-10 pr-10 py-3 text-sm rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-[#4a6fa5] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#4a6fa5] hover:text-white transition"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4a6fa5] hover:text-white transition"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 <button type="submit" disabled={loading} id="login-submit-btn"
-                  className="w-full py-3 mt-2 bg-white text-[#071B4D] font-black text-[17px] rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 mt-1 bg-white text-[#071B4D] font-black text-base rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  {loading ? <Loader2 size={20} className="animate-spin text-[#071B4D]" /> : 'Ingresar'}
+                  {loading ? <Loader2 size={18} className="animate-spin text-[#071B4D]" /> : 'Ingresar'}
                 </button>
 
-                <div className="flex items-center gap-3 my-1">
+                <div className="flex items-center gap-2 my-1.5">
                   <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-[#4a6fa5] whitespace-nowrap">o continuá con</span>
+                  <span className="text-[11px] text-[#4a6fa5] whitespace-nowrap">o continuá con</span>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <button type="button" id="login-facebook-btn"
-                    className="flex items-center justify-center gap-1.5 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 active:scale-[0.97] transition"
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold hover:bg-white/10 active:scale-[0.97] transition"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -308,8 +310,8 @@ export default function Login() {
             )}
 
             {!resetSuccess && (
-              <div className="mt-7 text-center space-y-3">
-                <p className="text-sm text-[#8da4c4]">
+              <div className="mt-4 text-center space-y-2">
+                <p className="text-xs text-[#8da4c4]">
                   ¿No tenés cuenta?{' '}
                   <button id="login-register-link" onClick={() => navigate('/register')}
                     className="text-[#00D4FF] font-bold hover:text-white transition"
@@ -319,20 +321,20 @@ export default function Login() {
                 </p>
                 <div className="flex items-center gap-2 justify-center">
                   <span className="h-px w-8 bg-white/15 block" />
-                  <span className="text-xs text-[#4a6fa5]">Opciones de Chofer</span>
+                  <span className="text-[10px] text-[#4a6fa5]">Opciones de Chofer</span>
                   <span className="h-px w-8 bg-white/15 block" />
                 </div>
                 <button id="login-chofer-link" onClick={() => navigate('/registro-conductor')}
-                  className="text-[#0D6EFD] font-bold text-sm hover:text-blue-400 transition"
+                  className="text-[#0D6EFD] font-bold text-xs hover:text-blue-400 transition"
                 >
                   Quiero ser chofer UBI
                 </button>
-                <div className="flex items-center justify-center gap-5 pt-2">
-                  <div className="flex items-center gap-1.5 text-[#4a6fa5]">
-                    <Car size={14} /><span className="text-[11px]">Viajes seguros</span>
+                <div className="flex items-center justify-center gap-4 pt-1">
+                  <div className="flex items-center gap-1 text-[#4a6fa5]">
+                    <Car size={12} /><span className="text-[10px]">Viajes seguros</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[#4a6fa5]">
-                    <ShieldCheck size={14} /><span className="text-[11px]">Choferes verificados</span>
+                  <div className="flex items-center gap-1 text-[#4a6fa5]">
+                    <ShieldCheck size={12} /><span className="text-[10px]">Choferes verificados</span>
                   </div>
                 </div>
               </div>

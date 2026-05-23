@@ -7,6 +7,20 @@
     <title>frontend</title>
   </head>
   <body>
+    <script>
+      window.addEventListener('error', function(e) {
+        var errDiv = document.createElement('div');
+        errDiv.style.cssText = 'color:red; background:white; position:fixed; top:0; left:0; z-index:99999; width:100%; padding:20px; word-wrap: break-word; font-family: monospace; font-size: 14px;';
+        errDiv.innerHTML = '<b>JS Error:</b> ' + e.message + '<br><small>' + e.filename + ':' + e.lineno + '</small>';
+        document.body.appendChild(errDiv);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var errDiv = document.createElement('div');
+        errDiv.style.cssText = 'color:red; background:white; position:fixed; top:0; left:0; z-index:99999; width:100%; padding:20px; word-wrap: break-word; font-family: monospace; font-size: 14px;';
+        errDiv.innerHTML = '<b>Promise Error:</b> ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+        document.body.appendChild(errDiv);
+      });
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

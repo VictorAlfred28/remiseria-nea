@@ -119,76 +119,70 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full flex items-start justify-center"
+      className="w-full relative bg-[#04102a]"
       style={{ 
-        background: '#03080f',
         minHeight: '100dvh',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div
-        id="login-card"
-        className="w-full flex flex-col overflow-hidden mx-auto h-full"
-        style={{
-          maxWidth: '600px',
-          background: '#03080f',
-          boxShadow: '0 0 80px rgba(0,0,0,0.7)',
+      {/* FONDO FIJO (IMAGEN) */}
+      <div 
+        className="fixed top-0 left-0 right-0 w-full flex justify-center pointer-events-none"
+        style={{ 
+          zIndex: 0, 
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)' 
         }}
       >
-        <div
-          id="login-image-section"
-          className="relative flex-shrink-0 w-full"
-          style={{
-            background: '#04102a',
-            overflow: 'hidden',
-            height: 'clamp(240px, 35vh, 320px)',
-          }}
-        >
+        <div className="w-full relative" style={{ maxWidth: '600px' }}>
           <img
             src={loginImg}
-            alt="UBI Traslados — Movemos personas. Conectamos destinos."
+            alt="UBI Traslados"
             style={{
               width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 40%',
+              height: 'auto',
+              objectFit: 'contain',
               display: 'block',
             }}
             draggable={false}
           />
-          <div
-            className="absolute bottom-0 left-0 right-0"
-            style={{
-              height: '80px',
-              background: 'linear-gradient(to bottom, transparent, #0d1829)',
-              pointerEvents: 'none',
-            }}
+          {/* Gradiente sutil para fundir la imagen con el fondo si es muy corta */}
+          <div 
+            className="absolute inset-0" 
+            style={{ background: 'linear-gradient(to bottom, transparent 50%, #04102a 100%)' }} 
           />
         </div>
+      </div>
 
-        <div
-          id="login-form-section"
-          className="relative flex-1 overflow-y-auto"
-          style={{
-            background: '#0d1829',
-            borderTopLeftRadius: '28px',
-            borderTopRightRadius: '28px',
-            marginTop: '-28px',
-            zIndex: 10,
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
+      {/* CONTENIDO DESLIZABLE (FORMULARIO) */}
+      <div 
+        className="relative z-10 w-full h-[100dvh] overflow-y-auto flex flex-col"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className="w-full mx-auto flex flex-col flex-1" style={{ maxWidth: '600px' }}>
+          
+          {/* Espaciador transparente para dejar ver la imagen de fondo */}
+          <div style={{ height: '52vh', minHeight: '300px', flexShrink: 0 }} />
+
           <div
-            className="absolute"
+            id="login-form-section"
+            className="flex-1 w-full relative"
             style={{
-              top: 0, left: '30%', right: '30%',
-              height: '4px', borderRadius: '9999px',
-              background: 'linear-gradient(90deg, transparent, #0D6EFD, #00D4FF, #0D6EFD, transparent)',
+              background: '#0d1829',
+              borderTopLeftRadius: '28px',
+              borderTopRightRadius: '28px',
+              boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)'
             }}
-          />
+          >
+            <div
+              className="absolute"
+              style={{
+                top: 0, left: '30%', right: '30%',
+                height: '4px', borderRadius: '9999px',
+                background: 'linear-gradient(90deg, transparent, #0D6EFD, #00D4FF, #0D6EFD, transparent)',
+              }}
+            />
 
-          <div className="w-full max-w-[430px] mx-auto px-6 pt-8 pb-10">
+            <div className="w-full max-w-[430px] mx-auto px-6 pt-8 pb-10">
             <div className="text-center mb-6">
               <h1 id="login-title" className="text-2xl font-black text-white tracking-tight">
                 {isResetView ? 'Recuperar Acceso' : 'Iniciar sesión'}
@@ -360,6 +354,7 @@ export default function Login() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -129,7 +129,7 @@ export default function Login() {
         className="fixed top-0 left-0 right-0 w-full flex justify-center pointer-events-none"
         style={{ 
           zIndex: 0, 
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)' 
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)' 
         }}
       >
         <div className="w-full relative" style={{ maxWidth: '600px' }}>
@@ -147,7 +147,7 @@ export default function Login() {
           {/* Gradiente sutil para fundir la imagen con el fondo si es muy corta */}
           <div 
             className="absolute inset-0" 
-            style={{ background: 'linear-gradient(to bottom, transparent 50%, #04102a 100%)' }} 
+            style={{ background: 'linear-gradient(to bottom, transparent 60%, #04102a 100%)' }} 
           />
         </div>
       </div>
@@ -159,8 +159,8 @@ export default function Login() {
       >
         <div className="w-full mx-auto flex flex-col flex-1" style={{ maxWidth: '600px' }}>
           
-          {/* Espaciador transparente para dejar ver la imagen de fondo */}
-          <div style={{ height: '52vh', minHeight: '300px', flexShrink: 0 }} />
+          {/* Espaciador transparente: al ser más corto que la imagen, el formulario se solapa sobre ella */}
+          <div style={{ height: '42vh', minHeight: '260px', flexShrink: 0 }} />
 
           <div
             id="login-form-section"

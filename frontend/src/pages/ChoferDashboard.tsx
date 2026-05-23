@@ -488,10 +488,10 @@ export default function ChoferDashboard() {
   };
 
   return (
-    <div className={`relative p-6 sm:p-8 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border backdrop-blur-xl w-full max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-700 transition-all ${isOnline ? 'bg-zinc-900/90 border-green-500/30 ring-1 ring-green-500/10' : 'bg-neutral-900/90 border-white/5'}`}>
+    <div className={`relative p-6 sm:p-8 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border backdrop-blur-xl w-full max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-700 transition-all glass-panel ${isOnline ? 'border-[#10B981]/50 ring-1 ring-[#10B981]/20' : 'border-[rgba(255,255,255,0.08)]'}`}>
       
       {/* DECORACIÓN FONDO (Brillo sutil) */}
-      <div className={`absolute -top-24 -left-24 w-64 h-64 blur-[120px] rounded-full pointer-events-none transition-opacity duration-1000 ${isOnline ? 'bg-green-500/10 opacity-100' : 'bg-white/5 opacity-0'}`} />
+      <div className={`absolute -top-24 -left-24 w-64 h-64 blur-[120px] rounded-full pointer-events-none transition-opacity duration-1000 ${isOnline ? 'bg-[#10B981]/20 opacity-100' : 'bg-[#0D6EFD]/20 opacity-100'}`} />
       
       {isBlocked && (
           <div className="relative mb-8 bg-red-600 text-white p-5 rounded-3xl flex items-center gap-4 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.3)] border-2 border-red-400/50 overflow-hidden">
@@ -528,8 +528,8 @@ export default function ChoferDashboard() {
               ${isBlocked 
                 ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed opacity-50' 
                 : (isOnline 
-                    ? 'bg-green-500 text-black shadow-[0_0_25px_rgba(34,197,94,0.4)] hover:bg-green-400 hover:shadow-green-400/60' 
-                    : 'bg-white text-black hover:bg-zinc-200 shadow-xl shadow-white/5')}
+                    ? 'bg-[#10B981] text-[#030712] shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:bg-[#059669] hover:shadow-[#10B981]/60' 
+                    : 'bg-[#0D6EFD] text-white hover:bg-blue-600 shadow-[0_0_20px_rgba(13,110,253,0.3)]')}
             `}
           >
               <Power size={20} className={isOnline ? "animate-pulse" : ""} /> 
@@ -579,8 +579,8 @@ export default function ChoferDashboard() {
             className={`
               relative flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-300 group overflow-hidden
               ${activeTab === tab.id 
-                ? 'bg-zinc-800/80 border-green-500/50 shadow-[0_15px_30px_-10px_rgba(34,197,94,0.15)] ring-1 ring-green-500/20 transform scale-[1.02]' 
-                : 'bg-zinc-900/40 border-white/5 hover:bg-zinc-800/40 hover:border-white/10'}
+                ? 'bg-black/60 border-[#0D6EFD]/50 shadow-[0_15px_30px_-10px_rgba(13,110,253,0.2)] ring-1 ring-[#0D6EFD]/30 transform scale-[1.02]' 
+                : 'bg-black/30 border-white/5 hover:bg-black/50 hover:border-white/10'}
             `}
           >
             <tab.icon size={26} className={`mb-2.5 transition-all duration-300 ${activeTab === tab.id ? tab.color : 'text-zinc-500 group-hover:text-zinc-300 group-hover:scale-110'}`} />
@@ -593,7 +593,7 @@ export default function ChoferDashboard() {
             )}
             
             {activeTab === tab.id && (
-              <div className="absolute inset-x-4 bottom-2 h-1 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+              <div className="absolute inset-x-4 bottom-2 h-1 bg-[#0D6EFD] rounded-full shadow-[0_0_10px_rgba(13,110,253,0.5)]" />
             )}
           </button>
         ))}

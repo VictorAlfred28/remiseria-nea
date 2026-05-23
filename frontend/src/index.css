@@ -1,16 +1,26 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ubi-deep: #071B4D;
+  --color-ubi-electric: #0D6EFD;
+  --color-ubi-cyan: #00D4FF;
+  --color-ubi-bg: #030712;
+  --color-ubi-card: rgba(10, 20, 60, 0.85);
+  --color-ubi-text-sec: #C7D2FE;
+  --color-ubi-border: rgba(255, 255, 255, 0.12);
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Poppins', 'Manrope', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: dark;
+  color: #ffffff;
+  background-color: var(--color-ubi-bg, #030712);
 
   font-synthesis: none;
-  text-Rendering: optimizeLegibility;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,13 +29,39 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* Mobile WebView Optimization */
+  background-color: var(--color-ubi-bg, #030712);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Utils for Capacitor Safe Areas */
+.safe-pt { padding-top: env(safe-area-inset-top, 0px); }
+.safe-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-mb { margin-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Custom Glassmorphism */
+.glass-panel {
+  background: var(--color-ubi-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-ubi-border);
+}
+
+/* Scrollbar Hide (Utility) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* ========================================================
@@ -37,20 +73,15 @@ body {
    
 .light-theme {
   filter: invert(1) hue-rotate(180deg);
-  background-color: #fff; /* Asegurar que el body tome un fondo base si el html es blanco se invierte a negro y vice versa */
+  background-color: #fff;
 }
 
-/* Prevenir que se reinviertan fotos de perfil, logotipos, mapas o videos.
-   Todo lo que requiera conservar su color puro debe tener .no-invert */
+/* Prevenir que se reinviertan fotos de perfil, logotipos, mapas o videos */
 .light-theme img,
 .light-theme video,
 .light-theme iframe,
 .light-theme .no-invert,
-.light-theme .leaflet-container {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-/* Si existe algún mapa con Leaflet se suele proteger especificamente */
+.light-theme .leaflet-container,
 .light-theme .leaflet-layer {
   filter: invert(1) hue-rotate(180deg);
 }

@@ -43,11 +43,11 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center font-sans selection:bg-blue-500/30">
+      <div className="min-h-[100dvh] bg-[#030712] text-white flex flex-col items-center font-sans selection:bg-blue-500/30">
         
         {/* Barra de navegación superior solo si hay sesión */}
         {user && (
-          <nav className="w-full bg-zinc-900/50 backdrop-blur-md p-4 shadow-lg flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
+          <nav className="w-full glass-panel !border-l-0 !border-r-0 !border-t-0 p-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex justify-between items-center border-b border-[rgba(255,255,255,0.08)] sticky top-0 z-50 safe-pt">
             <div className="flex items-center gap-6">
               <span className="text-xl font-black text-white ml-2 tracking-tight">Viajes NEA</span>
               
@@ -89,7 +89,7 @@ function App() {
           </nav>
         )}
         
-        <main className="w-full max-w-7xl relative flex-1">
+        <main className="w-full max-w-7xl relative flex-1 pb-[env(safe-area-inset-bottom,0px)]">
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />

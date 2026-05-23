@@ -121,24 +121,67 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute top-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-600/20 blur-[120px] rounded-full"></div>
-          <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-green-600/20 blur-[120px] rounded-full"></div>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+         <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-50" loading="lazy" />
+         <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/30 via-[#030712]/70 to-[#030712] backdrop-blur-[2px]"></div>
       </div>
 
-      <div className="relative w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-8 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-500">
+      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center animate-in fade-in duration-700 h-full overflow-y-auto scrollbar-hide">
         
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
-            <Car size={32} className="text-white" />
+        <div className="flex flex-col items-center mb-6 mt-8 sm:mt-12">
+          <div className="w-24 h-24 bg-[#071B4D] border border-white/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(13,110,253,0.3)] mb-4">
+            <div className="text-center">
+              <span className="text-4xl font-black text-white tracking-tighter block leading-none">UBI</span>
+              <span className="text-[10px] font-bold text-white tracking-widest block uppercase">Traslados</span>
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-1">Viajes NEA</h1>
-          <p className="text-zinc-400 text-sm text-center">
-            {isResetView ? "Recupera acceso a tu cuenta" : "Inicia sesión en tu panel corporativo"}
+          <h1 className="text-2xl font-black tracking-tight text-white mb-1 text-center">
+            {isResetView ? "Recuperar Acceso" : "Movemos personas."}
+          </h1>
+          <p className="text-[#00D4FF] font-bold text-lg text-center">
+            {isResetView ? "Ingresa tu email para continuar." : "Conectamos destinos."}
           </p>
         </div>
+
+        {/* Benefits Cards (Visual Only) */}
+        {!isResetView && (
+          <div className="grid grid-cols-4 gap-2 w-full mb-8 px-2">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-lg backdrop-blur-md">
+                <Car size={20} className="text-[#00D4FF]" />
+              </div>
+              <span className="text-[10px] text-[#C7D2FE] leading-tight font-medium">Viajes<br/>seguros</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-lg backdrop-blur-md">
+                <CheckCircle2 size={20} className="text-[#0D6EFD]" />
+              </div>
+              <span className="text-[10px] text-[#C7D2FE] leading-tight font-medium">Choferes<br/>verificados</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-lg backdrop-blur-md">
+                <span className="text-xl font-black text-[#00D4FF]">%</span>
+              </div>
+              <span className="text-[10px] text-[#C7D2FE] leading-tight font-medium">Beneficios y<br/>descuentos</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-lg backdrop-blur-md">
+                <span className="text-sm font-bold text-[#0D6EFD]">24/7</span>
+              </div>
+              <span className="text-[10px] text-[#C7D2FE] leading-tight font-medium">Soporte<br/>continuo</span>
+            </div>
+          </div>
+        )}
+
+        <div className="w-full glass-panel p-6 sm:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden mb-4">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0D6EFD]/50 to-transparent"></div>
+          
+          <div className="text-center mb-6">
+             <h2 className="text-xl font-bold text-white mb-1">{isResetView ? "Recuperación" : "Iniciar sesión"}</h2>
+             <p className="text-sm text-[#C7D2FE]">{isResetView ? "Te enviaremos un enlace" : "Accedé a tu cuenta para continuar"}</p>
+          </div>
 
         {errorMsg && (
           <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-400 text-sm px-4 py-3 rounded-xl animate-in fade-in">
@@ -169,7 +212,7 @@ export default function Login() {
                 <input
                   type="email"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600"
+                  className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] transition-all text-white placeholder-zinc-500"
                   placeholder="admin@viajesnea.app"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -180,7 +223,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 mt-2 bg-blue-600 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] hover:bg-blue-500 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 px-4 mt-2 bg-[#0D6EFD] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(13,110,253,0.3)] hover:shadow-[0_0_25px_rgba(13,110,253,0.5)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : "Enviar Enlace de Recuperación"}
             </button>
@@ -204,7 +247,7 @@ export default function Login() {
                 <input
                   type="email"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600"
+                  className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] transition-all text-white placeholder-zinc-500"
                   placeholder="admin@viajesnea.app"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -231,7 +274,7 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className="w-full pl-11 pr-12 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600"
+                  className="w-full pl-11 pr-12 py-3.5 bg-black/40 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] transition-all text-white placeholder-zinc-500"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -249,35 +292,38 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 mt-2 bg-white text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] hover:bg-zinc-100 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 px-4 mt-2 bg-white text-[#071B4D] font-black rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-lg"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : "Acceder al Sistema"}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : "Ingresar"}
             </button>
           </form>
         )}
 
-        {/* Link para registro, que nunca debe tapar la form */}
-        <div className="mt-6 text-center animate-in slide-in-from-bottom border-t border-zinc-800 pt-5">
-           <p className="text-zinc-400 text-sm">¿Sos pasajero y no tenés cuenta?</p>
+        <div className="mt-4 text-center pb-8">
+           <p className="text-[#C7D2FE] text-sm mb-2">¿No tenés cuenta?</p>
            <button 
              onClick={() => navigate('/register')}
-             className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium mt-1 mb-3"
+             className="text-[#00D4FF] hover:text-white transition-colors text-sm font-bold block mx-auto mb-3"
            >
-             Crear cuenta de pasajero
+             Registrate como pasajero
            </button>
 
-           <div className="border-t border-zinc-800/50 pt-3">
-              <p className="text-zinc-500 text-xs mt-1">¿Querés manejar con nosotros?</p>
-              <button 
-                onClick={() => navigate('/registro-conductor')}
-                className="text-green-400 hover:text-green-300 transition-colors text-sm font-medium mt-1"
-              >
-                Registrate como chofer
-              </button>
+           <div className="flex items-center gap-2 justify-center text-xs mt-4 opacity-70">
+              <span className="h-px w-8 bg-white/20"></span>
+              <span className="text-white">Opciones de Chofer</span>
+              <span className="h-px w-8 bg-white/20"></span>
            </div>
+           
+           <button 
+             onClick={() => navigate('/registro-conductor')}
+             className="text-[#0D6EFD] hover:text-white transition-colors text-sm font-bold mt-3 block mx-auto"
+           >
+             Quiero ser chofer UBI
+           </button>
         </div>
 
       </div>
+    </div>
     </div>
   );
 }

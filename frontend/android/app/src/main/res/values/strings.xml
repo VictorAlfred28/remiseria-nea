@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">remiseria-nea</string>
+    <string name="title_activity_main">remiseria-nea</string>
+    <string name="package_name">com.remiserianea.app</string>
+    <string name="custom_url_scheme">com.remiserianea.app</string>
+</resources>

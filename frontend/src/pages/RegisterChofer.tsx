@@ -157,14 +157,18 @@ export default function RegisterChofer() {
 
   if (success) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4">
-        <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-8 rounded-3xl shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
-             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
-                 <CheckCircle2 size={40} className="text-green-500" />
+      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#030712] p-4 relative">
+        <div className="absolute inset-0 z-0">
+           <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-40" loading="lazy" />
+           <div className="absolute inset-0 bg-[#030712]/80 backdrop-blur-[4px]"></div>
+        </div>
+        <div className="relative z-10 w-full max-w-md glass-panel p-8 rounded-[2rem] shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
+             <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                 <CheckCircle2 size={40} className="text-green-400" />
              </div>
              <h2 className="text-2xl font-black text-white mb-2">Solicitud Enviada</h2>
-             <p className="text-zinc-400 mb-8">Tu registro como chofer ha sido enviado exitosamente. Un administrador revisará tu perfil y documentación. Te notificaremos cuando tu cuenta sea aprobada.</p>
-             <button onClick={() => navigate('/login')} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-500 transition-colors">
+             <p className="text-[#C7D2FE] mb-8 text-sm">Tu registro como chofer ha sido enviado exitosamente. Un administrador revisará tu perfil y documentación. Te notificaremos cuando tu cuenta sea aprobada.</p>
+             <button onClick={() => navigate('/login')} className="w-full bg-[#0D6EFD] text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors shadow-[0_0_20px_rgba(13,110,253,0.3)]">
                Volver a Inicio de Sesión
              </button>
         </div>
@@ -196,15 +200,18 @@ export default function RegisterChofer() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden">
       
-      {/* Background blurs */}
-      <div className="absolute top-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-600/20 blur-[120px] rounded-full"></div>
-          <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-purple-600/20 blur-[120px] rounded-full"></div>
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+         <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-40" loading="lazy" />
+         <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/40 via-[#030712]/80 to-[#030712] backdrop-blur-[2px]"></div>
       </div>
 
-      <div className="relative w-full max-w-lg bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-6 md:p-8 rounded-3xl shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg p-4 safe-pt safe-pb flex flex-col items-center animate-in fade-in duration-700 h-full overflow-y-auto scrollbar-hide">
+        
+        <div className="w-full glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden mt-auto mb-auto">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0D6EFD]/50 to-transparent"></div>
         
         {/* Header Steps */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-zinc-800/80">
@@ -420,17 +427,18 @@ export default function RegisterChofer() {
              )}
              
              {step < 5 ? (
-                <button type="button" onClick={nextStep} className="flex-1 px-6 py-3.5 bg-white text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2">
+                <button type="button" onClick={nextStep} className="flex-1 px-6 py-4 bg-white text-[#071B4D] font-black rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] transition-all flex items-center justify-center gap-2">
                     Siguiente <ChevronRight size={18} />
                 </button>
              ) : (
-                <button type="submit" disabled={loading} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={loading} className="flex-1 py-4 bg-[#0D6EFD] hover:bg-blue-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(13,110,253,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : "Enviar Solicitud"}
                 </button>
              )}
           </div>
 
         </form>
+        </div>
       </div>
     </div>
   );

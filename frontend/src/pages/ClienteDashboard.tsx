@@ -568,7 +568,7 @@ export default function ClienteDashboard() {
     <>
     <div className="space-y-6 animate-in fade-in duration-500 pb-20 md:pb-0 relative">
       {/* HEADER PERFIL Y TABS */}
-      <header className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 p-6 rounded-3xl mb-6">
+      <header className="glass-panel p-6 rounded-3xl mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
            <div className="flex flex-col gap-3">
              <div>
@@ -583,7 +583,7 @@ export default function ClienteDashboard() {
            </div>
            
            {/* Navigation Tabs Desktop */}
-           <div className="hidden md:flex bg-black/40 p-1.5 rounded-xl gap-1">
+           <div className="hidden md:flex bg-black/40 p-1.5 rounded-xl gap-1 border border-white/10">
                {[
                  { id: 'pedir', label: 'Inicio', icon: Car },
                  { id: 'reservas', label: 'Reservas', icon: Calendar },
@@ -598,9 +598,9 @@ export default function ClienteDashboard() {
                  <button 
                    key={tab.id}
                    onClick={() => setActiveTab(tab.id as any)}
-                   className={`flex items-center gap-2 px-4 py-2 font-medium text-sm transition-all rounded-lg ${
+                   className={`flex items-center gap-2 px-4 py-2 font-bold text-sm transition-all rounded-lg ${
                       activeTab === tab.id 
-                       ? 'bg-blue-600 text-white shadow-lg' 
+                       ? 'bg-[#0D6EFD] text-white shadow-[0_0_20px_rgba(13,110,253,0.4)]' 
                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
                    }`}
                  >
@@ -608,33 +608,6 @@ export default function ClienteDashboard() {
                  </button>
               ))}
            </div>
-        </div>
-        
-        {/* Navigation Tabs Mobile (Scrollable) */}
-        <div className="flex md:hidden bg-black/40 p-1.5 rounded-xl gap-1 mt-4 overflow-x-auto snap-x scrollbar-hide py-2">
-           {[
-             { id: 'pedir', label: 'Inicio', icon: Car },
-             { id: 'reservas', label: 'Reservas', icon: Calendar },
-             { id: 'historial', label: 'Historial', icon: History },
-             { id: 'perfil', label: 'Perfil', icon: User },
-             { id: 'carnet', label: 'Carnet Socio', icon: Star },
-             { id: 'familia', label: 'Seguridad', icon: Shield },
-             { id: 'negocio', label: 'Mi Negocio', icon: Building },
-             ...(empresaAsignada ? [{ id: 'empresa', label: 'Viaje Empresa', icon: Building }] : []),
-             ...(esTitular ? [{ id: 'flota', label: 'Mi Flota', icon: Truck }] : [])
-           ].map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`snap-center flex-shrink-0 flex items-center gap-2 px-4 py-2 font-medium text-sm transition-all rounded-lg ${
-                   activeTab === tab.id 
-                    ? 'bg-blue-600 text-white shadow-lg' 
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <tab.icon size={16} /> {tab.label}
-              </button>
-           ))}
         </div>
       </header>
 
@@ -667,7 +640,7 @@ export default function ClienteDashboard() {
 
                {(viajeActivo && !viajeMinimizado) ? (
                  /* UI VIAJE ACTIVO */
-                 <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/20 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                 <div className="glass-panel rounded-[2rem] p-6 shadow-[0_0_40px_rgba(13,110,253,0.15)] relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
                       <Navigation size={120} />
                     </div>
@@ -744,7 +717,7 @@ export default function ClienteDashboard() {
                  </div>
                ) : (
                  /* UI SOLICITAR VIAJE */
-                 <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
+                 <div className="glass-panel rounded-[2rem] p-6 shadow-[0_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden">
                    <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                      <Car className="text-blue-400" /> Solicitar Móvil AHORA
                    </h2>
@@ -790,7 +763,7 @@ export default function ClienteDashboard() {
                                  if(cotizacion) setCotizacion(null);
                              }}
                              placeholder="¿Dónde te buscamos?"
-                             className="w-full bg-black/30 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none pr-10"
+                             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] outline-none pr-10 transition-all"
                            />
                            <button 
                              onClick={useMyLocation}
@@ -829,7 +802,7 @@ export default function ClienteDashboard() {
                               if(cotizacion) setCotizacion(null);
                           }}
                           placeholder="¿A dónde nos dirigimos?"
-                          className="w-full bg-black/30 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] outline-none transition-all"
                         />
                         {activeSugField === 'destino' && sugerencias.length > 0 && (
                             <div className="absolute z-50 left-10 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
@@ -851,7 +824,7 @@ export default function ClienteDashboard() {
                      <button 
                        onClick={handleCotizar}
                        disabled={loading || !origen || !destino}
-                       className="w-full mt-6 bg-white hover:bg-zinc-200 text-black font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                       className="w-full mt-6 bg-[#0D6EFD] hover:bg-blue-600 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(13,110,253,0.3)]"
                      >
                        {loading ? <Loader2 className="animate-spin" size={18} /> : <Calculator size={18} />}
                        Calcular Viaje
@@ -1387,6 +1360,31 @@ export default function ClienteDashboard() {
       </div>
     )}
 
+
+    {/* BOTTOM NAVIGATION MOBILE (ESTILO UBER) */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-panel !border-b-0 !border-l-0 !border-r-0 !rounded-none pb-[env(safe-area-inset-bottom)] z-50">
+      <div className="flex justify-between items-center px-6 py-2">
+         {[
+           { id: 'pedir', label: 'Inicio', icon: Car },
+           { id: 'reservas', label: 'Agendar', icon: Calendar },
+           { id: 'historial', label: 'Viajes', icon: History },
+           { id: 'perfil', label: 'Cuenta', icon: User }
+         ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className="flex flex-col items-center gap-1 p-2 transition-all active:scale-95"
+            >
+               <div className={`p-2 rounded-full transition-all ${activeTab === tab.id ? 'bg-[#0D6EFD]/20 text-[#00D4FF]' : 'text-zinc-400'}`}>
+                  <tab.icon size={22} className={activeTab === tab.id ? 'fill-[#0D6EFD]/20' : ''} />
+               </div>
+               <span className={`text-[10px] font-bold ${activeTab === tab.id ? 'text-white' : 'text-zinc-500'}`}>
+                 {tab.label}
+               </span>
+            </button>
+         ))}
+      </div>
+    </nav>
   </>
   );
 }

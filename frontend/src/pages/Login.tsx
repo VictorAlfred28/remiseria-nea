@@ -119,15 +119,19 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="min-h-screen w-full flex items-start justify-center"
-      style={{ background: '#03080f' }}
+      className="w-full flex items-start justify-center"
+      style={{ 
+        background: '#03080f',
+        minHeight: '100dvh',
+        paddingTop: 'max(env(safe-area-inset-top), 32px)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
     >
       <div
         id="login-card"
-        className="w-full flex flex-col overflow-hidden mx-auto"
+        className="w-full flex flex-col overflow-hidden mx-auto h-full"
         style={{
           maxWidth: '600px',
-          minHeight: '100svh',
           background: '#03080f',
           boxShadow: '0 0 80px rgba(0,0,0,0.7)',
         }}
@@ -136,10 +140,8 @@ export default function Login() {
           id="login-image-section"
           className="relative flex-shrink-0 w-full"
           style={{
-            height: '310px',
             background: '#04102a',
             overflow: 'hidden',
-            paddingTop: 'max(env(safe-area-inset-top), 36px)',
           }}
         >
           <img
@@ -147,8 +149,9 @@ export default function Login() {
             alt="UBI Traslados — Movemos personas. Conectamos destinos."
             style={{
               width: '100%',
-              height: '100%',
-              objectFit: 'cover',
+              height: 'auto',
+              maxHeight: '360px',
+              objectFit: 'contain',
               objectPosition: 'center top',
               display: 'block',
             }}

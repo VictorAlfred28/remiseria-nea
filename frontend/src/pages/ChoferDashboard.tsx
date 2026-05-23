@@ -491,7 +491,7 @@ export default function ChoferDashboard() {
     <div className={`relative p-6 sm:p-8 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border backdrop-blur-xl w-full max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-700 transition-all glass-panel ${isOnline ? 'border-[#10B981]/50 ring-1 ring-[#10B981]/20' : 'border-[rgba(255,255,255,0.08)]'}`}>
       
       {/* DECORACIÓN FONDO (Brillo sutil) */}
-      <div className={`absolute -top-24 -left-24 w-64 h-64 blur-[120px] rounded-full pointer-events-none transition-opacity duration-1000 ${isOnline ? 'bg-[#10B981]/20 opacity-100' : 'bg-[#0D6EFD]/20 opacity-100'}`} />
+      <div className={`absolute -top-24 -left-24 w-64 h-64 rounded-full pointer-events-none transition-opacity duration-1000 ${isOnline ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#10B981]/20 to-transparent' : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0D6EFD]/20 to-transparent'}`} />
       
       {isBlocked && (
           <div className="relative mb-8 bg-red-600 text-white p-5 rounded-3xl flex items-center gap-4 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.3)] border-2 border-red-400/50 overflow-hidden">
@@ -1010,7 +1010,7 @@ export default function ChoferDashboard() {
                              </div>
 
                              {/* Fondo decorativo hover */}
-                             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-500/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                          </div>
                      ))
                  )}

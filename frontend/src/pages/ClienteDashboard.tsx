@@ -1144,8 +1144,8 @@ export default function ClienteDashboard() {
                   {/* Tarjeta Tipo Premium */}
                   <div className="relative w-full aspect-[1.586/1] bg-gradient-to-tr from-zinc-950 via-zinc-900 to-zinc-800 p-6 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/10 opacity-30 group-hover:opacity-100 transition-opacity duration-700"></div>
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl mix-blend-overlay"></div>
-                      <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent rounded-full mix-blend-overlay"></div>
+                      <div className="absolute bottom-0 left-0 w-40 h-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/20 to-transparent rounded-full"></div>
 
                       <div className="relative z-10 flex flex-col h-full justify-between">
                          <div className="flex justify-between items-start">
@@ -1179,7 +1179,7 @@ export default function ClienteDashboard() {
 
                   {/* Zona QR Dinámico */}
                   <div className="relative mt-10 w-full flex flex-col items-center">
-                     <div className="absolute inset-0 bg-blue-500/5 rounded-3xl blur-xl"></div>
+                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/5 to-transparent rounded-3xl"></div>
                      <div className="relative bg-white p-6 sm:p-8 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.05)] flex flex-col items-center justify-center min-h-[250px] min-w-[250px] w-full max-w-[280px]">
                         {qrToken ? (
                            <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">

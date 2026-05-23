@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import TripSimulator, { TripStatus } from '../components/cliente/TripSimulator';
+import TripSimulator from '../components/cliente/TripSimulator';
+import type { TripStatus } from '../components/cliente/TripSimulator';
 import { ArrowLeft, Play, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

@@ -85,8 +85,8 @@ export default function ComercioDashboard() {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-blue-500/30">
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/3" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-600/10 to-transparent rounded-full translate-y-1/3 -translate-x-1/3" />
       </div>
 
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 relative z-10 flex flex-col min-h-screen">

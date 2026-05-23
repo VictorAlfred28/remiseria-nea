@@ -132,7 +132,7 @@ export default function Login() {
           style={{ 
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
             minHeight: '20vh',
-            maxHeight: '43vh'
+            maxHeight: '48vh'
           }}
         >
           <img
@@ -141,10 +141,10 @@ export default function Login() {
             style={{
               width: '100%',
               height: '100%',
-              maxHeight: '43vh',
+              maxHeight: '48vh',
               objectFit: 'contain',
               display: 'block',
-              transform: 'scaleX(1.15) scaleY(1.02)',
+              transform: 'scale(1.22)',
               transformOrigin: 'bottom center',
             }}
             draggable={false}

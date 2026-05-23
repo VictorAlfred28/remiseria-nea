@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.remiserianea.app',
-  appName: 'remiseria-nea',
+  appName: 'Traslados UBI',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

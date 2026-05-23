@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  network_security_config.xml
+  Permite tráfico HTTP claro en Android 9+ para el backend FastAPI.
+  Capacitor requiere esto cuando el backend no usa HTTPS.
+  Sin este archivo, Android 9+ bloquea HTTP y genera "Failed fetch".
+-->
+<network-security-config>
+    <!-- Permite texto claro (HTTP) en TODOS los dominios -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- Dominio específico del backend de producción -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">viajesnea.agentech.ar</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

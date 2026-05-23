@@ -407,7 +407,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
                         <div className="bg-zinc-800/40 p-5 rounded-2xl border border-zinc-700/50 text-center">
                             <Lock className="mx-auto text-zinc-500 mb-2" />
                             <p className="text-sm font-bold text-zinc-300">Restricciones Avanzadas</p>
-                            <p className="text-xs text-zinc-500 mt-1">Tu Remisería no te ha asignado un Plan PRO para limitar el horario y consumo de tus dependientes.</p>
+                            <p className="text-xs text-zinc-500 mt-1">Tu Traslados UBI no te ha asignado un Plan PRO para limitar el horario y consumo de tus dependientes.</p>
                         </div>
                     )}
                     

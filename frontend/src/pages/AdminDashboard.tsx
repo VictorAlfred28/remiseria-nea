@@ -415,7 +415,7 @@ export default function AdminDashboard() {
   return (
     <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] shadow-2xl animate-in fade-in zoom-in-95 duration-500 w-full overflow-hidden relative">
       <h1 className="text-3xl font-black text-white mb-6 tracking-tight">
-        Panel de Administración <span className="text-[#0D6EFD] font-light">| Remisería</span>
+        Panel de Administración <span className="text-[#0D6EFD] font-light">| UBI</span>
       </h1>
       
       <div className="flex gap-4 mb-8 border-b border-white/10 pb-4 overflow-x-auto scrollbar-hide">

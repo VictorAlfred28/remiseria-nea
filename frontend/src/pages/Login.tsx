@@ -128,11 +128,11 @@ export default function Login() {
         
         {/* IMAGEN SUPERIOR (Flujo normal) */}
         <div 
-          className="w-full relative flex-shrink bg-[#04102a] flex items-end"
+          className="w-full relative flex-shrink bg-[#04102a] flex items-end overflow-hidden"
           style={{ 
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
             minHeight: '20vh',
-            maxHeight: '40vh'
+            maxHeight: '43vh'
           }}
         >
           <img
@@ -141,9 +141,11 @@ export default function Login() {
             style={{
               width: '100%',
               height: '100%',
-              maxHeight: '40vh',
+              maxHeight: '43vh',
               objectFit: 'contain',
               display: 'block',
+              transform: 'scaleX(1.15) scaleY(1.02)',
+              transformOrigin: 'bottom center',
             }}
             draggable={false}
           />

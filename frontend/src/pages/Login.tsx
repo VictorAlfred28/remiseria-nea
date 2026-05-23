@@ -119,20 +119,21 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full relative bg-[#04102a]"
+      className="w-full min-h-[100dvh] overflow-y-auto flex flex-col items-center bg-[#03080f]"
       style={{ 
-        minHeight: '100dvh',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      {/* FONDO FIJO (IMAGEN) */}
-      <div 
-        className="fixed top-0 left-0 right-0 w-full flex justify-center pointer-events-none"
-        style={{ 
-          zIndex: 0, 
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)' 
-        }}
-      >
-        <div className="w-full relative" style={{ maxWidth: '600px' }}>
+      <div className="w-full flex flex-col flex-1" style={{ maxWidth: '600px' }}>
+        
+        {/* IMAGEN SUPERIOR (Flujo normal) */}
+        <div 
+          className="w-full relative flex-shrink-0 bg-[#04102a]"
+          style={{ 
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)',
+          }}
+        >
           <img
             src={loginImg}
             alt="UBI Traslados"
@@ -144,35 +145,20 @@ export default function Login() {
             }}
             draggable={false}
           />
-          {/* Gradiente sutil para fundir la imagen con el fondo si es muy corta */}
-          <div 
-            className="absolute inset-0" 
-            style={{ background: 'linear-gradient(to bottom, transparent 60%, #04102a 100%)' }} 
-          />
         </div>
-      </div>
 
-      {/* CONTENIDO DESLIZABLE (FORMULARIO) */}
-      <div 
-        className="relative z-10 w-full h-[100dvh] overflow-y-auto flex flex-col"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        <div className="w-full mx-auto flex flex-col flex-1" style={{ maxWidth: '600px' }}>
-          
-          {/* Espaciador transparente: al ser más corto que la imagen, el formulario se solapa sobre ella */}
-          <div style={{ height: '42vh', minHeight: '260px', flexShrink: 0 }} />
-
-          <div
-            id="login-form-section"
-            className="flex-1 w-full relative"
-            style={{
-              background: '#0d1829',
-              borderTopLeftRadius: '28px',
-              borderTopRightRadius: '28px',
-              boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
-              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)'
-            }}
-          >
+        {/* FORMULARIO (Flujo normal, se mueve junto con la imagen) */}
+        <div
+          id="login-form-section"
+          className="flex-1 w-full relative z-10"
+          style={{
+            background: '#0d1829',
+            borderTopLeftRadius: '28px',
+            borderTopRightRadius: '28px',
+            marginTop: '-28px', /* Superpone el formulario sobre el borde de la imagen para unión perfecta */
+            boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
+          }}
+        >
             <div
               className="absolute"
               style={{
@@ -354,7 +340,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

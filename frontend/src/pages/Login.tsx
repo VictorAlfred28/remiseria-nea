@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Mail, Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff, Car, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import loginImg from '../assets/login/imagen-login.png';
+import loginImg from '../assets/login/imagen-login.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');

@@ -123,8 +123,8 @@ export default function Login() {
       style={{ 
         background: '#03080f',
         minHeight: '100dvh',
-        paddingTop: 'max(env(safe-area-inset-top), 32px)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
       <div
@@ -142,6 +142,7 @@ export default function Login() {
           style={{
             background: '#04102a',
             overflow: 'hidden',
+            height: 'clamp(240px, 35vh, 320px)',
           }}
         >
           <img
@@ -149,10 +150,9 @@ export default function Login() {
             alt="UBI Traslados — Movemos personas. Conectamos destinos."
             style={{
               width: '100%',
-              height: 'auto',
-              maxHeight: '360px',
-              objectFit: 'contain',
-              objectPosition: 'center top',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 40%',
               display: 'block',
             }}
             draggable={false}

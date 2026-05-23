@@ -7,11 +7,12 @@ import ChoferDashboard from "./pages/ChoferDashboard";
 import ClienteDashboard from "./pages/ClienteDashboard";
 import ComercioDashboard from "./pages/ComercioDashboard";
 import PromocionDetalle from "./pages/PromocionDetalle";
+import TariffPrintView from './pages/TariffPrintView';
+import TestSimulator from './pages/TestSimulator';
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RegisterChofer from "./pages/RegisterChofer";
 import LiveTracker from "./pages/LiveTracker";
-import TariffPrintView from "./pages/TariffPrintView";
 import { useAuthStore } from "./store/useAuthStore";
 import { LogOut, Sun, Moon } from "lucide-react";
 
@@ -100,6 +101,7 @@ function App() {
             <Route path="/registro-conductor" element={user ? <Navigate to="/" /> : <RegisterChofer />} />
             
             <Route path="/track/:viajeId" element={<LiveTracker />} />
+            <Route path="/test-simulator" element={<TestSimulator />} />
             
             <Route path="/" element={
               <div className="flex items-center justify-center p-10 h-[80vh]">

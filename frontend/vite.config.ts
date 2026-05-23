@@ -4,8 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // Requerido por Capacitor para rutas relativas
   plugins: [react(), tailwindcss()],
   build: {
+    // Compatibilidad para WebViews en Android más antiguos
+    target: 'es2015',
     // Apagar sourcemaps para proteger el código original en producción
     sourcemap: false,
 

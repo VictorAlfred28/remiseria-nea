@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { Capacitor } from '@capacitor/core';
 import AdminDashboard from "./pages/AdminDashboard";
 import ChoferDashboard from "./pages/ChoferDashboard";
 import ClienteDashboard from "./pages/ClienteDashboard";
@@ -13,6 +14,9 @@ import LiveTracker from "./pages/LiveTracker";
 import TariffPrintView from "./pages/TariffPrintView";
 import { useAuthStore } from "./store/useAuthStore";
 import { LogOut, Sun, Moon } from "lucide-react";
+
+// Selección dinámica del Router: HashRouter es obligatorio en Android/iOS para evitar pantalla negra por rutas file:// o custom schemes
+const AppRouter = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
 
 // Inyectar clase inicial al cargar la app sin esperar al componente react
 if (localStorage.getItem('theme') === 'light') {
@@ -42,8 +46,8 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="min-h-[100dvh] bg-[#030712] text-white flex flex-col items-center font-sans selection:bg-blue-500/30">
+    <AppRouter>
+      <div className="min-h-screen bg-[#030712] text-white flex flex-col items-center font-sans selection:bg-blue-500/30 w-full h-full">
         
         {/* Barra de navegación superior solo si hay sesión */}
         {user && (
@@ -158,7 +162,7 @@ function App() {
           </Routes>
         </main>
       </div>
-    </Router>
+    </AppRouter>
   );
 }
 

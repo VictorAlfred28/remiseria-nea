@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase, Truck } from "lucide-react";
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
     if (!orgId) return;
     setLoadingClientes(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/clientes/puntos`, {
+      const resp = await fetch(`${API_BASE_URL}/admin/clientes/puntos`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if(resp.ok) {
@@ -217,7 +218,7 @@ export default function AdminDashboard() {
     if (!editCliente) return;
     setUpdatingCliente(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/cliente/${editCliente.id}/puntos`, {
+      const resp = await fetch(`${API_BASE_URL}/admin/cliente/${editCliente.id}/puntos`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -997,7 +998,7 @@ export default function AdminDashboard() {
                   e.preventDefault();
                   setLoadingTitular(true); setTitularError(''); setCreatedTitular(null);
                   try {
-                    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+                    const apiBase = API_BASE_URL;
                     const resp = await fetch(`${apiBase}/admin/create-titular`, {
                       method: 'POST',
                       headers: {

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck } from "lucide-react";
@@ -127,7 +128,7 @@ export default function ClienteDashboard() {
 
   const cargarEmpresaStatus = async () => {
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/empresa`, {
+      const resp = await fetch(`${API_BASE_URL}/cliente/empresa`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if(resp.ok) {
@@ -145,7 +146,7 @@ export default function ClienteDashboard() {
 
   const cargarPuntosStatus = async () => {
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/puntos/status`, {
+      const resp = await fetch(`${API_BASE_URL}/cliente/puntos/status`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if(resp.ok) {
@@ -159,7 +160,7 @@ export default function ClienteDashboard() {
 
   const cargarReservas = async () => {
      try {
-       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/reservas`, {
+       const resp = await fetch(`${API_BASE_URL}/cliente/reservas`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
        });
         if(resp.ok) {
@@ -178,7 +179,7 @@ export default function ClienteDashboard() {
 
   const handleTripAction = async (tripId: string, action: 'approve' | 'reject') => {
       try {
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/${action}-trip/${tripId}`, {
+          const resp = await fetch(`${API_BASE_URL}/family/${action}-trip/${tripId}`, {
               method: 'POST',
               headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
           });
@@ -230,7 +231,7 @@ export default function ClienteDashboard() {
 
   const cargarQrSocio = async () => {
      try {
-       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/socios/qr_token`, {
+       const resp = await fetch(`${API_BASE_URL}/socios/qr_token`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
        });
        if(resp.ok) {
@@ -270,7 +271,7 @@ export default function ClienteDashboard() {
      if(!viajeACompletar) return;
      setRatingLoading(true);
      try {
-        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/viaje/${viajeACompletar.id}/calificar`, {
+        const resp = await fetch(`${API_BASE_URL}/cliente/viaje/${viajeACompletar.id}/calificar`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` },
             body: JSON.stringify({ puntuacion: ratingVal, comentario: ratingComentario })
@@ -320,7 +321,7 @@ export default function ClienteDashboard() {
     const distanciaKmCalculada = parseFloat(calculateDistance(oLat, oLng, dLat, dLng));
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/viaje/cotizar`, {
+      const response = await fetch(`${API_BASE_URL}/cliente/viaje/cotizar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -355,7 +356,7 @@ export default function ClienteDashboard() {
     const dLng = destinoCoords?.lng || -58.9822;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/viaje`, {
+      const response = await fetch(`${API_BASE_URL}/cliente/viaje`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -395,7 +396,7 @@ export default function ClienteDashboard() {
     if(!confirm("¿Estás seguro que deseas cancelar este viaje?")) return;
     setLoading(true);
     try {
-       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/viaje/${viajeActivo.id}/cancelar`, {
+       const resp = await fetch(`${API_BASE_URL}/cliente/viaje/${viajeActivo.id}/cancelar`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
        });
@@ -419,7 +420,7 @@ export default function ClienteDashboard() {
 
   const handlePagarViaje = async (viaje: any) => {
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/payments/create_trip_preference`, {
+      const resp = await fetch(`${API_BASE_URL}/payments/create_trip_preference`, {
          method: "POST",
          headers: {
            "Content-Type": "application/json",
@@ -493,7 +494,7 @@ export default function ClienteDashboard() {
      if(!origen || !destino || !resFecha || !resHora) return;
      setLoading(true);
      try {
-       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/reservas`, {
+       const resp = await fetch(`${API_BASE_URL}/cliente/reservas`, {
           method: "POST",
           headers: {
              "Content-Type": "application/json",

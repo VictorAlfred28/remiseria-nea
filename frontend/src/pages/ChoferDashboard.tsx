@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck } from "lucide-react";
@@ -300,7 +301,7 @@ export default function ChoferDashboard() {
         const updateUbicacion = async () => {
             try {
                 // 1. Actualizar la tabla choferes (para que titulares vean en tiempo real)
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+                const apiUrl = API_BASE_URL;
                 const token = sessionStorage.getItem('sb-access-token');
                 await fetch(`${apiUrl}/chofer/ubicacion/actualizar?lat=${choferCoords.lat}&lng=${choferCoords.lng}`, {
                     method: 'POST',

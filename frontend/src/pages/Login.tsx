@@ -134,11 +134,12 @@ export default function Login() {
       >
         <div
           id="login-image-section"
-          className="relative flex-shrink-0"
+          className="relative flex-shrink-0 w-full"
           style={{
-            height: '360px',
+            height: '310px',
             background: '#04102a',
             overflow: 'hidden',
+            paddingTop: 'max(env(safe-area-inset-top), 36px)',
           }}
         >
           <img
@@ -147,7 +148,7 @@ export default function Login() {
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
+              objectFit: 'cover',
               objectPosition: 'center top',
               display: 'block',
             }}
@@ -282,7 +283,7 @@ export default function Login() {
                 </div>
 
                 <button type="submit" disabled={loading} id="login-submit-btn"
-                  className="w-full py-4 mt-2 bg-white text-[#071B4D] font-black text-[17px] rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full py-3 mt-2 bg-white text-[#071B4D] font-black text-[17px] rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 size={20} className="animate-spin text-[#071B4D]" /> : 'Ingresar'}
                 </button>

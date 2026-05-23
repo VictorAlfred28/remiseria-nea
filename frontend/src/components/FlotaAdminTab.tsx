@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Car, User, Phone, PlusCircle, Loader2, RefreshCw, 
@@ -7,7 +8,7 @@ import MantenimientoTab from './titular/MantenimientoTab';
 import TramitesTab from './titular/TramitesTab';
 import { supabase } from '../lib/supabase';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API = API_BASE_URL;
 const token = () => localStorage.getItem('sb-access-token') ?? '';
 
 interface FlotaAdminTabProps {

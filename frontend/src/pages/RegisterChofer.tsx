@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone, CheckCircle2, ChevronRight, UploadCloud, MapPin, X } from 'lucide-react';
@@ -79,23 +80,46 @@ export default function RegisterChofer() {
       return;
     }
 
+    // Validations
+    if (!/^\d{8}$/.test(dni.trim())) {
+      setErrorMsg("El DNI debe contener exactamente 8 números.");
+      return;
+    }
+    if (!/^\d+$/.test(telefono.replace(/\s+/g, '').replace('+', ''))) {
+      setErrorMsg("El teléfono debe contener solo números.");
+      return;
+    }
+    
+    // Convert email to lowercase
+    const finalEmail = email.toLowerCase().trim();
+
     setLoading(true);
     setErrorMsg('');
 
     try {
-      // 1. Obtener org default (al igual que pasajero)
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${apiBase}/public/organizaciones/default`);
+      // 1. Obtener org default
+      const apiBase = API_BASE_URL;
+      let response;
+      try {
+        response = await fetch(`${apiBase}/public/organizaciones/default`);
+      } catch (networkErr) {
+        throw new Error("No se pudo conectar con el servidor. Verificá tu conexión e intentá nuevamente.");
+      }
       if (!response.ok) throw new Error("No hay organizaciones configuradas en la plataforma.");
       const { id: organizacionId } = await response.json();
 
       // 2. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: finalEmail,
         password,
       });
 
-      if (authError) throw new Error(authError.message);
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error("Este correo ya se encuentra registrado.");
+        }
+        throw new Error(authError.message);
+      }
       if (!authData.user) throw new Error("No se pudo crear el usuario.");
 
       const userId = authData.user.id;
@@ -107,45 +131,52 @@ export default function RegisterChofer() {
         if (dorsoFile) uploadedDocs.push(await uploadFile(dorsoFile, userId, 'licencia_dorso'));
         if (antecedentesFile) uploadedDocs.push(await uploadFile(antecedentesFile, userId, 'antecedentes'));
       } catch (uploadErr: any) {
-        throw new Error(uploadErr.message || "Error al subir archivos.");
+        throw new Error(uploadErr.message || "Error al subir archivos. Verificá tu conexión.");
       }
 
       // 4. Mudar al backend para que registre en public.usuarios y public.choferes
       const vehiculoFinal = tieneVehiculo ? vehiculoMarcaModelo : null;
       const patenteFinal = tieneVehiculo ? patente.toUpperCase() : null;
 
-      const profileResp = await fetch(`${apiBase}/public/registro/chofer`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-              id: userId,
-              nombre: nombre,
-              email: email,
-              telefono: telefono,
-              dni: dni,
-              direccion: direccion,
-              vehiculo: vehiculoFinal,
-              patente: patenteFinal,
-              licencia_numero: licenciaNumero,
-              licencia_categoria: licenciaCategoria,
-              licencia_vencimiento: licenciaVencimiento,
-              documentos: uploadedDocs,
-              tiene_vehiculo: tieneVehiculo,
-              tipo_pago: 'comision',
-              valor_pago: 0.0,
-              organizacion_id: organizacionId
-          })
-      });
+      let profileResp;
+      try {
+        profileResp = await fetch(`${apiBase}/public/registro/chofer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: userId,
+                nombre: nombre,
+                email: finalEmail,
+                telefono: telefono,
+                dni: dni,
+                direccion: direccion,
+                vehiculo: vehiculoFinal,
+                patente: patenteFinal,
+                licencia_numero: licenciaNumero,
+                licencia_categoria: licenciaCategoria,
+                licencia_vencimiento: licenciaVencimiento,
+                documentos: uploadedDocs,
+                tiene_vehiculo: tieneVehiculo,
+                tipo_pago: 'comision',
+                valor_pago: 0.0,
+                organizacion_id: organizacionId
+            })
+        });
+      } catch (networkErr) {
+        throw new Error("No se pudo conectar con el servidor para guardar tu registro de chofer.");
+      }
 
       if (!profileResp.ok) {
-        const detail = await profileResp.json();
-        throw new Error("Error en registro de datos: " + (detail.detail || profileResp.statusText));
+        const detail = await profileResp.json().catch(() => ({}));
+        const errMsg = detail.detail || profileResp.statusText;
+        if (errMsg.includes('ya existe') || errMsg.includes('already exists')) {
+             throw new Error("Este correo ya se encuentra registrado.");
+        }
+        throw new Error("Error en registro de datos: " + errMsg);
       }
 
       setSuccess(true);
-      // Cerramos sesión por las dudas porque si Auth la dejó abierta, el authState lo bloquearía
+      // Cerramos sesión por las dudas
       await supabase.auth.signOut();
 
     } catch (err: any) {

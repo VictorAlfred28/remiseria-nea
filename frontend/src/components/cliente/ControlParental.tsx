@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import { useState, useEffect } from "react";
 import { Lock, User, Shield, Plus, Trash2, Map } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -23,7 +24,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
     const cargarFamilia = async () => {
         if (!user) return;
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/members`, {
+            const resp = await fetch(`${API_BASE_URL}/family/members`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if (resp.ok) {
@@ -41,7 +42,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
 
     const cargarZonasPro = async () => {
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones`, {
+            const resp = await fetch(`${API_BASE_URL}/family/zones`, {
                headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if(resp.ok) {
@@ -60,7 +61,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
 
     const cargarReglasPro = async () => {
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/rules`, {
+            const resp = await fetch(`${API_BASE_URL}/family/rules`, {
                headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if(resp.ok) {
@@ -79,7 +80,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
     const handleCreateGroup = async () => {
         setFamilyLoading(true);
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/create`, {
+            const resp = await fetch(`${API_BASE_URL}/family/create`, {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
@@ -100,7 +101,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
         if(!invitePhone) return;
         setFamilyLoading(true);
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/invite`, {
+            const resp = await fetch(`${API_BASE_URL}/family/invite`, {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ telefono: invitePhone, nombre: inviteName || "Familiar" })
@@ -123,7 +124,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
         e.preventDefault();
         setFamilyLoading(true);
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/accept`, {
+            const resp = await fetch(`${API_BASE_URL}/family/accept`, {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ tutor_telefono: tutorPhoneToAccept })
@@ -144,7 +145,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
 
     const handleTripAction = async (viajeId: string, action: 'approve'|'reject') => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/trip-action`, {
+            const res = await fetch(`${API_BASE_URL}/family/trip-action`, {
                 method: 'POST',
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ viaje_id: viajeId, action })
@@ -171,7 +172,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
             if (familyRules.allowed_end_time) payload.allowed_end_time = familyRules.allowed_end_time;
             payload.require_approval = familyRules.require_approval;
 
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/rules`, {
+            const res = await fetch(`${API_BASE_URL}/family/rules`, {
                method: 'POST',
                headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
                body: JSON.stringify(payload)
@@ -194,7 +195,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
         e.preventDefault();
         setFamilyLoading(true);
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones`, {
+            const res = await fetch(`${API_BASE_URL}/family/zones`, {
                method: 'POST',
                headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`, "Content-Type": "application/json" },
                body: JSON.stringify(newZone)
@@ -216,7 +217,7 @@ export default function ControlParental({ user, isPro }: { user: any, isPro: boo
     const handleDeleteZone = async (zona_id: string) => {
         if(!confirm("¿Eliminar zona límite?")) return;
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/family/zones/${zona_id}`, {
+            const res = await fetch(`${API_BASE_URL}/family/zones/${zona_id}`, {
                method: 'DELETE',
                headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });

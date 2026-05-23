@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '../config';
 import axios from "axios";
 
 // Instancia de API base apuntando a FastAPI
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
+  baseURL: API_BASE_URL,
 });
 
 // Interceptor para inyectar token JWT de Supabase

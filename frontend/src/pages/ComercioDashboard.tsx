@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
@@ -50,7 +51,7 @@ export default function ComercioDashboard() {
     setLoading(true);
 
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/socios/validar_qr`, {
+      const resp = await fetch(`${API_BASE_URL}/socios/validar_qr`, {
           method: 'POST',
           headers: {
             "Content-Type": "application/json",

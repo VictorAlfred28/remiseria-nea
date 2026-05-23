@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 /**
  * MiFlotaTab — Panel del Titular
  * Integrado en ClienteDashboard cuando roles.includes('titular').
@@ -14,7 +15,7 @@ import BolsaTitularTab from '../bolsa/BolsaTitularTab';
 import MantenimientoTab from '../titular/MantenimientoTab';
 import TramitesTab from '../titular/TramitesTab';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API = API_BASE_URL;
 const token = () => sessionStorage.getItem('sb-access-token') ?? '';
 
 const apiFetch = (path: string) =>

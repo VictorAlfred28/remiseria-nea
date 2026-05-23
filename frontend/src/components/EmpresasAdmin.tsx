@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Loader2, Plus, Edit, Trash2, Building, Users, Percent, Search, CreditCard, History, DollarSign } from "lucide-react";
@@ -23,7 +24,7 @@ export default function EmpresasAdmin() {
     const fetchEmpresas = async () => {
         setLoading(true);
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas`, {
+            const resp = await fetch(`${API_BASE_URL}/admin/empresas`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if (resp.ok) {
@@ -43,8 +44,8 @@ export default function EmpresasAdmin() {
         try {
             const method = id ? "PUT" : "POST";
             const url = id 
-                ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${id}` 
-                : `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas`;
+                ? `${API_BASE_URL}/admin/empresas/${id}` 
+                : `${API_BASE_URL}/admin/empresas`;
                 
             const resp = await fetch(url, {
                 method,
@@ -173,7 +174,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
 
     const fetchUsuariosAsignados = async () => {
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresa.id}/usuarios`, {
+            const resp = await fetch(`${API_BASE_URL}/admin/empresas/${empresa.id}/usuarios`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if (resp.ok) setUsuarios(await resp.json());
@@ -182,7 +183,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
     
     const fetchTodosLosUsuarios = async () => {
          try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/clientes`, {
+            const resp = await fetch(`${API_BASE_URL}/admin/clientes`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if (resp.ok) setTodosUsuarios(await resp.json());
@@ -191,7 +192,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
     
     const addUsuario = async (userId: string) => {
         try {
-             await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresa.id}/usuarios`, {
+             await fetch(`${API_BASE_URL}/admin/empresas/${empresa.id}/usuarios`, {
                 method: "POST",
                 headers: { "Content-Type":"application/json", "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` },
                 body: JSON.stringify({ user_id: userId, limite_mensual: 0 })
@@ -202,7 +203,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
     
     const removeUsuario = async (userId: string) => {
          try {
-             await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresa.id}/usuarios/${userId}`, {
+             await fetch(`${API_BASE_URL}/admin/empresas/${empresa.id}/usuarios/${userId}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
              });
@@ -213,7 +214,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
     const saveBeneficio = async (e: any) => {
         e.preventDefault();
         try {
-             const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresa.id}/beneficios`, {
+             const resp = await fetch(`${API_BASE_URL}/admin/empresas/${empresa.id}/beneficios`, {
                 method: "POST",
                 headers: { "Content-Type":"application/json", "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` },
                 body: JSON.stringify({ tipo_descuento: tipoDesc, valor: valorDesc, activo: true })
@@ -262,7 +263,7 @@ function EmpresaDetalle({ empresa, goBack, fetchList }: any) {
                                 const obs = e.target.obs.value;
                                 if (!amount || amount <= 0) return;
                                 try {
-                                    const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresa.id}/pagos`, {
+                                    const resp = await fetch(`${API_BASE_URL}/admin/empresas/${empresa.id}/pagos`, {
                                         method: "POST",
                                         headers: { "Content-Type":"application/json", "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` },
                                         body: JSON.stringify({ monto: parseFloat(amount), metodo_pago: method, observaciones: obs })
@@ -386,7 +387,7 @@ function MovimientosList({ empresaId }: { empresaId: string }) {
     const fetchMovs = async () => {
         setLoading(true);
         try {
-            const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/empresas/${empresaId}/movimientos`, {
+            const resp = await fetch(`${API_BASE_URL}/admin/empresas/${empresaId}/movimientos`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
             });
             if (resp.ok) setMovs(await resp.json());

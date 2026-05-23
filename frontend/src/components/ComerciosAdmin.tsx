@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useEffect } from "react";
 import { Loader2, CheckCircle2, XCircle, Store, ExternalLink } from "lucide-react";
 
@@ -13,7 +14,7 @@ export default function ComerciosAdmin() {
   const fetchSolicitudes = async () => {
     setLoading(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/comercios/solicitudes`, {
+      const resp = await fetch(`${API_BASE_URL}/admin/comercios/solicitudes`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if (resp.ok) {
@@ -31,7 +32,7 @@ export default function ComerciosAdmin() {
     
     setProcessingId(id);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/admin/comercios/solicitudes/${id}/${action}`, {
+      const resp = await fetch(`${API_BASE_URL}/admin/comercios/solicitudes/${id}/${action}`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });

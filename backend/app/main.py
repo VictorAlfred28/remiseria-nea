@@ -27,6 +27,8 @@ origins = [
     "http://localhost:3000",
     "https://viajesnea.vercel.app",
     "https://viajesnea.agentech.ar",
+    "https://app.trasladosubi.com",
+    "https://api.viajesnea.agentech.ar",
 ]
 if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
     origins.append(settings.FRONTEND_URL)
@@ -34,9 +36,10 @@ if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Added PATCH and OPTIONS
-    allow_headers=["Content-Type", "Authorization", "x-webhook-secret"],  # Added webhook header
+    allow_methods=["*"],  # Permitir todos los métodos
+    allow_headers=["*"],  # Permitir todos los headers para evitar bloqueos silenciosos por preflight
     max_age=3600,
 )
 

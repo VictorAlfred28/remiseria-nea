@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import React, { useState, useEffect } from "react";
 import { Store, Clock, XCircle, CheckCircle2, TrendingUp, Tag, Plus, Edit2, Trash2, Camera, UploadCloud, LogOut, ChevronRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -43,7 +44,7 @@ export default function MiNegocioTab() {
   const cargarEstado = async () => {
     setLoading(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/negocio/estado`, {
+      const resp = await fetch(`${API_BASE_URL}/cliente/negocio/estado`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if (resp.ok) {
@@ -65,7 +66,7 @@ export default function MiNegocioTab() {
 
   const cargarPromociones = async () => {
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/negocio/promociones`, {
+      const resp = await fetch(`${API_BASE_URL}/cliente/negocio/promociones`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
       });
       if (resp.ok) {
@@ -105,7 +106,7 @@ export default function MiNegocioTab() {
     }
 
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/negocio/solicitud`, {
+      const resp = await fetch(`${API_BASE_URL}/cliente/negocio/solicitud`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,7 +137,7 @@ export default function MiNegocioTab() {
     
     // Asumimos que usa la organizacion root (si aplica). Backend lo saca del token.
     try {
-        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/cliente/negocio/promociones`, {
+        const resp = await fetch(`${API_BASE_URL}/cliente/negocio/promociones`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone } from 'lucide-react';
@@ -19,10 +20,25 @@ export default function Register() {
     setLoading(true);
     setErrorMsg('');
 
+    // Validations
+    if (!/^\d+$/.test(telefono.replace(/\s+/g, '').replace('+', ''))) {
+      setErrorMsg("El teléfono debe contener solo números.");
+      setLoading(false);
+      return;
+    }
+    
+    // Convert email to lowercase
+    const finalEmail = email.toLowerCase().trim();
+
     try {
-      // 1. Obtener la organización por defecto (mediante el endpoint público backend que bypasses RLS)
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${apiBase}/public/organizaciones/default`);
+      // 1. Obtener la organización por defecto
+      const apiBase = API_BASE_URL;
+      let response;
+      try {
+        response = await fetch(`${apiBase}/public/organizaciones/default`);
+      } catch (networkErr) {
+        throw new Error("No se pudo conectar con el servidor. Verificá tu conexión e intentá nuevamente.");
+      }
       
       if (!response.ok) throw new Error("No hay organizaciones configuradas en la plataforma.");
       
@@ -30,32 +46,44 @@ export default function Register() {
 
       // 2. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: finalEmail,
         password,
       });
 
-      if (authError) throw new Error(authError.message);
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error("Este correo ya se encuentra registrado.");
+        }
+        throw new Error(authError.message);
+      }
 
       if (authData.user) {
         // 3. Crear registro en tabla pública usuarios
-        const profileResp = await fetch(`${apiBase}/public/registro/perfil`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: authData.user.id,
-                organizacion_id: organizacionId,
-                email: email,
-                nombre: nombre,
-                telefono: telefono,
-                rol: 'cliente'
-            })
-        });
+        let profileResp;
+        try {
+          profileResp = await fetch(`${apiBase}/public/registro/perfil`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  id: authData.user.id,
+                  organizacion_id: organizacionId,
+                  email: finalEmail,
+                  nombre: nombre,
+                  telefono: telefono,
+                  rol: 'cliente'
+              })
+          });
+        } catch (networkErr) {
+          throw new Error("No se pudo conectar con el servidor para guardar tu perfil.");
+        }
 
         if (!profileResp.ok) {
-          const detail = await profileResp.json();
-          throw new Error("Usuario creado, pero hubo un error en registro de datos: " + (detail.detail || profileResp.statusText));
+          const detail = await profileResp.json().catch(() => ({}));
+          const errMsg = detail.detail || profileResp.statusText;
+          if (errMsg.includes('ya existe') || errMsg.includes('already exists')) {
+             throw new Error("Este correo ya se encuentra registrado.");
+          }
+          throw new Error("Error en registro de datos: " + errMsg);
         }
 
         // 4. Iniciar sesión automáticamente

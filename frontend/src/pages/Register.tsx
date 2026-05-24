@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import bgRegistro from '../assets/fondo_registro.png';
+import logoOriginal from '../assets/login/logoUbi.png';
 
 export default function Register() {
   const [nombre, setNombre] = useState('');
@@ -105,36 +105,23 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-         <div 
-           className="w-full h-full opacity-50" 
-           style={{ 
-             backgroundImage: `url(${bgRegistro})`,
-             backgroundSize: 'cover',
-             backgroundPosition: 'center',
-             backgroundRepeat: 'no-repeat'
-           }}
-         />
-         <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/30 via-[#030712]/70 to-[#030712] backdrop-blur-[2px]"></div>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-[#061a4a] via-[#08296d] to-[#04153d]">
+      
+      {/* Círculos decorativos sutiles y radar */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
+         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full border-[0.5px] border-blue-400/20"></div>
+         <div className="absolute top-[5%] left-[5%] w-[400px] h-[400px] rounded-full border-[0.5px] border-blue-400/10"></div>
+         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full border-[0.5px] border-blue-400/20"></div>
+         <div className="absolute bottom-[5%] right-[5%] w-[500px] h-[500px] rounded-full border-[0.5px] border-blue-400/10"></div>
+         {/* Glow central */}
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center animate-in fade-in duration-700 h-full overflow-y-auto scrollbar-hide">
+      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center justify-center animate-in fade-in duration-700 min-h-[100dvh] py-8">
         
-        <div className="flex flex-col items-center mb-6 mt-8 sm:mt-12">
-          <div className="w-24 h-24 bg-[#071B4D] border border-white/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(13,110,253,0.3)] mb-4">
-            <div className="text-center">
-              <span className="text-4xl font-black text-white tracking-tighter block leading-none">UBI</span>
-              <span className="text-[10px] font-bold text-white tracking-widest block uppercase">Traslados</span>
-            </div>
-          </div>
-          <h1 className="text-2xl font-black tracking-tight text-white mb-1 text-center">
-            Pasajero Nuevo
-          </h1>
-          <p className="text-[#00D4FF] font-bold text-lg text-center">
-            Registrate para viajar.
-          </p>
+        {/* LOGO ORIGINAL CENTRADO */}
+        <div className="flex flex-col items-center mb-8">
+           <img src={logoOriginal} alt="UBI Viajes NEA" className="w-52 sm:w-60 object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)]" />
         </div>
 
         {errorMsg && (
@@ -143,8 +130,15 @@ export default function Register() {
           </div>
         )}
 
-        <div className="w-full glass-panel p-6 sm:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden mb-4">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0D6EFD]/50 to-transparent"></div>
+        <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden mb-6">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+              Crear cuenta
+            </h1>
+            <p className="text-zinc-300 text-sm">
+              Completá tus datos para registrarte
+            </p>
+          </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>

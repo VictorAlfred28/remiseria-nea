@@ -12,6 +12,7 @@ import TestSimulator from './pages/TestSimulator';
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RegisterChofer from "./pages/RegisterChofer";
+import ResetPassword from "./pages/ResetPassword";
 import LiveTracker from "./pages/LiveTracker";
 import { useAuthStore } from "./store/useAuthStore";
 import { LogOut, Sun, Moon } from "lucide-react";
@@ -99,6 +100,7 @@ function App() {
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
             <Route path="/registro-conductor" element={user ? <Navigate to="/" /> : <RegisterChofer />} />
+            <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPassword />} />
             
             <Route path="/track/:viajeId" element={<LiveTracker />} />
             <Route path="/test-simulator" element={<TestSimulator />} />
@@ -127,7 +129,7 @@ function App() {
               </ProtectedRoute>
             } />
 
-            <Route path="/chofer" element={
+            <Route path="/chofer/*" element={
               <ProtectedRoute allowedRoles={['chofer']}>
                 <div className="p-6"><ChoferDashboard /></div>
               </ProtectedRoute>

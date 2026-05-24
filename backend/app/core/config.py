@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -12,7 +13,7 @@ class Settings(BaseSettings):
     EMERGENCY_PHONE: str | None = None
     MERCADOPAGO_ACCESS_TOKEN: str | None = None
     WEBHOOK_SECRET: str | None = None
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://viajesnea.agentech.ar")
     SUPABASE_JWT_SECRET: str | None = None
     GMAIL_EMAIL: str | None = None
     GMAIL_APP_PASSWORD: str | None = None

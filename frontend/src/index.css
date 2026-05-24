@@ -25,23 +25,25 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root {
+  height: 100%;
+  overflow-x: hidden;
+}
+
 html, body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
   /* Mobile WebView Optimization */
   background-color: var(--color-ubi-bg, #030712);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
   
   /* WEB FIX: Restaurar scrollbar vertical perdido por flex/h-screen global */
-  overflow-x: hidden;
   overflow-y: auto;
 }
 
 #root {
   width: 100%;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }

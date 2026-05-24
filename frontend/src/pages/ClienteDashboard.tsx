@@ -613,10 +613,10 @@ export default function ClienteDashboard() {
       </header>
 
       {/* RENDERIZADO CONDICIONAL SEGUN EL TAB */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${activeTab === 'pedir' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6`}>
         
         {/* COLUMNA PRINCIPAL */}
-        <div className="lg:col-span-2">
+        <div className={activeTab === 'pedir' ? 'lg:col-span-2' : ''}>
           
           {/* TAB: PEDIR AHORA */}
           {activeTab === 'pedir' && (
@@ -1204,104 +1204,106 @@ export default function ClienteDashboard() {
         )}
 
         {/* COLUMNA DERECHA PERMANENTE */}
-        <div className="space-y-6 lg:self-start lg:sticky lg:top-4">
-          
-          {/* SECCIÓN MIS PUNTOS */}
-          <div className="bg-zinc-900/50 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-6 overflow-hidden relative">
-             <div className="absolute -right-2 -top-2 opacity-5 pointer-events-none">
-                <Calculator size={100} />
-             </div>
-             
-             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-bold flex items-center gap-2">
-                   🎯 Mis Puntos
-                </h3>
-              {puntosStatus?.viajes_gratis > 0 && (
-                 <span className="bg-amber-500 text-black px-3 py-0.5 rounded-full text-[10px] font-black animate-pulse">
-                    VIAJE GRATIS LISTO
-                 </span>
-              )}
-           </div>
-
-             <div className="space-y-4">
-                <div>
-                   <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-zinc-400">Progreso para viaje gratis</span>
-                      <span className="text-blue-400 font-bold">{puntosStatus?.puntos_actuales || 0}/100</span>
-                   </div>
-                   <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, puntosStatus?.puntos_actuales || 0)}%` }}
-                      ></div>
-                   </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
-                   <div className="flex items-center gap-3">
-                      <div className="bg-blue-500/10 p-2 rounded-xl">
-                         <History className="text-blue-400" size={20} />
-                      </div>
-                      <div>
-                         <p className="text-xs text-zinc-500">Puntos actuales</p>
-                         <p className="text-xl font-black text-white">{puntosStatus?.puntos_actuales || 0}</p>
-                      </div>
-                   </div>
-                   <div className="h-10 w-px bg-white/5"></div>
-                   <div className="flex items-center gap-3">
-                      <div className="bg-amber-500/10 p-2 rounded-xl">
-                         <Car className="text-amber-500" size={20} />
-                      </div>
-                      <div>
-                         <p className="text-xs text-zinc-500">Viajes Gratis</p>
-                         <p className="text-xl font-black text-white">{puntosStatus?.viajes_gratis || 0}</p>
-                      </div>
-                   </div>
-                </div>
-
-                {puntosStatus?.puntos_actuales < 100 && (
-                  <p className="text-xs text-zinc-500 text-center italic">
-                    ¡Te faltan {100 - (puntosStatus?.puntos_actuales || 0)} puntos para tu próximo viaje gratis!
-                  </p>
+        {activeTab === 'pedir' && (
+          <div className="space-y-6 lg:self-start lg:sticky lg:top-4">
+            
+            {/* SECCIÓN MIS PUNTOS */}
+            <div className="bg-zinc-900/50 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-6 overflow-hidden relative">
+               <div className="absolute -right-2 -top-2 opacity-5 pointer-events-none">
+                  <Calculator size={100} />
+               </div>
+               
+               <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold flex items-center gap-2">
+                     🎯 Mis Puntos
+                  </h3>
+                {puntosStatus?.viajes_gratis > 0 && (
+                   <span className="bg-amber-500 text-black px-3 py-0.5 rounded-full text-[10px] font-black animate-pulse">
+                      VIAJE GRATIS LISTO
+                   </span>
                 )}
              </div>
-          </div>
 
-          <div className="bg-zinc-900/50 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-6">
-             <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2">
-               🌟 Promociones Activas
-             </h3>
-             {promociones.length === 0 ? (
-               <p className="text-zinc-500 text-sm">No hay promociones activas en este momento.</p>
-             ) : (
-               <div className="space-y-3">
-                 {promociones.map(promo => (
-                   <div key={promo.id} className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex items-start gap-3">
-                      <div className="mt-1">🎁</div>
-                      <div>
-                        <p className="text-rose-200 font-bold text-sm mb-1">{promo.titulo}</p>
-                        <p className="text-rose-400/70 text-[10px] mb-1 line-clamp-2">{promo.descripcion}</p>
-                        <Link to={`/promocion/${promo.id}`} className="text-rose-400 hover:text-rose-300 text-[10px] font-bold flex items-center gap-1 transition-colors">
-                           Ver más <ChevronRight size={10} />
-                        </Link>
-                      </div>
-                   </div>
-                 ))}
+               <div className="space-y-4">
+                  <div>
+                     <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-zinc-400">Progreso para viaje gratis</span>
+                        <span className="text-blue-400 font-bold">{puntosStatus?.puntos_actuales || 0}/100</span>
+                     </div>
+                     <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, puntosStatus?.puntos_actuales || 0)}%` }}
+                        ></div>
+                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
+                     <div className="flex items-center gap-3">
+                        <div className="bg-blue-500/10 p-2 rounded-xl">
+                           <History className="text-blue-400" size={20} />
+                        </div>
+                        <div>
+                           <p className="text-xs text-zinc-500">Puntos actuales</p>
+                           <p className="text-xl font-black text-white">{puntosStatus?.puntos_actuales || 0}</p>
+                        </div>
+                     </div>
+                     <div className="h-10 w-px bg-white/5"></div>
+                     <div className="flex items-center gap-3">
+                        <div className="bg-amber-500/10 p-2 rounded-xl">
+                           <Car className="text-amber-500" size={20} />
+                        </div>
+                        <div>
+                           <p className="text-xs text-zinc-500">Viajes Gratis</p>
+                           <p className="text-xl font-black text-white">{puntosStatus?.viajes_gratis || 0}</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  {puntosStatus?.puntos_actuales < 100 && (
+                    <p className="text-xs text-zinc-500 text-center italic">
+                      ¡Te faltan {100 - (puntosStatus?.puntos_actuales || 0)} puntos para tu próximo viaje gratis!
+                    </p>
+                  )}
                </div>
-             )}
+            </div>
+
+            <div className="bg-zinc-900/50 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-6">
+               <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2">
+                 🌟 Promociones Activas
+               </h3>
+               {promociones.length === 0 ? (
+                 <p className="text-zinc-500 text-sm">No hay promociones activas en este momento.</p>
+               ) : (
+                 <div className="space-y-3">
+                   {promociones.map(promo => (
+                     <div key={promo.id} className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex items-start gap-3">
+                        <div className="mt-1">🎁</div>
+                        <div>
+                          <p className="text-rose-200 font-bold text-sm mb-1">{promo.titulo}</p>
+                          <p className="text-rose-400/70 text-[10px] mb-1 line-clamp-2">{promo.descripcion}</p>
+                          <Link to={`/promocion/${promo.id}`} className="text-rose-400 hover:text-rose-300 text-[10px] font-bold flex items-center gap-1 transition-colors">
+                             Ver más <ChevronRight size={10} />
+                          </Link>
+                        </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+            
+            <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 relative overflow-hidden">
+               <div className="absolute -right-4 -bottom-4 opacity-20">
+                  <Car size={100} />
+               </div>
+               <h3 className="text-white font-bold mb-2 relative z-10">Viaja Protegido</h3>
+               <p className="text-zinc-300 text-sm mb-4 relative z-10">Tus viajes están monitoreados satelitalmente por la administración local.</p>
+               <button onClick={handleSupportWhatsApp} className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 relative z-10">
+                  Contactar Soporte <ChevronRight size={14} />
+               </button>
+            </div>
           </div>
-          
-          <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 relative overflow-hidden">
-             <div className="absolute -right-4 -bottom-4 opacity-20">
-                <Car size={100} />
-             </div>
-             <h3 className="text-white font-bold mb-2 relative z-10">Viaja Protegido</h3>
-             <p className="text-zinc-300 text-sm mb-4 relative z-10">Tus viajes están monitoreados satelitalmente por la administración local.</p>
-             <button onClick={handleSupportWhatsApp} className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 relative z-10">
-                Contactar Soporte <ChevronRight size={14} />
-             </button>
-          </div>
-        </div>
+        )}
 
       </div>
     </div>

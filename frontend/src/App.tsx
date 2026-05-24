@@ -48,7 +48,7 @@ function App() {
 
   return (
     <AppRouter>
-      <div className="min-h-screen bg-[#030712] text-white flex flex-col items-center font-sans selection:bg-blue-500/30 w-full h-full">
+      <div className="min-h-screen bg-[#030712] text-white flex flex-col items-center font-sans selection:bg-blue-500/30 w-full flex-1">
         
         {/* Barra de navegación superior solo si hay sesión */}
         {user && (

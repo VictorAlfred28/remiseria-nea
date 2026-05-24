@@ -229,7 +229,7 @@ export default function ChoferDashboard() {
       setLoadingChoferData(false);
   };
 
-  const toggleService = () => {
+  const toggleService = async () => {
       if (isOnline) {
           if (watchIdRef.current) {
               navigator.geolocation.clearWatch(watchIdRef.current);
@@ -244,6 +244,18 @@ export default function ChoferDashboard() {
           if (!navigator.geolocation) {
               setLocationError("Tu dispositivo no soporta GPS web.");
               return;
+          }
+
+          try {
+              if (navigator.permissions && navigator.permissions.query) {
+                  const result = await navigator.permissions.query({ name: 'geolocation' });
+                  if (result.state === 'denied') {
+                      setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
+                      return;
+                  }
+              }
+          } catch (e) {
+              // Browser might not support permissions API, continue to watchPosition
           }
 
           setIsOnline(true);
@@ -265,10 +277,17 @@ export default function ChoferDashboard() {
                   channelRef.current?.track(payload);
               },
               (err: GeolocationPositionError) => {
-                  setLocationError("GPS denegado. Permite el acceso e intenta de nuevo.");
-                  setIsOnline(false);
+                  if (err.code === err.PERMISSION_DENIED) {
+                      setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
+                      setIsOnline(false);
+                  } else if (err.code === err.TIMEOUT) {
+                      console.warn("Buscando señal GPS...");
+                      // Don't turn off isOnline, just wait
+                  } else {
+                      console.warn("GPS Error:", err.message);
+                  }
               },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
           );
           watchIdRef.current = id;
       }

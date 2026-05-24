@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import bgRegistro from '../assets/fondo-registro.png';
+import bgRegistro from '../assets/fondo_registro.png';
 
 export default function Register() {
   const [nombre, setNombre] = useState('');

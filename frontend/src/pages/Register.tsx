@@ -118,7 +118,8 @@ export default function Register() {
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center justify-center animate-in fade-in duration-700 h-full overflow-y-auto scrollbar-hide py-8">
+      <div className="relative z-10 w-full h-full overflow-y-auto scrollbar-hide safe-pt safe-pb">
+        <div className="min-h-full w-full max-w-md mx-auto p-4 py-8 flex flex-col items-center justify-center animate-in fade-in duration-700">
         
         {/* LOGO ORIGINAL CENTRADO */}
         <div className="flex flex-col items-center mb-8">

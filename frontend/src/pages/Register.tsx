@@ -238,5 +238,6 @@ export default function Register() {
         </button>
       </div>
     </div>
+  </div>
   );
 }

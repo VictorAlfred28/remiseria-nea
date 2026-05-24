@@ -122,6 +122,11 @@ function App() {
                 <div className="p-6"><AdminDashboard /></div>
               </ProtectedRoute>
             } />
+            <Route path="/admin/:tab" element={
+              <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+                <div className="p-6"><AdminDashboard /></div>
+              </ProtectedRoute>
+            } />
 
             <Route path="/admin/print-tariff" element={
               <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
@@ -163,6 +168,8 @@ function App() {
                   </div>
                </ProtectedRoute>
             } />
+            {/* Catch-all route to prevent blank screens */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
       </div>

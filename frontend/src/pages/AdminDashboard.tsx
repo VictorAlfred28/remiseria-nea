@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase, Truck } from "lucide-react";
 import TariffManager from "../components/TariffManager";
@@ -33,7 +33,14 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("choferes");
+  const { tab } = useParams();
+  const [activeTab, setActiveTab] = useState(tab || "choferes");
+
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
   const [activeSubTab, setActiveSubTab] = useState("validacion"); // 'caja' o 'validacion'
   const [activeSubTabChoferes, setActiveSubTabChoferes] = useState("pendientes"); // 'pendientes' o 'alta'
   const [activeFleetSubTab, setActiveFleetSubTab] = useState("control"); // 'control' o 'gestion'

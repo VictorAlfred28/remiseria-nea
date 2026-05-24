@@ -119,7 +119,7 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full h-[100dvh] overflow-hidden flex flex-col items-center bg-[#04102a]"
+      className="w-full h-[100dvh] overflow-hidden overscroll-none flex flex-col items-center bg-[#04102a]"
       style={{ 
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}

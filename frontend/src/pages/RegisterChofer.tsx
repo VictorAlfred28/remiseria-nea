@@ -188,8 +188,8 @@ export default function RegisterChofer() {
 
   if (success) {
     return (
-      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#030712] p-4 relative">
-        <div className="absolute inset-0 z-0">
+      <div className="h-[100dvh] w-full flex items-center justify-center bg-[#030712] p-4 relative overflow-hidden overscroll-none">
+        <div className="absolute inset-0 z-0 pointer-events-none">
            <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-40" loading="lazy" />
            <div className="absolute inset-0 bg-[#030712]/80 backdrop-blur-[4px]"></div>
         </div>
@@ -231,10 +231,10 @@ export default function RegisterChofer() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden">
+    <div className="h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden overscroll-none">
       
       {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
          <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-40" loading="lazy" />
          <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/40 via-[#030712]/80 to-[#030712] backdrop-blur-[2px]"></div>
       </div>

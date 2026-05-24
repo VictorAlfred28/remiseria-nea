@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from datetime import date, time
 
-from app.core.security import get_current_admin
+from app.core.security import get_current_admin, get_current_user
 from app.db.supabase import supabase
 
 router = APIRouter()
@@ -23,7 +23,7 @@ class ReservationUpdate(BaseModel):
     estado: str # Ej: 'asignada', 'completada', 'cancelada'
 
 @router.get("/")
-def get_reservations(estado: Optional[str] = None, claims: Dict[str, Any] = Depends(get_current_admin)):
+def get_reservations(estado: Optional[str] = None, claims: Dict[str, Any] = Depends(get_current_user)):
     """Obtiene las reservas de la organización, opcionalmente filtradas por estado."""
     org_id = claims.get("organizacion_id")
     query = supabase.table("reservations").select("*").eq("organizacion_id", org_id)
@@ -46,7 +46,7 @@ def create_reservation(data: ReservationCreate, claims: Dict[str, Any] = Depends
     return resp.data[0]
 
 @router.put("/{res_id}/estado")
-def update_reservation_status(res_id: str, data: ReservationUpdate, claims: Dict[str, Any] = Depends(get_current_admin)):
+def update_reservation_status(res_id: str, data: ReservationUpdate, claims: Dict[str, Any] = Depends(get_current_user)):
     """Cambia el estado de una reserva (Ej: Pasa a asignada o cancelada)."""
     org_id = claims.get("organizacion_id")
     

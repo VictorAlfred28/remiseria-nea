@@ -105,7 +105,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-[#061a4a] via-[#08296d] to-[#04153d]">
+    <div className="h-[100dvh] w-full flex flex-col items-center justify-center relative overflow-hidden overscroll-none bg-gradient-to-b from-[#061a4a] via-[#08296d] to-[#04153d]">
       
       {/* Círculos decorativos sutiles y radar */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
@@ -117,7 +117,7 @@ export default function Register() {
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center justify-center animate-in fade-in duration-700 min-h-[100dvh] py-8">
+      <div className="relative z-10 w-full max-w-md p-4 safe-pt safe-pb flex flex-col items-center justify-center animate-in fade-in duration-700 h-full overflow-y-auto scrollbar-hide py-8">
         
         {/* LOGO ORIGINAL CENTRADO */}
         <div className="flex flex-col items-center mb-8">

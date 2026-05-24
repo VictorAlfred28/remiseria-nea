@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import React, { useState, useEffect, useRef } from "react";
 import { Link, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import SolicitudesPage from "./chofer/SolicitudesPage";
@@ -507,10 +507,10 @@ export default function ChoferDashboard() {
                       {!isMainPage && <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Panel Chofer</p>}
                    </div>
                </div>
-               {/* Logout visible solo en mobile para subrutas */}
+               {/* Navegación para mobile en subrutas */}
                {!isMainPage && (
-                   <button onClick={() => useAuthStore.getState().logout()} className="sm:hidden text-xs font-bold uppercase text-zinc-500 hover:text-red-400">
-                       Salir
+                   <button onClick={() => navigate('/chofer')} className="sm:hidden flex items-center gap-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-300">
+                       <ArrowLeft size={14} /> Volver
                    </button>
                )}
             </div>
@@ -540,8 +540,8 @@ export default function ChoferDashboard() {
                   {isOnline ? "FINALIZAR TURNO" : "COMENZAR TURNO"}
               </button>
           ) : (
-              <button onClick={() => useAuthStore.getState().logout()} className="hidden sm:flex text-xs font-bold uppercase text-zinc-500 hover:text-red-400 transition-colors items-center gap-2">
-                 Cerrar sesión
+              <button onClick={() => navigate('/chofer')} className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold uppercase text-zinc-300 hover:text-white transition-colors border border-white/5 shadow-sm">
+                 <ArrowLeft size={16} /> Volver al Panel
               </button>
           )}
       </div>

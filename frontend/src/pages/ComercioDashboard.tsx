@@ -101,10 +101,6 @@ export default function ComercioDashboard() {
                  <p className="text-zinc-400 text-sm">{user?.user_metadata?.nombre || "Comercio Adherido"}</p>
               </div>
            </div>
-           
-           <button onClick={signOut} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl font-bold transition">
-              <LogOut size={16} /> <span className="hidden sm:inline">Cerrar Sesión</span>
-           </button>
         </header>
 
         <main className="flex-1 flex flex-col items-center justify-center -mt-10">

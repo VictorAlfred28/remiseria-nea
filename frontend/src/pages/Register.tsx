@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone } from 'lucide-react';
+import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import logoOriginal from '../assets/login/logoUbi.png';
@@ -11,6 +11,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
@@ -199,14 +200,22 @@ export default function Register() {
                   <Lock size={18} className="text-zinc-500" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   minLength={6}
-                  className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] transition-all text-white placeholder-zinc-500"
+                  className="w-full pl-11 pr-11 py-3.5 bg-black/40 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] transition-all text-white placeholder-zinc-500"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-500 hover:text-white transition-colors"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

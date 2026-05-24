@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck } from "lucide-react";
+import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";
@@ -41,8 +41,8 @@ export default function ClienteDashboard() {
   // Soporte
   const [orgSoporteMoto, setOrgSoporteMoto] = useState<any>(null);
   
-  // Perfil
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [passMessage, setPassMessage] = useState("");
   
   // Puntos Status
@@ -1043,13 +1043,23 @@ export default function ClienteDashboard() {
                    <form onSubmit={handleChangePassword} className="space-y-4">
                       <div>
                         <label className="block text-zinc-400 text-sm mb-1">Nueva Contraseña</label>
-                        <input 
-                           type="password" 
-                           value={newPassword}
-                           onChange={e => setNewPassword(e.target.value)}
-                           className="w-full bg-black/30 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-zinc-500 outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="********" 
-                        />
+                        <div className="relative">
+                           <input 
+                              type={showPassword ? "text" : "password"} 
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              className="w-full bg-black/30 border border-white/5 rounded-xl px-4 pr-11 py-3 text-white placeholder-zinc-500 outline-none focus:ring-1 focus:ring-blue-500" 
+                              placeholder="********" 
+                           />
+                           <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors"
+                              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                           >
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                           </button>
+                        </div>
                       </div>
                       <button disabled={loading} type="submit" className="bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all border border-white/5">
                         Actualizar Credenciales

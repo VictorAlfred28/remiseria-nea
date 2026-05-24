@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Lock, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
+import { Lock, CheckCircle2, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { setRecoveringPassword } = useAuthStore();
 
   useEffect(() => {
     // Verificar si el usuario llegó con un token de recuperación válido
@@ -55,8 +59,13 @@ export default function ResetPassword() {
       }
 
       setSuccess(true);
-      // Opcional: Cerrar la sesión de recuperación por seguridad después de cambiar la clave
+      // Limpiar hash de la URL para que no quede expuesto el token
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Limpiar estado de recuperación global
+      setRecoveringPassword(false);
+      // Forzar cierre de sesión (Supabase creó una sesión silenciosa con el token)
       await supabase.auth.signOut();
+      
     } catch (err: any) {
       console.error('Error al actualizar contraseña:', err);
       setError(err.message || 'Hubo un problema al actualizar tu contraseña. Intenta nuevamente.');
@@ -113,32 +122,52 @@ export default function ResetPassword() {
             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">
               Nueva Contraseña
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-5 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
-              placeholder="••••••••"
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-5 pr-12 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
+                placeholder="••••••••"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">
               Confirmar Contraseña
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-5 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
-              placeholder="••••••••"
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-5 pr-12 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
+                placeholder="••••••••"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors"
+                aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button

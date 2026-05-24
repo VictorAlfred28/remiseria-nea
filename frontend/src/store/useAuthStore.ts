@@ -14,6 +14,8 @@ interface AuthState {
   toggleTheme: () => void;
   /** Helper: comprueba si el usuario tiene un rol (campo legado O user_roles) */
   hasRole: (role: string) => boolean;
+  isRecoveringPassword: boolean;
+  setRecoveringPassword: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -23,6 +25,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   orgId: null,
   isLoading: true,
   isLightMode: localStorage.getItem('theme') === 'light',
+  isRecoveringPassword: sessionStorage.getItem('isRecoveringPassword') === 'true',
+
+  setRecoveringPassword: (value: boolean) => {
+    if (value) {
+      sessionStorage.setItem('isRecoveringPassword', 'true');
+    } else {
+      sessionStorage.removeItem('isRecoveringPassword');
+    }
+    set({ isRecoveringPassword: value });
+  },
 
   hasRole: (role: string) => {
     const state = get();

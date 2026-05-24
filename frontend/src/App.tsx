@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { BrowserRouter, HashRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Capacitor } from '@capacitor/core';
 import AdminDashboard from "./pages/AdminDashboard";
 import ChoferDashboard from "./pages/ChoferDashboard";
@@ -16,6 +16,7 @@ import ResetPassword from "./pages/ResetPassword";
 import LiveTracker from "./pages/LiveTracker";
 import { useAuthStore } from "./store/useAuthStore";
 import { LogOut, Sun, Moon } from "lucide-react";
+import { supabase } from "./lib/supabase";
 
 // Selección dinámica del Router: HashRouter es obligatorio en Android/iOS para evitar pantalla negra por rutas file:// o custom schemes
 const AppRouter = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
@@ -26,8 +27,12 @@ if (localStorage.getItem('theme') === 'light') {
 }
 // Componente para proteger rutas según el rol
 function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) {
-  const { user, role, isLoading } = useAuthStore();
+  const { user, role, isLoading, isRecoveringPassword } = useAuthStore();
   const location = useLocation();
+
+  if (isRecoveringPassword) {
+    return <Navigate to="/reset-password" replace />;
+  }
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">Cargando Sistema...</div>;
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} />;
@@ -41,10 +46,27 @@ function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allow
 }
 
 function App() {
-  const { checkSession, user, role, roles, logout, isLightMode, toggleTheme, isLoading } = useAuthStore();
+  const { checkSession, user, role, roles, logout, isLightMode, toggleTheme, isLoading, isRecoveringPassword, setRecoveringPassword } = useAuthStore();
 
   useEffect(() => {
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveringPassword(true);
+      }
+    });
+
+    // Validar deep link / hash de recuperación manual si no lanza evento
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+       setRecoveringPassword(true);
+    }
+
     checkSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -100,21 +122,27 @@ function App() {
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
             <Route path="/registro-conductor" element={user ? <Navigate to="/" /> : <RegisterChofer />} />
-            <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPassword />} />
+            <Route path="/reset-password" element={
+              isRecoveringPassword ? <ResetPassword /> : (user ? <Navigate to="/" /> : <ResetPassword />)
+            } />
             
             <Route path="/track/:viajeId" element={<LiveTracker />} />
             <Route path="/test-simulator" element={<TestSimulator />} />
             
             <Route path="/" element={
-              <div className="flex items-center justify-center p-10 h-[80vh]">
-                {isLoading ? (
-                  <div className="text-zinc-500 animate-pulse">Cargando perfil...</div>
-                ) : user ? (
-                  <Navigate to={(role === 'admin' || role === 'superadmin') ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
-                ) : (
-                  <Navigate to="/login" />
-                )}
-              </div>
+              isRecoveringPassword ? (
+                <Navigate to="/reset-password" replace />
+              ) : (
+                <div className="flex items-center justify-center p-10 h-[80vh]">
+                  {isLoading ? (
+                    <div className="text-zinc-500 animate-pulse">Cargando perfil...</div>
+                  ) : user ? (
+                    <Navigate to={(role === 'admin' || role === 'superadmin') ? "/admin" : (role === 'chofer' ? "/chofer" : (role === 'comercio' ? "/comercio" : "/cliente"))} />
+                  ) : (
+                    <Navigate to="/login" />
+                  )}
+                </div>
+              )
             } />
 
             <Route path="/admin" element={

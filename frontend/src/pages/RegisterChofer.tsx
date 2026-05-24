@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone, CheckCircle2, ChevronRight, UploadCloud, MapPin, X } from 'lucide-react';
+import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone, CheckCircle2, ChevronRight, UploadCloud, MapPin, X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../services/api'; // Or use fetch depending on how the app does it, we'll use fetch as seen in Register.tsx
 
@@ -19,6 +19,7 @@ export default function RegisterChofer() {
   const [dni, setDni] = useState('');
   const [direccion, setDireccion] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Paso 2: Vehículo
   const [tieneVehiculo, setTieneVehiculo] = useState(true);
@@ -322,9 +323,17 @@ export default function RegisterChofer() {
                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                    <Lock size={18} className="text-zinc-500" />
                  </div>
-                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                   className="w-full pl-11 pr-4 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
+                 <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
+                   className="w-full pl-11 pr-11 py-3 bg-zinc-950/50 border border-zinc-800 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-white outline-none"
                    placeholder="Crea una contraseña" />
+                 <button
+                   type="button"
+                   onClick={() => setShowPassword(!showPassword)}
+                   className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-500 hover:text-white transition-colors"
+                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                 >
+                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                 </button>
                </div>
             </div>
           )}

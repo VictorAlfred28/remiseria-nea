@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Car, Lock, Mail, Loader2, ArrowLeft, User, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
+import bgRegistro from '../assets/fondo-registro.png';
 
 export default function Register() {
   const [nombre, setNombre] = useState('');
@@ -107,7 +108,15 @@ export default function Register() {
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center relative bg-[#030712] overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-         <img src="/bg-login.png" alt="City Night" className="w-full h-full object-cover opacity-50" loading="lazy" />
+         <div 
+           className="w-full h-full opacity-50" 
+           style={{ 
+             backgroundImage: `url(${bgRegistro})`,
+             backgroundSize: 'cover',
+             backgroundPosition: 'center',
+             backgroundRepeat: 'no-repeat'
+           }}
+         />
          <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/30 via-[#030712]/70 to-[#030712] backdrop-blur-[2px]"></div>
       </div>
 

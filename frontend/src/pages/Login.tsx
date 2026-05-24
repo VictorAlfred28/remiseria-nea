@@ -141,7 +141,7 @@ export default function Login() {
               height: '100%',
               objectFit: 'contain',
               display: 'block',
-              transform: 'scaleX(1.12)', /* Expansión moderada para reducir bordes oscuros */
+              transform: 'scaleX(1.35)', /* Expansión horizontal mayor para llenar el ancho */
               transformOrigin: 'center center'
             }}
             draggable={false}

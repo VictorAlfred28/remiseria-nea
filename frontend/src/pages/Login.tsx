@@ -288,6 +288,7 @@ export default function Login() {
                     Facebook
                   </button>
                   <button type="button" id="login-instagram-btn"
+                    onClick={() => window.open('https://www.instagram.com/ubi_traslados/', '_blank')}
                     className="flex items-center justify-center gap-1.5 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 active:scale-[0.97] transition"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="url(#ig-grad)">

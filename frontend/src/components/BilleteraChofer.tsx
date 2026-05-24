@@ -129,12 +129,12 @@ export default function BilleteraChofer() {
                 </h3>
                 
                 <div className="bg-zinc-950 p-5 rounded-2xl border border-blue-500/20 mb-6">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
                         <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Datos para Transferir</p>
                         <button 
                             type="button"
                             onClick={handleOpenMercadoPago}
-                            className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-blue-500/30 transition-all active:scale-95"
+                            className="bg-[#009EE3]/10 hover:bg-[#009EE3]/20 text-[#009EE3] text-[10px] sm:text-xs font-black px-4 py-2 rounded-xl flex items-center gap-2 border border-[#009EE3]/30 transition-all active:scale-95 w-full sm:w-auto justify-center"
                         >
                             <img src="/mercadopago_icon.png" alt="Mercado Pago" className="w-4 h-4 object-contain rounded-sm" />
                             ABRIR MERCADO PAGO
@@ -142,34 +142,34 @@ export default function BilleteraChofer() {
                     </div>
 
                     <div className="space-y-3 text-sm text-zinc-300">
-                        <p className="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg">
-                            <span><span className="font-bold text-white">Banco:</span> Banco Provincia del Chaco</span>
-                        </p>
-                        <p className="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg group">
-                            <span><span className="font-bold text-white">CBU:</span> 3110030211000012345678</span>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl gap-2">
+                            <span className="break-words"><span className="font-bold text-white">Banco:</span> Banco Provincia del Chaco</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl group gap-3">
+                            <span className="break-all"><span className="font-bold text-white">CBU:</span> 3110030211000012345678</span>
                             <button 
                                 type="button"
                                 onClick={() => copyToClipboard("3110030211000012345678", "cbu")}
-                                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black transition-all ${copiedField === 'cbu' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all w-full sm:w-auto ${copiedField === 'cbu' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
                             >
-                                {copiedField === 'cbu' ? <Check size={12} /> : <Copy size={12} />}
+                                {copiedField === 'cbu' ? <Check size={14} /> : <Copy size={14} />}
                                 {copiedField === 'cbu' ? "COPIADO" : "COPIAR"}
                             </button>
-                        </p>
-                        <p className="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg group">
-                            <span><span className="font-bold text-white">Alias:</span> VIAJES.NEA.OFICIAL</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl group gap-3">
+                            <span className="break-all"><span className="font-bold text-white">Alias:</span> VIAJES.NEA.OFICIAL</span>
                             <button 
                                 type="button"
                                 onClick={() => copyToClipboard("VIAJES.NEA.OFICIAL", "alias")}
-                                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black transition-all ${copiedField === 'alias' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all w-full sm:w-auto ${copiedField === 'alias' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
                             >
-                                {copiedField === 'alias' ? <Check size={12} /> : <Copy size={12} />}
+                                {copiedField === 'alias' ? <Check size={14} /> : <Copy size={14} />}
                                 {copiedField === 'alias' ? "COPIADO" : "COPIAR"}
                             </button>
-                        </p>
-                        <p className="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg">
-                            <span><span className="font-bold text-white">Titular:</span> VIAJES NEA S.R.L.</span>
-                        </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl gap-2">
+                            <span className="break-words"><span className="font-bold text-white">Titular:</span> VIAJES NEA S.R.L.</span>
+                        </div>
                     </div>
                 </div>
 

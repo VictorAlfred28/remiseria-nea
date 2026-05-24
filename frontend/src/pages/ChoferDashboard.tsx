@@ -507,12 +507,6 @@ export default function ChoferDashboard() {
                       {!isMainPage && <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Panel Chofer</p>}
                    </div>
                </div>
-               {/* Navegación para mobile en subrutas */}
-               {!isMainPage && (
-                   <button onClick={() => navigate('/chofer')} className="sm:hidden flex items-center gap-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-300">
-                       <ArrowLeft size={14} /> Volver
-                   </button>
-               )}
             </div>
             {isMainPage && (
                 <>
@@ -524,7 +518,7 @@ export default function ChoferDashboard() {
             )}
           </div>
           
-          {isMainPage ? (
+          {isMainPage && (
               <button 
                 onClick={isBlocked ? () => alert("Tu cuenta está bloqueada por deuda. Debes saldar con administración para volver online.") : toggleService}
                 className={`
@@ -538,10 +532,6 @@ export default function ChoferDashboard() {
               >
                   <Power size={20} className={isOnline ? "animate-pulse" : ""} /> 
                   {isOnline ? "FINALIZAR TURNO" : "COMENZAR TURNO"}
-              </button>
-          ) : (
-              <button onClick={() => navigate('/chofer')} className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold uppercase text-zinc-300 hover:text-white transition-colors border border-white/5 shadow-sm">
-                 <ArrowLeft size={16} /> Volver al Panel
               </button>
           )}
       </div>

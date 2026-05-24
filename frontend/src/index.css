@@ -68,6 +68,26 @@ html, body {
   scrollbar-width: none;
 }
 
+/* Custom scrollbar for Admin Tabs in WEB */
+.web-admin-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.web-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
 /* ========================================================
    MODO CLARO (INVERSIÓN HSL DINÁMICA)
    --------------------------------------------------------

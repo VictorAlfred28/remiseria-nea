@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase, Truck } from "lucide-react";
 import TariffManager from "../components/TariffManager";
 import ReservationTable from "../components/ReservationTable";
@@ -419,7 +420,7 @@ export default function AdminDashboard() {
         Panel de Administración <span className="text-[#0D6EFD] font-light">| UBI</span>
       </h1>
       
-      <div className="flex flex-nowrap gap-4 mb-8 border-b border-white/10 pb-4 overflow-x-auto scrollbar-hide scroll-smooth w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className={`flex flex-nowrap whitespace-nowrap gap-4 mb-8 border-b border-white/10 pb-4 overflow-x-auto overflow-y-hidden scroll-smooth w-full ${Capacitor.isNativePlatform() ? 'scrollbar-hide' : 'web-admin-scrollbar'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
         <button onClick={() => setActiveTab("choferes")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'choferes' ? 'bg-[#0D6EFD] text-white shadow-[0_0_15px_rgba(13,110,253,0.3)]' : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}`}>
           <Car size={18} /> Alta de Choferes
         </button>

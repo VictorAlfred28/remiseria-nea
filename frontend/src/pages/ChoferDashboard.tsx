@@ -13,6 +13,7 @@ import BolsaPage from "./chofer/BolsaPage";
 import PremiosPage from "./chofer/PremiosPage";
 import AjustesChoferPage from "./chofer/AjustesChoferPage";
 import FlotaPage from "./chofer/FlotaPage";
+import { Geolocation } from '@capacitor/geolocation';
 import { supabase } from "../lib/supabase";
 import { 
     api,
@@ -66,7 +67,7 @@ export default function ChoferDashboard() {
   const [radarLoading, setRadarLoading] = useState(false);
   const [lastRadarUpdate, setLastRadarUpdate] = useState<Date | null>(null);
   
-  const watchIdRef = useRef<number | null>(null);
+  const watchIdRef = useRef<any>(null);
   const channelRef = useRef<any>(null);
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export default function ChoferDashboard() {
         fetchDatosGenerales();
 
         return () => {
-            if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+            if (watchIdRef.current) Geolocation.clearWatch({ id: watchIdRef.current });
             if (channelRef.current) supabase.removeChannel(channelRef.current);
         };
     }
@@ -232,7 +233,7 @@ export default function ChoferDashboard() {
   const toggleService = async () => {
       if (isOnline) {
           if (watchIdRef.current) {
-              navigator.geolocation.clearWatch(watchIdRef.current);
+              await Geolocation.clearWatch({ id: watchIdRef.current });
               watchIdRef.current = null;
           }
           channelRef.current?.untrack();
@@ -241,55 +242,58 @@ export default function ChoferDashboard() {
       } else {
           setLocationError("");
           setAcceptError("");
-          if (!navigator.geolocation) {
-              setLocationError("Tu dispositivo no soporta GPS web.");
-              return;
-          }
 
           try {
-              if (navigator.permissions && navigator.permissions.query) {
-                  const result = await navigator.permissions.query({ name: 'geolocation' });
-                  if (result.state === 'denied') {
+              const check = await Geolocation.checkPermissions();
+              if (check.location !== 'granted') {
+                  const req = await Geolocation.requestPermissions();
+                  if (req.location !== 'granted') {
                       setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
                       return;
                   }
               }
           } catch (e) {
-              // Browser might not support permissions API, continue to watchPosition
+              console.warn("Capacitor Geolocation error on permissions:", e);
           }
 
           setIsOnline(true);
-          const id = navigator.geolocation.watchPosition(
-              (pos: GeolocationPosition) => {
-                  const lat = pos.coords.latitude;
-                  const lng = pos.coords.longitude;
-                  setChoferCoords({ lat, lng });
+          try {
+              const id = await Geolocation.watchPosition(
+                  { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+                  (pos, err) => {
+                      if (err) {
+                          if (err.message?.toLowerCase().includes("denied") || err.code === 1) {
+                              setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
+                              setIsOnline(false);
+                          } else {
+                              console.warn("GPS Error:", err);
+                          }
+                          return;
+                      }
 
-                  const isBusy = !!viajeActivo;
-                  const payload = {
-                      chofer_id: user?.id,
-                      nombre: user?.email, 
-                      lat,
-                      lng,
-                      status: isBusy ? 'busy' : 'free',
-                      timestamp: new Date().toISOString()
-                  };
-                  channelRef.current?.track(payload);
-              },
-              (err: GeolocationPositionError) => {
-                  if (err.code === err.PERMISSION_DENIED) {
-                      setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
-                      setIsOnline(false);
-                  } else if (err.code === err.TIMEOUT) {
-                      console.warn("Buscando señal GPS...");
-                      // Don't turn off isOnline, just wait
-                  } else {
-                      console.warn("GPS Error:", err.message);
+                      if (pos) {
+                          const lat = pos.coords.latitude;
+                          const lng = pos.coords.longitude;
+                          setChoferCoords({ lat, lng });
+
+                          const isBusy = !!viajeActivo;
+                          const payload = {
+                              chofer_id: user?.id,
+                              nombre: user?.email, 
+                              lat,
+                              lng,
+                              status: isBusy ? 'busy' : 'free',
+                              timestamp: new Date().toISOString()
+                          };
+                          channelRef.current?.track(payload);
+                      }
                   }
-              },
-              { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-          );
-          watchIdRef.current = id;
+              );
+              watchIdRef.current = id;
+          } catch (error) {
+              setLocationError("Error al iniciar servicio GPS.");
+              setIsOnline(false);
+          }
       }
   };
 

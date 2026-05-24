@@ -119,36 +119,45 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full h-[100dvh] overflow-hidden flex flex-col justify-end items-center relative bg-[#03080f]"
+      className="w-full h-[100dvh] overflow-hidden flex flex-col items-center bg-[#04102a]"
       style={{ 
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      {/* IMAGEN DE FONDO (Pantalla completa, un solo plano) */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <img
-          src={loginImg}
-          alt="UBI Traslados"
-          className="w-full h-full object-cover object-top"
-          draggable={false}
-        />
-        {/* Opcional: un degradado sutil en la parte inferior para que la transición hacia el formulario sea perfecta */}
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0d1829] to-transparent" />
-      </div>
-
-      <div className="w-full flex flex-col justify-end h-auto relative z-10" style={{ maxWidth: '600px' }}>
+      <div className="w-full flex flex-col h-full" style={{ maxWidth: '600px' }}>
         
+        {/* IMAGEN SUPERIOR (No tapada por el formulario) */}
+        <div 
+          className="w-full relative flex-1 flex items-center justify-center overflow-hidden"
+          style={{ 
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)'
+          }}
+        >
+          <img
+            src={loginImg}
+            alt="UBI Traslados"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              transform: 'scaleX(1.12)', /* Expansión moderada para reducir bordes oscuros */
+              transformOrigin: 'center center'
+            }}
+            draggable={false}
+          />
+        </div>
+
         {/* FORMULARIO */}
         <div
           id="login-form-section"
-          className="w-full relative flex flex-col"
+          className="flex-shrink-0 w-full relative z-10 flex flex-col"
           style={{
-            background: 'rgba(13, 24, 41, 0.95)', /* Ligeramente translúcido para fundirse con el fondo */
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            background: '#0d1829',
             borderTopLeftRadius: '28px',
             borderTopRightRadius: '28px',
             boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
+            marginTop: '-15px'
           }}
         >
             <div

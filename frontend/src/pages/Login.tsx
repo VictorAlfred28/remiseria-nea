@@ -119,46 +119,35 @@ export default function Login() {
   return (
     <div
       id="login-screen"
-      className="w-full h-[100dvh] overflow-hidden flex flex-col items-center bg-[#03080f]"
+      className="w-full h-[100dvh] overflow-hidden flex flex-col justify-end items-center relative bg-[#03080f]"
       style={{ 
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div className="w-full flex flex-col h-full" style={{ maxWidth: '600px' }}>
-        
-        {/* IMAGEN SUPERIOR (Flujo normal) */}
-        <div 
-          className="w-full relative flex-shrink bg-[#04102a] flex items-center justify-center overflow-hidden"
-          style={{ 
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
-            minHeight: '20vh',
-            maxHeight: '45vh'
-          }}
-        >
-          <img
-            src={loginImg}
-            alt="UBI Traslados"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              transform: 'scaleX(1.12) scaleY(1.02)',
-              transformOrigin: 'center center',
-            }}
-            draggable={false}
-          />
-        </div>
+      {/* IMAGEN DE FONDO (Pantalla completa, un solo plano) */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <img
+          src={loginImg}
+          alt="UBI Traslados"
+          className="w-full h-full object-cover object-top"
+          draggable={false}
+        />
+        {/* Opcional: un degradado sutil en la parte inferior para que la transición hacia el formulario sea perfecta */}
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0d1829] to-transparent" />
+      </div>
 
-        {/* FORMULARIO (Flujo normal, se mueve junto con la imagen) */}
+      <div className="w-full flex flex-col justify-end h-auto relative z-10" style={{ maxWidth: '600px' }}>
+        
+        {/* FORMULARIO */}
         <div
           id="login-form-section"
-          className="flex-shrink-0 w-full relative z-10 flex flex-col"
+          className="w-full relative flex flex-col"
           style={{
-            background: '#0d1829',
+            background: 'rgba(13, 24, 41, 0.95)', /* Ligeramente translúcido para fundirse con el fondo */
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             borderTopLeftRadius: '28px',
             borderTopRightRadius: '28px',
-            marginTop: '-20px', /* Superpone el formulario sobre el borde de la imagen para unión perfecta */
             boxShadow: '0 -15px 40px rgba(0,0,0,0.5)',
           }}
         >

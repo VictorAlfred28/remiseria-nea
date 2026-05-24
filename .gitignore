@@ -29,3 +29,6 @@ frontend/.env.local
 # Supabase
 supabase/.temp/
 
+# Security (Keys and Env)
+*.jks
+frontend/.env

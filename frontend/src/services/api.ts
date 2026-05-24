@@ -7,14 +7,27 @@ export const api = axios.create({
 });
 
 // Interceptor para inyectar token JWT de Supabase
-// Usar sessionStorage por seguridad (no persiste entre sesiones del navegador)
+// Usar localStorage como prioridad para soportar Capacitor, con fallback a sessionStorage
 api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("sb-access-token");
+  const token = localStorage.getItem("sb-access-token") || sessionStorage.getItem("sb-access-token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Interceptor global defensivo para capturar "Failed to Fetch" y logs nativos
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      console.error("[API_ERROR] Error de Red (Failed to Fetch o CORS):", error.message, error.config?.url);
+    } else {
+      console.error(`[API_ERROR] ${error.response.status} en ${error.config?.url}:`, error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const getChoferes = async () => {
     const res = await api.get("/admin/choferes");

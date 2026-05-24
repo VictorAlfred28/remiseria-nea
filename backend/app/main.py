@@ -25,6 +25,7 @@ app.include_router(api_router, prefix="/api/v1")
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://localhost",
     "https://viajesnea.vercel.app",
     "https://viajesnea.agentech.ar",
     "https://app.trasladosubi.com",

@@ -89,9 +89,7 @@ export default function LiveTracker() {
                   });
               }
             })
-            .subscribe((status: string) => {
-                console.log("Tracker Subscribe Status:", status);
-            });
+            .subscribe();
       }
       return () => {
           if (channelRef.current) {

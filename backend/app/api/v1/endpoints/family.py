@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, Optional
 from pydantic import BaseModel
 import asyncio
+import logging
 
 from app.core.security import get_current_user
 from app.db.supabase import supabase
 from app.core.evolution import send_whatsapp_message
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class InviteRequest(BaseModel):
     telefono: str
@@ -115,8 +117,7 @@ async def invite_member(req: InviteRequest, claims: Dict[str, Any] = Depends(get
             mensaje
         )
     except Exception as e:
-        print(f"Aviso webhooks no despachado / dependiente db error: {e}")
-        # Retornamos exito igual para la UI
+        logger.warning(f"Aviso de webhook / error en DB dependiente: {e}")
         pass
 
     return {"success": True, "message": "Invitación enviada por WhatsApp."}

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Dict, Any
 from pydantic import BaseModel
 import jwt
+import logging
 from datetime import datetime, timedelta, timezone
 
 from app.core.security import get_current_user
@@ -9,6 +10,7 @@ from app.db.supabase import supabase
 from app.core.config import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Utilizaremos el JWT Secret de Supabase si existe, sino un fallback temporal
 JWT_SECRET = settings.SUPABASE_JWT_SECRET or "super-secret-qr-key-viajes-nea"
@@ -101,8 +103,7 @@ def validar_qr(data: ValidarQRRequest, claims: Dict[str, Any] = Depends(get_curr
                 "beneficio_aplicado": "Validación Exitosa"
             }).execute()
         except Exception as e:
-            # Si falla el logging no bloqueamos la validez
-            print(f"Error loggeando escaneo: {e}")
+            logger.warning(f"Error registrando escaneo de socio: {e}")
             
         return {
             "valido": True, 

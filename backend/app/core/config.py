@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str | None = None
     GMAIL_EMAIL: str | None = None
     GMAIL_APP_PASSWORD: str | None = None
+    SUPERADMIN_EMAIL: str = "agentech.nea@gmail.com"  # Configurable via .env SUPERADMIN_EMAIL
 
     class Config:
         env_file = ".env"

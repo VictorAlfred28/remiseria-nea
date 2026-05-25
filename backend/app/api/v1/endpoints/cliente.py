@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from datetime import datetime, date, time
+import logging
 
 from app.core.security import get_current_cliente
 from app.db.supabase import supabase
 from app.core.pricing import calculate_fare
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class TripRequest(BaseModel):
     origen: Dict[str, Any]
@@ -285,7 +287,7 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                             if not o_in_allowed: mensajes_rechazo.append("Origen fuera de zona permitida")
                             if not d_in_allowed: mensajes_rechazo.append("Destino fuera de zona permitida")
                 except Exception as e:
-                    print("Error parseando reglas:", e)
+                    logger.warning(f"Error evaluando reglas parentales: {e}")
                     
             if mensajes_rechazo:
                 msg_err = " y ".join(mensajes_rechazo)
@@ -298,7 +300,7 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                         msg_wa = f"⚠️ *Alerta Control Parental*\n\nTu dependiente intentó pedir un viaje pero fue bloqueado por: *{msg_err}*"
                         asyncio.create_task(send_whatsapp_message(settings.EVOLUTION_INSTANCE, t_data.data[0]["telefono"], msg_wa))
                 except Exception as e:
-                    print(f"Error enviando alerta WhatsApp: {e}")
+                    logger.warning(f"Error enviando alerta WhatsApp al tutor: {e}")
                 raise HTTPException(status_code=403, detail="Restricción parental: " + msg_err)
 
 
@@ -326,7 +328,7 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                         
                     asyncio.create_task(send_whatsapp_message(settings.EVOLUTION_INSTANCE, t_data.data[0]["telefono"], msg))
             except Exception as e:
-                print("Aviso de viaje tutelado no enviado:", e)
+                logger.warning(f"Aviso de viaje tutelado no enviado: {e}")
                 
     # 4. Inserción del viaje
     resp = supabase.table("viajes").insert(nuevo_viaje).execute()

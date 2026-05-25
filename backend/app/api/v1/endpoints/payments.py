@@ -46,9 +46,9 @@ def create_checkout_preference(data: PaymentRequest, claims: Dict[str, Any] = De
         # Metadata para que el Webhook sepa a qué chofer impactar el pago
         "external_reference": f"CHOFER_{chofer_id}_{data.monto}",
         "back_urls": {
-            "success": "https://viajes-nea.com/chofer", # Ajustar a dominio frontend
-            "pending": "https://viajes-nea.com/chofer",
-            "failure": "https://viajes-nea.com/chofer"
+            "success": f"{settings.FRONTEND_URL}/chofer" if settings.FRONTEND_URL else "https://viajesnea.agentech.ar/chofer",
+            "pending": f"{settings.FRONTEND_URL}/chofer" if settings.FRONTEND_URL else "https://viajesnea.agentech.ar/chofer",
+            "failure": f"{settings.FRONTEND_URL}/chofer" if settings.FRONTEND_URL else "https://viajesnea.agentech.ar/chofer"
         },
         "auto_return": "approved"
     }
@@ -190,30 +190,28 @@ async def mp_webhook(request: Request, background_tasks: BackgroundTasks):
         x_timestamp = request.headers.get("x-timestamp")
         
         if not x_signature or not x_timestamp:
-            # Signature optional for testing, but warn in production
-            logger.warning(f"Missing MP signature headers in webhook")
-            # For testing/backward compatibility, still process
-            # TODO: Make this required in production
-        else:
-            # Validate signature if present
-            import hmac
-            import hashlib
-            
-            # Create the signature verification data
-            manifest = f"{x_timestamp}.{body.decode()}"
-            signature_secret = settings.MERCADOPAGO_ACCESS_TOKEN  # Using access token or dedicated secret
-            
-            expected_signature = hmac.new(
-                signature_secret.encode(),
-                manifest.encode(),
-                hashlib.sha256
-            ).hexdigest()
-            
-            if x_signature != expected_signature and not x_signature.startswith("sha256="):
-                # Try with sha256= prefix
-                if f"sha256={x_signature}" != expected_signature:
-                    logger.error(f"Invalid MP webhook signature. Expected {expected_signature}, got {x_signature}")
-                    return {"status": "unauthorized"}
+            logger.warning("Webhook MP recibido sin headers de firma — rechazado")
+            return {"status": "unauthorized"}
+
+        # Validar firma HMAC-SHA256
+        import hmac
+        import hashlib
+
+        manifest = f"{x_timestamp}.{body.decode()}"
+        # NOTA: Usar settings.MERCADOPAGO_WEBHOOK_SECRET si está disponible, sino access token como fallback
+        signature_secret = getattr(settings, 'MERCADOPAGO_WEBHOOK_SECRET', settings.MERCADOPAGO_ACCESS_TOKEN) or ''
+
+        expected_signature = hmac.new(
+            signature_secret.encode(),
+            manifest.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        # MP envía el header como "ts=TIMESTAMP,v1=HASH"
+        sig_value = x_signature.split("v1=")[-1] if "v1=" in x_signature else x_signature
+        if not hmac.compare_digest(sig_value, expected_signature):
+            logger.error(f"Firma de webhook MP inválida")
+            return {"status": "unauthorized"}
         
         # 3. Extract webhook data
         params = dict(request.query_params)
@@ -347,13 +345,27 @@ def get_chofer_balance(claims: Dict[str, Any] = Depends(get_current_user)):
         "movimientos": resp_movs.data
     }
 
+class AdminChargeRequest(BaseModel):
+    chofer_id: str
+    monto: float
+    tipo: str = "cargo_manual"
+    descripcion: str = "Cargo admin"
+
 @router.post("/admin/charge")
-def admin_manual_charge(data: Dict[str, Any], claims: Dict[str, Any] = Depends(get_current_admin)):
+def admin_manual_charge(data: AdminChargeRequest, claims: Dict[str, Any] = Depends(get_current_admin)):
     """El Admin carga un castigo/deuda/diaria o un pago manual en efectivo."""
-    chofer_id = data.get("chofer_id")
-    monto = float(data.get("monto", 0)) # Positivo es abono en efvo, negativo es cargo a deber
-    tipo = data.get("tipo", "cargo_manual")
-    descripcion = data.get("descripcion", "Cargo admin")
+    if data.monto == 0:
+        raise HTTPException(status_code=400, detail="El monto no puede ser cero.")
+
+    chofer_id = data.chofer_id
+    monto = data.monto
+    tipo = data.tipo
+    descripcion = data.descripcion
+    
+    # Verificar que el chofer exista
+    chofer_check = supabase.table("choferes").select("id, saldo").eq("id", chofer_id).execute()
+    if not chofer_check.data:
+        raise HTTPException(status_code=404, detail="Chofer no encontrado.")
     
     # 1. Registrar movimiento
     supabase.table("movimientos_saldo").insert({

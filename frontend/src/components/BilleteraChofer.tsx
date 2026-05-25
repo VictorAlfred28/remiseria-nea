@@ -45,17 +45,13 @@ export default function BilleteraChofer() {
     const intentUrl = 'intent://www.mercadopago.com.ar/#Intent;scheme=https;package=com.mercadopago.wallet;end;';
     const fallbackPlayStore = 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet';
     
-    console.log('MP URL:', webUrl);
-    console.log('INTENT URL:', intentUrl);
 
     if (Capacitor.isNativePlatform() || isMobileDevice) {
-      console.log('TRY OPEN MP APP');
       
       let fallbackTimer: any;
       
       const handleVisibility = () => {
          if (document.hidden) {
-             console.log('MP APP DETECTADA Y ABIERTA: Cancelando fallbacks');
              if (fallbackTimer) clearTimeout(fallbackTimer);
              document.removeEventListener("visibilitychange", handleVisibility);
          }
@@ -68,8 +64,6 @@ export default function BilleteraChofer() {
       
       // El timeout se amplía a 3 segundos para dar tiempo suficiente al OS de resolver el intent
       fallbackTimer = setTimeout(() => {
-        console.log('MP APP OPEN FAILED');
-        console.log('OPEN PLAYSTORE');
         document.removeEventListener("visibilitychange", handleVisibility);
         
         if (Capacitor.isNativePlatform()) {
@@ -81,7 +75,6 @@ export default function BilleteraChofer() {
       }, 3000);
       
     } else {
-      console.log('FALLBACK WEB: Navegador Desktop');
       window.open(webUrl, '_blank');
     }
   };

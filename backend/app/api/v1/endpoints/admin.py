@@ -245,7 +245,7 @@ def update_chofer(chofer_id: str, data: ChoferUpdate, claims: Dict[str, Any] = D
         if u_data.data:
             user_rol = u_data.data[0].get("rol")
             user_email = u_data.data[0].get("email")
-            if (user_rol == "superadmin" or user_email == "agentech.nea@gmail.com") and not data.activo:
+            if (user_rol == "superadmin" or user_email == settings.SUPERADMIN_EMAIL) and not data.activo:
                 raise HTTPException(status_code=403, detail="Acción denegada: No se puede desactivar al SuperAdmin principal.")
         u_update["activo"] = data.activo
     
@@ -290,7 +290,7 @@ def delete_chofer(chofer_id: str, claims: Dict[str, Any] = Depends(get_current_a
     if u_data.data:
         user_rol = u_data.data[0].get("rol")
         user_email = u_data.data[0].get("email")
-        if user_rol == "superadmin" or user_email == "agentech.nea@gmail.com":
+        if user_rol == "superadmin" or user_email == settings.SUPERADMIN_EMAIL:
             raise HTTPException(status_code=403, detail="Acción denegada: No se puede eliminar al SuperAdmin principal.")
 
     # 2. Borrar Chofer (La tabla tiene FK a usuarios cascade? si no, borrar manual)
@@ -980,7 +980,7 @@ def rechazar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims:
     telefono = usuario.get("telefono")
     nombre = usuario.get("nombre", "Usuario")
 
-    if rol == "superadmin" or email == "agentech.nea@gmail.com":
+    if rol == "superadmin" or email == settings.SUPERADMIN_EMAIL:
         raise HTTPException(status_code=403, detail="Acción denegada: No se puede rechazar o desactivar al SuperAdmin principal.")
 
     update_payload = {

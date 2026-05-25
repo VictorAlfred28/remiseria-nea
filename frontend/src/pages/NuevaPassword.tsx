@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type React from "react";
 import { supabase } from "../lib/supabase";
 import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +7,11 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export default function NuevaPassword() {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const [checkingSession, setCheckingSession] = useState(true);
 
@@ -25,18 +29,28 @@ export default function NuevaPassword() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({
+    const { error: updateError } = await supabase.auth.updateUser({
       password
     });
 
     setLoading(false);
 
-    if (error) {
-      alert("Error al actualizar contraseña: " + error.message);
+    if (updateError) {
+      setError("Error al actualizar: " + updateError.message);
     } else {
-      alert("Contraseña actualizada correctamente");
       setRecoveringPassword(false);
       navigate("/");
     }
@@ -63,17 +77,23 @@ export default function NuevaPassword() {
           <p className="text-sm text-zinc-400">Ingresa tu nueva contraseña para acceder.</p>
         </div>
 
+        {error && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-medium">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleUpdate} className="space-y-5">
           <div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-5 pr-12 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
-                placeholder="Nueva contraseña"
+                placeholder="Nueva contraseña (mín. 8 caracteres)"
                 disabled={loading}
               />
               <button
@@ -87,12 +107,35 @@ export default function NuevaPassword() {
             </div>
           </div>
 
+          <div>
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                required
+                minLength={8}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-5 pr-12 py-4 bg-black/50 border border-zinc-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-white placeholder-zinc-600 outline-none"
+                placeholder="Confirmar contraseña"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors"
+                aria-label={showConfirm ? "Ocultar" : "Mostrar"}
+              >
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
           <button 
             type="submit" 
-            disabled={loading || password.length < 6}
+            disabled={loading || password.length < 8}
             className="w-full bg-[#0D6EFD] hover:bg-blue-600 text-white font-black text-sm tracking-widest py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(13,110,253,0.3)] mt-2 flex justify-center items-center"
           >
-            {loading ? <Loader2 size={20} className="animate-spin" /> : "GUARDAR"}
+            {loading ? <Loader2 size={20} className="animate-spin" /> : "GUARDAR CONTRASEÑA"}
           </button>
         </form>
       </div>

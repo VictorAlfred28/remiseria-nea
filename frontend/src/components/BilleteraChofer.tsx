@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getPagosChofer, uploadPagoChofer, getMyBalance } from "../services/api";
-import { Loader2, Wallet, ArrowUpRight, ArrowDownLeft, Upload, CheckCircle2, AlertCircle, Clock, Copy, ExternalLink, Smartphone, Check } from "lucide-react";
+import { Loader2, Wallet, ArrowUpRight, ArrowDownLeft, Upload, CheckCircle2, AlertCircle, Clock, Copy, ExternalLink, Smartphone, Check, Inbox } from "lucide-react";
+import logoUbi from "../../assets/icon.png";
 
 export default function BilleteraChofer() {
   const [balance, setBalance] = useState<number>(0);
@@ -101,22 +102,22 @@ export default function BilleteraChofer() {
         {/* COLUMNA IZQUIERDA: ESTADO Y ENVÍO DE COMPROBANTE */}
         <div className="lg:col-span-7 space-y-6">
             
-            <div className={`relative overflow-hidden p-8 rounded-[2rem] border backdrop-blur-md transition-all duration-500 ${isDebt ? 'bg-red-500/5 border-red-500/20 shadow-[0_20px_40px_-15px_rgba(239,68,68,0.1)]' : 'bg-green-500/5 border-green-500/20 shadow-[0_20px_40px_-15px_rgba(34,197,94,0.1)]'}`}>
+            <div className={`relative overflow-hidden p-8 rounded-[2rem] border backdrop-blur-md transition-all duration-500 ${isDebt ? 'bg-red-500/5 border-red-500/20 shadow-[0_20px_40px_-15px_rgba(239,68,68,0.1)]' : 'bg-blue-600/5 border-blue-500/20 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.1)]'}`}>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-white/5 to-transparent rounded-tr-[2rem] pointer-events-none" />
                 
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-center mb-6">
                     <div>
                         <h2 className="text-sm font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">Estado Corriente</h2>
-                        <p className={`text-xs font-bold ${isDebt ? 'text-red-400' : 'text-green-400'}`}>
-                            {isDebt ? "⚠️ REQUERIDO: REGULARIZAR SALDO AL CANCELAR DEUDA" : "✓ AL DÍA"}
+                        <p className={`text-xs font-bold ${isDebt ? 'text-red-400' : 'text-cyan-400'}`}>
+                            {isDebt ? "⚠️ REQUERIDO: REGULARIZAR SALDO" : "✓ AL DÍA"}
                         </p>
                     </div>
-                    <Wallet className={isDebt ? 'text-red-500/50' : 'text-green-500/50'} size={32} />
+                    <Wallet className={isDebt ? 'text-red-500/50' : 'text-blue-500/50'} size={40} />
                 </div>
 
-                <div className="flex flex-col items-center py-4">
-                    <span className="text-zinc-500 text-2xl font-light mb-1">$</span>
-                    <h1 className={`text-7xl font-black tracking-tighter ${isDebt ? 'text-red-500' : 'text-green-400'}`}>
+                <div className="flex items-center gap-2">
+                    <span className="text-zinc-500 text-3xl font-light">$</span>
+                    <h1 className={`text-6xl sm:text-7xl font-black tracking-tighter ${isDebt ? 'text-red-500' : 'text-white'}`}>
                         {absBalance.toLocaleString('es-AR')}
                     </h1>
                 </div>
@@ -124,51 +125,62 @@ export default function BilleteraChofer() {
 
             {/* SECCIÓN DE DATOS DE PAGO Y SUBIDA DE COMPROBANTE */}
             <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-md rounded-[2rem] p-8 shadow-2xl">
-                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                    Pagar a la Administración
-                </h3>
+                <div className="flex items-center gap-4 mb-8">
+                   <img src={logoUbi} alt="Traslados UBI" className="w-10 h-10 object-contain rounded-xl" />
+                   <h3 className="text-xl font-black text-white">
+                       Pagar a Administración
+                   </h3>
+                </div>
                 
-                <div className="bg-zinc-950 p-5 rounded-2xl border border-blue-500/20 mb-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+                <div className="bg-zinc-950 p-6 rounded-2xl border border-blue-500/20 mb-8">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Datos para Transferir</p>
                         <button 
                             type="button"
                             onClick={handleOpenMercadoPago}
-                            className="bg-[#009EE3]/10 hover:bg-[#009EE3]/20 text-[#009EE3] text-[10px] sm:text-xs font-black px-4 py-2 rounded-xl flex items-center gap-2 border border-[#009EE3]/30 transition-all active:scale-95 w-full sm:w-auto justify-center"
+                            className="bg-[#009EE3]/10 hover:bg-[#009EE3]/20 text-[#009EE3] text-xs font-black px-5 py-3 rounded-xl flex items-center gap-2 border border-[#009EE3]/30 transition-all active:scale-95 w-full sm:w-auto justify-center"
                         >
-                            <img src="/mercadopago_icon.png" alt="Mercado Pago" className="w-4 h-4 object-contain rounded-sm" />
+                            <img src="/mercadopago_icon.png" alt="Mercado Pago" className="w-5 h-5 object-contain rounded-sm" />
                             ABRIR MERCADO PAGO
                         </button>
                     </div>
 
-                    <div className="space-y-3 text-sm text-zinc-300">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl gap-2">
-                            <span className="break-words"><span className="font-bold text-white">Banco:</span> Banco Provincia del Chaco</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-zinc-300">
+                        <div className="bg-zinc-900/50 p-4 rounded-xl">
+                            <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Banco</span>
+                            <span className="font-bold text-white break-words">Banco Provincia del Chaco</span>
                         </div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl group gap-3">
-                            <span className="break-all"><span className="font-bold text-white">CBU:</span> 3110030211000012345678</span>
+                        <div className="bg-zinc-900/50 p-4 rounded-xl">
+                            <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Titular</span>
+                            <span className="font-bold text-white break-words">TRASLADOS UBI S.R.L.</span>
+                        </div>
+                        <div className="bg-zinc-900/50 p-4 rounded-xl flex justify-between items-center group">
+                            <div className="overflow-hidden pr-2">
+                                <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">CBU</span>
+                                <span className="font-bold text-white break-all">3110030211000012345678</span>
+                            </div>
                             <button 
                                 type="button"
                                 onClick={() => copyToClipboard("3110030211000012345678", "cbu")}
-                                className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all w-full sm:w-auto ${copiedField === 'cbu' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                className={`shrink-0 flex items-center justify-center p-2.5 rounded-lg transition-all active:scale-95 ${copiedField === 'cbu' ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                title="Copiar CBU"
                             >
-                                {copiedField === 'cbu' ? <Check size={14} /> : <Copy size={14} />}
-                                {copiedField === 'cbu' ? "COPIADO" : "COPIAR"}
+                                {copiedField === 'cbu' ? <Check size={18} /> : <Copy size={18} />}
                             </button>
                         </div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl group gap-3">
-                            <span className="break-all"><span className="font-bold text-white">Alias:</span> VIAJES.NEA.OFICIAL</span>
+                        <div className="bg-zinc-900/50 p-4 rounded-xl flex justify-between items-center group">
+                            <div className="overflow-hidden pr-2">
+                                <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Alias</span>
+                                <span className="font-bold text-white break-all">UBI.TRASLADOS.OFICIAL</span>
+                            </div>
                             <button 
                                 type="button"
-                                onClick={() => copyToClipboard("VIAJES.NEA.OFICIAL", "alias")}
-                                className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all w-full sm:w-auto ${copiedField === 'alias' ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                onClick={() => copyToClipboard("UBI.TRASLADOS.OFICIAL", "alias")}
+                                className={`shrink-0 flex items-center justify-center p-2.5 rounded-lg transition-all active:scale-95 ${copiedField === 'alias' ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                title="Copiar Alias"
                             >
-                                {copiedField === 'alias' ? <Check size={14} /> : <Copy size={14} />}
-                                {copiedField === 'alias' ? "COPIADO" : "COPIAR"}
+                                {copiedField === 'alias' ? <Check size={18} /> : <Copy size={18} />}
                             </button>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-zinc-900/50 p-3 rounded-xl gap-2">
-                            <span className="break-words"><span className="font-bold text-white">Titular:</span> VIAJES NEA S.R.L.</span>
                         </div>
                     </div>
                 </div>
@@ -222,9 +234,10 @@ export default function BilleteraChofer() {
                 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                     {pagos.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 opacity-30 text-center">
-                            <ArrowUpRight size={48} className="mb-4 text-zinc-600" />
-                            <p className="text-sm font-bold tracking-widest uppercase">No has enviado comprobantes</p>
+                        <div className="flex flex-col items-center justify-center py-24 opacity-50 text-center">
+                            <Inbox size={56} className="mb-4 text-blue-500/50" />
+                            <p className="text-sm font-bold tracking-widest uppercase text-zinc-400">Sin Movimientos</p>
+                            <p className="text-xs text-zinc-500 mt-2">Aún no has enviado comprobantes de pago.</p>
                         </div>
                     ) : pagos.map((p) => {
                         const isPendiente = p.estado === 'PENDIENTE';
@@ -236,7 +249,7 @@ export default function BilleteraChofer() {
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
                                         {isPendiente && <Clock className="text-yellow-500" size={24}/>}
-                                        {isAprobado && <CheckCircle2 className="text-green-500" size={24}/>}
+                                        {isAprobado && <CheckCircle2 className="text-cyan-500" size={24}/>}
                                         {isRechazado && <AlertCircle className="text-red-500" size={24}/>}
                                         
                                         <div>
@@ -246,7 +259,7 @@ export default function BilleteraChofer() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={`text-[10px] uppercase font-black px-2 py-1 rounded border ${isPendiente ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' : isAprobado ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+                                    <div className={`text-[10px] uppercase font-black px-2 py-1 rounded border ${isPendiente ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' : isAprobado ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
                                         {p.estado}
                                     </div>
                                 </div>

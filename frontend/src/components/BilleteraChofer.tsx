@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getPagosChofer, uploadPagoChofer, getMyBalance } from "../services/api";
 import { Loader2, Wallet, Upload, CheckCircle2, AlertCircle, Clock, Copy, Check, Inbox } from "lucide-react";
 import logoUbi from "../../assets/icon.png";
-import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
 export default function BilleteraChofer() {
@@ -38,17 +38,32 @@ export default function BilleteraChofer() {
   };
 
   const handleOpenMercadoPago = async () => {
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     if (Capacitor.isNativePlatform()) {
       try {
-        await App.openUrl({ url: 'mercadopago://' });
+        await Browser.open({ url: 'mercadopago://' });
       } catch (error) {
+        console.warn("Error abriendo scheme nativo:", error);
         try {
-          await App.openUrl({ url: 'market://details?id=com.mercadopago.wallet' });
+          await Browser.open({ url: 'market://details?id=com.mercadopago.wallet' });
         } catch (marketError) {
-          await App.openUrl({ url: 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet' });
+          try {
+            window.open('https://play.google.com/store/apps/details?id=com.mercadopago.wallet', '_blank');
+          } catch (e) {
+            alert("No se pudo abrir Mercado Pago. Instala la aplicación manualmente.");
+          }
         }
       }
+    } else if (isMobileDevice) {
+      // Navegador móvil o PWA: Forzamos el deep link
+      window.location.href = 'mercadopago://';
+      // Fallback a Google Play si no tiene la app de Mercado Pago instalada
+      setTimeout(() => {
+        window.location.href = 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet';
+      }, 2500);
     } else {
+      // Entorno Desktop Web
       window.open('https://www.mercadopago.com.ar/', '_blank');
     }
   };

@@ -259,7 +259,7 @@ export default function PromocionDetalle() {
               {/* Info Extra para Socios */}
               <div className="bg-blue-600/5 border border-blue-500/10 p-6 rounded-[2rem]">
                  <p className="text-xs text-blue-300/70 font-medium leading-relaxed">
-                   Presentá tu Carnet Digital Socio en el local para acceder a este beneficio exclusivo. Club Viajes NEA.
+                   Presentá tu Carnet Digital Socio en el local para acceder a este beneficio exclusivo. Club Traslados UBI.
                  </p>
               </div>
             </div>

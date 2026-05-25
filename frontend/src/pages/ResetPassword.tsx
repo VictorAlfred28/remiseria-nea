@@ -107,7 +107,7 @@ export default function ResetPassword() {
             <Lock size={32} className="text-blue-500" />
           </div>
           <h1 className="text-2xl font-black text-white tracking-tighter mb-2">Restablecer Contraseña</h1>
-          <p className="text-sm text-zinc-400">Ingresa tu nueva contraseña para acceder a Viajes NEA.</p>
+          <p className="text-sm text-zinc-400">Ingresa tu nueva contraseña para acceder a Traslados UBI.</p>
         </div>
 
         {error && (

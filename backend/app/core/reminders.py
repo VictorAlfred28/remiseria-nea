@@ -60,7 +60,7 @@ async def procesar_y_enviar_recordatorios():
         
         mensaje = (
             f"👋 ¡Hola {nombre}! Esperamos que estés teniendo un excelente día.\n\n"
-            f"Nos contactamos desde la administración de *Viajes NEA* para avisarte que, "
+            f"Nos contactamos desde la administración de *Traslados UBI* para avisarte que, "
             f"al revisar tu billetera, notamos que tenés un saldo negativo de *${saldo_deuda:,.2f}* "
             f"que ya supera los 10 días de antigüedad. 📆💳\n\n"
             f"⚠️ *Importante:* Temporalmente hemos pausado el despacho de nuevos viajes a tu cuenta hasta que se regularice la situación.\n\n"

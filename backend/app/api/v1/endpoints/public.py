@@ -43,7 +43,7 @@ async def test_wpp(phone: str, claims: Dict[str, Any] = Depends(get_current_admi
     }
     payload = {
         "number": phone,
-        "text": "Prueba de diagnóstico de WhatsApp (Viajes NEA)"
+        "text": "Prueba de diagnóstico de WhatsApp (Traslados UBI)"
     }
     async with httpx.AsyncClient() as client:
         try:

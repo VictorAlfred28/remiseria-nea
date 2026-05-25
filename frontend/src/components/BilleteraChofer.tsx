@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { getPagosChofer, uploadPagoChofer, getMyBalance } from "../services/api";
-import { Loader2, Wallet, ArrowUpRight, ArrowDownLeft, Upload, CheckCircle2, AlertCircle, Clock, Copy, ExternalLink, Smartphone, Check, Inbox } from "lucide-react";
+import { Loader2, Wallet, Upload, CheckCircle2, AlertCircle, Clock, Copy, Check, Inbox } from "lucide-react";
 import logoUbi from "../../assets/icon.png";
+import { App } from '@capacitor/app';
 
 export default function BilleteraChofer() {
   const [balance, setBalance] = useState<number>(0);
@@ -35,19 +36,12 @@ export default function BilleteraChofer() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleOpenMercadoPago = () => {
-    const deepLink = "mercadopago://";
-    const webFallback = "https://www.mercadopago.com.ar";
-    
-    // Intenta abrir la app
-    window.location.href = deepLink;
-    
-    // Fallback a web si en 2.5s no se movió el foco (probablemente no abrió la app)
-    setTimeout(() => {
-        if (document.hasFocus()) {
-            window.open(webFallback, "_blank");
-        }
-    }, 2500);
+  const handleOpenMercadoPago = async () => {
+    try {
+        await App.openUrl({ url: 'mercadopago://' });
+    } catch (error) {
+        window.open('https://www.mercadopago.com.ar/', '_blank');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +73,7 @@ export default function BilleteraChofer() {
       alert("Comprobante enviado exitosamente y pendiente de validación.");
       setMonto("");
       setFile(null);
-      fetchData(); // Recargar historial
+      fetchData();
     } catch (err: any) {
       alert("Error al subir comprobante: " + (err.response?.data?.detail || err.message));
     }
@@ -88,7 +82,7 @@ export default function BilleteraChofer() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4">
-        <Loader2 className="animate-spin text-green-500" size={48} />
+        <Loader2 className="animate-spin text-blue-500" size={48} />
         <p className="text-zinc-500 font-bold animate-pulse tracking-widest text-xs uppercase">Sincronizando Billetera...</p>
     </div>
   );
@@ -97,118 +91,119 @@ export default function BilleteraChofer() {
   const absBalance = Math.abs(balance);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
         
-        {/* COLUMNA IZQUIERDA: ESTADO Y ENVÍO DE COMPROBANTE */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* COLUMNA IZQUIERDA */}
+        <div className="xl:col-span-7 flex flex-col gap-6">
             
-            <div className={`relative overflow-hidden p-8 rounded-[2rem] border backdrop-blur-md transition-all duration-500 ${isDebt ? 'bg-red-500/5 border-red-500/20 shadow-[0_20px_40px_-15px_rgba(239,68,68,0.1)]' : 'bg-blue-600/5 border-blue-500/20 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.1)]'}`}>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-white/5 to-transparent rounded-tr-[2rem] pointer-events-none" />
+            <div className={`relative overflow-hidden p-6 sm:p-8 rounded-3xl border transition-all duration-500 ${isDebt ? 'bg-red-500/5 border-red-500/20 shadow-[0_10px_30px_-10px_rgba(239,68,68,0.15)]' : 'bg-blue-600/10 border-blue-500/30 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.15)]'}`}>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-white/10 to-transparent rounded-tr-3xl pointer-events-none" />
                 
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h2 className="text-sm font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">Estado Corriente</h2>
-                        <p className={`text-xs font-bold ${isDebt ? 'text-red-400' : 'text-cyan-400'}`}>
+                        <h2 className="text-[10px] sm:text-xs font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Estado Corriente</h2>
+                        <p className={`text-xs sm:text-sm font-bold ${isDebt ? 'text-red-400' : 'text-cyan-400'}`}>
                             {isDebt ? "⚠️ REQUERIDO: REGULARIZAR SALDO" : "✓ AL DÍA"}
                         </p>
                     </div>
-                    <Wallet className={isDebt ? 'text-red-500/50' : 'text-blue-500/50'} size={40} />
+                    <Wallet className={isDebt ? 'text-red-500/50' : 'text-blue-500/50'} size={32} />
                 </div>
 
                 <div className="flex items-center gap-2">
                     <span className="text-zinc-500 text-3xl font-light">$</span>
-                    <h1 className={`text-6xl sm:text-7xl font-black tracking-tighter ${isDebt ? 'text-red-500' : 'text-white'}`}>
+                    <h1 className={`text-5xl sm:text-7xl font-black tracking-tighter ${isDebt ? 'text-red-500' : 'text-white'}`}>
                         {absBalance.toLocaleString('es-AR')}
                     </h1>
                 </div>
             </div>
 
-            {/* SECCIÓN DE DATOS DE PAGO Y SUBIDA DE COMPROBANTE */}
-            <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-md rounded-[2rem] p-8 shadow-2xl">
-                <div className="flex items-center gap-4 mb-8">
-                   <img src={logoUbi} alt="Traslados UBI" className="w-10 h-10 object-contain rounded-xl" />
-                   <h3 className="text-xl font-black text-white">
+            <div className="bg-zinc-900/60 border border-white/5 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl w-full">
+                <div className="flex items-center gap-3 mb-6">
+                   <img src={logoUbi} alt="Traslados UBI" className="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10" />
+                   <h3 className="text-lg sm:text-xl font-black text-white">
                        Pagar a Administración
                    </h3>
                 </div>
                 
-                <div className="bg-zinc-950 p-6 rounded-2xl border border-blue-500/20 mb-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                        <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Datos para Transferir</p>
+                <div className="bg-zinc-950/80 p-4 sm:p-5 rounded-2xl border border-blue-500/20 mb-6 flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <p className="text-[10px] sm:text-xs text-blue-400 font-bold uppercase tracking-widest">Datos para Transferir</p>
                         <button 
                             type="button"
                             onClick={handleOpenMercadoPago}
-                            className="bg-[#009EE3]/10 hover:bg-[#009EE3]/20 text-[#009EE3] text-xs font-black px-5 py-3 rounded-xl flex items-center gap-2 border border-[#009EE3]/30 transition-all active:scale-95 w-full sm:w-auto justify-center"
+                            className="bg-[#009EE3]/15 hover:bg-[#009EE3]/25 text-[#009EE3] text-[10px] sm:text-xs font-black px-4 py-2.5 rounded-xl flex items-center gap-2 border border-[#009EE3]/30 transition-all active:scale-95 w-full sm:w-auto justify-center whitespace-nowrap"
                         >
-                            <img src="/mercadopago_icon.png" alt="Mercado Pago" className="w-5 h-5 object-contain rounded-sm" />
+                            <img src="/mercadopago_icon.png" alt="MP" className="w-4 h-4 object-contain rounded-sm" onError={(e) => e.currentTarget.style.display = 'none'} />
                             ABRIR MERCADO PAGO
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-zinc-300">
-                        <div className="bg-zinc-900/50 p-4 rounded-xl">
-                            <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Banco</span>
-                            <span className="font-bold text-white break-words">Banco Provincia del Chaco</span>
+                    <div className="grid grid-cols-2 gap-3 text-sm text-zinc-300 w-full">
+                        <div className="bg-zinc-900/70 p-3 rounded-xl border border-white/5 flex flex-col justify-center min-w-0">
+                            <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">Banco</span>
+                            <span className="font-bold text-white text-xs sm:text-sm truncate">Banco Provincia del Chaco</span>
                         </div>
-                        <div className="bg-zinc-900/50 p-4 rounded-xl">
-                            <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Titular</span>
-                            <span className="font-bold text-white break-words">TRASLADOS UBI S.R.L.</span>
+                        <div className="bg-zinc-900/70 p-3 rounded-xl border border-white/5 flex flex-col justify-center min-w-0">
+                            <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">Titular</span>
+                            <span className="font-bold text-white text-xs sm:text-sm truncate">TRASLADOS UBI S.R.L.</span>
                         </div>
-                        <div className="bg-zinc-900/50 p-4 rounded-xl flex justify-between items-center group">
-                            <div className="overflow-hidden pr-2">
-                                <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">CBU</span>
-                                <span className="font-bold text-white break-all">3110030211000012345678</span>
+                        
+                        <div className="bg-zinc-900/70 p-2 sm:p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 col-span-2 sm:col-span-1">
+                            <div className="min-w-0 pr-2">
+                                <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">CBU</span>
+                                <span className="font-bold text-white text-xs sm:text-sm tracking-tight truncate block">3110030211000012345678</span>
                             </div>
                             <button 
                                 type="button"
                                 onClick={() => copyToClipboard("3110030211000012345678", "cbu")}
-                                className={`shrink-0 flex items-center justify-center p-2.5 rounded-lg transition-all active:scale-95 ${copiedField === 'cbu' ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                className={`shrink-0 flex items-center justify-center p-2 rounded-lg transition-all active:scale-95 ${copiedField === 'cbu' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
                                 title="Copiar CBU"
                             >
-                                {copiedField === 'cbu' ? <Check size={18} /> : <Copy size={18} />}
+                                {copiedField === 'cbu' ? <Check size={16} /> : <Copy size={16} />}
                             </button>
                         </div>
-                        <div className="bg-zinc-900/50 p-4 rounded-xl flex justify-between items-center group">
-                            <div className="overflow-hidden pr-2">
-                                <span className="block text-[10px] uppercase text-zinc-500 font-black mb-1">Alias</span>
-                                <span className="font-bold text-white break-all">UBI.TRASLADOS.OFICIAL</span>
+                        
+                        <div className="bg-zinc-900/70 p-2 sm:p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 col-span-2 sm:col-span-1">
+                            <div className="min-w-0 pr-2">
+                                <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">Alias</span>
+                                <span className="font-bold text-white text-xs sm:text-sm tracking-tight truncate block">UBI.TRASLADOS.OFICIAL</span>
                             </div>
                             <button 
                                 type="button"
                                 onClick={() => copyToClipboard("UBI.TRASLADOS.OFICIAL", "alias")}
-                                className={`shrink-0 flex items-center justify-center p-2.5 rounded-lg transition-all active:scale-95 ${copiedField === 'alias' ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+                                className={`shrink-0 flex items-center justify-center p-2 rounded-lg transition-all active:scale-95 ${copiedField === 'alias' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
                                 title="Copiar Alias"
                             >
-                                {copiedField === 'alias' ? <Check size={18} /> : <Copy size={18} />}
+                                {copiedField === 'alias' ? <Check size={16} /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleUploadPago} className="space-y-5">
-                    <div>
-                        <label className="block text-sm font-bold text-zinc-400 mb-2">Monto a Avisar ($)</label>
-                        <input 
-                            type="number"
-                            min="1"
-                            step="any"
-                            value={monto}
-                            onChange={(e) => setMonto(e.target.value)}
-                            required
-                            placeholder={isDebt ? `${absBalance}` : "Ej: 5000"}
-                            className="w-full bg-zinc-800/50 border border-zinc-700 p-4 rounded-xl text-white font-bold text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-sm font-bold text-zinc-400 mb-2">Comprobante de Transferencia (Imagen PDF o JPG)</label>
-                        <div className="relative">
+                <form onSubmit={handleUploadPago} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-400 mb-1.5 ml-1">Monto ($)</label>
+                            <input 
+                                type="number"
+                                min="1"
+                                step="any"
+                                value={monto}
+                                onChange={(e) => setMonto(e.target.value)}
+                                required
+                                placeholder={isDebt ? `${absBalance}` : "Ej: 5000"}
+                                className="w-full bg-zinc-950/50 border border-zinc-700/50 p-3.5 rounded-xl text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-600"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-400 mb-1.5 ml-1">Comprobante</label>
                             <input 
                                 type="file"
                                 accept="image/*,.pdf"
                                 onChange={handleFileChange}
                                 required
-                                className="w-full bg-zinc-800/50 border border-zinc-700 p-3 rounded-xl text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-500/20 file:text-blue-400 hover:file:bg-blue-500/30 transition-all cursor-pointer"
+                                className="w-full bg-zinc-950/50 border border-zinc-700/50 p-2.5 rounded-xl text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 transition-all cursor-pointer h-[52px]"
                             />
                         </div>
                     </div>
@@ -216,28 +211,27 @@ export default function BilleteraChofer() {
                     <button 
                         type="submit"
                         disabled={payLoading}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 disabled:opacity-50 transition-all"
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all mt-2 text-sm uppercase tracking-wider"
                     >
-                        {payLoading ? <Loader2 className="animate-spin" /> : <><Upload size={20}/> ENVIAR PAGO Y COMPROBANTE</>}
+                        {payLoading ? <Loader2 className="animate-spin" size={18} /> : <><Upload size={18}/> ENVIAR PAGO Y COMPROBANTE</>}
                     </button>
                 </form>
             </div>
         </div>
 
-        {/* COLUMNA DERECHA: HISTORIAL DE PAGOS */}
-        <div className="lg:col-span-5">
-            <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-md rounded-[2rem] p-8 shadow-xl h-full flex flex-col">
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                    <h3 className="text-lg font-black text-white uppercase tracking-widest">Mis Pagos Enviados</h3>
-                    <span className="bg-zinc-800 text-zinc-400 text-[10px] font-black px-3 py-1 rounded-full">{pagos.length}</span>
+        {/* COLUMNA DERECHA */}
+        <div className="xl:col-span-5 flex h-[400px] xl:h-auto">
+            <div className="bg-zinc-900/60 border border-white/5 backdrop-blur-md rounded-3xl p-6 shadow-xl w-full flex flex-col">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                    <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-widest">Mis Pagos Enviados</h3>
+                    <span className="bg-blue-500/10 text-blue-400 text-[10px] font-black px-2.5 py-1 rounded-full border border-blue-500/20">{pagos.length}</span>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
                     {pagos.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 opacity-50 text-center">
-                            <Inbox size={56} className="mb-4 text-blue-500/50" />
-                            <p className="text-sm font-bold tracking-widest uppercase text-zinc-400">Sin Movimientos</p>
-                            <p className="text-xs text-zinc-500 mt-2">Aún no has enviado comprobantes de pago.</p>
+                        <div className="flex flex-col items-center justify-center h-full opacity-60 text-center">
+                            <Inbox size={48} className="mb-3 text-blue-500/50" />
+                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-400">Sin Movimientos</p>
                         </div>
                     ) : pagos.map((p) => {
                         const isPendiente = p.estado === 'PENDIENTE';
@@ -245,27 +239,28 @@ export default function BilleteraChofer() {
                         const isRechazado = p.estado === 'RECHAZADO';
                         
                         return (
-                            <div key={p.id} className="group bg-zinc-950/30 border border-white/5 p-5 rounded-[1.5rem] flex flex-col gap-3 hover:bg-zinc-900/50 transition-all">
-                                <div className="flex justify-between items-start">
+                            <div key={p.id} className="group bg-zinc-950/50 border border-white/5 p-4 rounded-2xl flex flex-col gap-2 hover:bg-zinc-800/50 transition-all">
+                                <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        {isPendiente && <Clock className="text-yellow-500" size={24}/>}
-                                        {isAprobado && <CheckCircle2 className="text-cyan-500" size={24}/>}
-                                        {isRechazado && <AlertCircle className="text-red-500" size={24}/>}
-                                        
+                                        <div className={`p-2 rounded-xl bg-zinc-900 border border-white/5`}>
+                                            {isPendiente && <Clock className="text-yellow-500" size={16}/>}
+                                            {isAprobado && <CheckCircle2 className="text-cyan-500" size={16}/>}
+                                            {isRechazado && <AlertCircle className="text-red-500" size={16}/>}
+                                        </div>
                                         <div>
-                                            <p className="text-white font-bold">${Number(p.monto).toLocaleString('es-AR')}</p>
-                                            <p className="text-zinc-500 text-[10px] uppercase font-bold mt-1">
+                                            <p className="text-white font-bold text-sm">${Number(p.monto).toLocaleString('es-AR')}</p>
+                                            <p className="text-zinc-500 text-[9px] uppercase font-bold tracking-wider">
                                                 {new Date(p.creado_en).toLocaleDateString('es-AR')}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={`text-[10px] uppercase font-black px-2 py-1 rounded border ${isPendiente ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' : isAprobado ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+                                    <div className={`text-[9px] uppercase font-black px-2 py-1 rounded-lg border ${isPendiente ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' : isAprobado ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
                                         {p.estado}
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-2">
-                                    <a href={p.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 text-xs font-bold hover:underline">Ver Foto Comprobante</a>
-                                    {isRechazado && p.observaciones && <span className="text-xs text-red-400 italic flex-1 text-right ml-4 truncate" title={p.observaciones}>Motivo: {p.observaciones}</span>}
+                                <div className="flex justify-between items-center mt-1 pt-2 border-t border-white/5">
+                                    <a href={p.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 text-[10px] font-bold hover:underline uppercase tracking-wide">Ver Comprobante</a>
+                                    {isRechazado && p.observaciones && <span className="text-[10px] text-red-400 italic truncate ml-2" title={p.observaciones}>{p.observaciones}</span>}
                                 </div>
                             </div>
                         );
@@ -273,7 +268,6 @@ export default function BilleteraChofer() {
                 </div>
             </div>
         </div>
-
     </div>
   );
 }

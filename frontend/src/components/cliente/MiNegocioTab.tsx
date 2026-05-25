@@ -348,9 +348,7 @@ export default function MiNegocioTab() {
                 <Store size={32} className="text-blue-400 -rotate-3" />
             </div>
             <h2 className="text-2xl font-black text-white px-4">¿Querés sumar tu negocio?</h2>
-            <p className="text-zinc-400 mt-2 max-w-md mx-auto text-sm">
-               Convertite en un "Comercio Adherido" de Viajes NEA, ofrece promociones a nuestra flota de choferes y pasajeros, y atráe nuevos clientes.
-            </p>
+            <p className="text-zinc-400 max-w-sm mb-6 text-sm mx-auto">Convertite en un "Comercio Adherido" de Traslados UBI, ofrece promociones a nuestra flota de choferes y pasajeros, y atráe nuevos clientes.</p>
         </div>
 
         <form onSubmit={handleEnviarSolicitud} className="max-w-2xl mx-auto space-y-6">

@@ -21,7 +21,7 @@ async def send_email(to: str, subject: str, html_content: str):
         return
 
     message = EmailMessage()
-    message["From"] = f"Viajes NEA <{settings.GMAIL_EMAIL}>"
+    message["From"] = f"Traslados UBI <{settings.GMAIL_EMAIL}>"
     message["To"] = to
     message["Subject"] = subject
     message.set_content(html_content, subtype="html")

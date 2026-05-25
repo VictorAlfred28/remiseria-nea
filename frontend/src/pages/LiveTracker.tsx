@@ -132,7 +132,7 @@ export default function LiveTracker() {
               <div className="bg-green-500/10 p-6 rounded-2xl border border-green-500/30 max-w-sm w-full">
                  <CheckCircle2 className="text-green-500 mx-auto mb-4" size={64} />
                  <h1 className="text-2xl font-black text-green-400 mb-2">Viaje Finalizado</h1>
-                 <p className="text-sm font-medium">Gracias por viajar con Viajes NEA.</p>
+                 <p className="text-sm font-medium">Gracias por viajar con Traslados UBI.</p>
               </div>
           </div>
       );
@@ -172,7 +172,7 @@ export default function LiveTracker() {
                             <ArrowLeft size={20} />
                         </button>
                         <div>
-                            <h2 className="font-black text-lg tracking-tight">Viajes NEA</h2>
+                            <h2 className="font-black text-lg tracking-tight">Traslados UBI</h2>
                             <p className="text-xs text-zinc-400">Seguridad en Viaje</p>
                         </div>
                     </div>

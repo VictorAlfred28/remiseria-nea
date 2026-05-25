@@ -84,7 +84,7 @@ TOOLS = [
     }
 ]
 
-SYSTEM_PROMPT = """Eres un asistente virtual inteligente que responde consultas de clientes por WhatsApp para la remisería "Viajes NEA".
+SYSTEM_PROMPT = """Eres un asistente virtual inteligente que responde consultas de clientes por WhatsApp para la remisería "Traslados UBI".
 Tu trabajo es atender con un tono amigable, profesional y estilo correntino/chaqueño (cálido).
 
 IMPORTANTE:

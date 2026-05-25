@@ -320,9 +320,9 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                     import asyncio
                     
                     if requiere_aprobacion:
-                        msg = f"🛡️ *Viajes NEA - Autorización Requerida*\n\n{nombre_hijo} quiere solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n💵 Estimado: ${precio_final}\n\nIngresa a tu App, pestaña Familia, para *APROBAR* o *RECHAZAR*."
+                        msg = f"🛡️ *Traslados UBI - Autorización Requerida*\n\n{nombre_hijo} quiere solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n💵 Estimado: ${precio_final}\n\nIngresa a tu App, pestaña Familia, para *APROBAR* o *RECHAZAR*."
                     else:
-                        msg = f"🚗 *Viajes NEA - Control Familiar*\n\n{nombre_hijo} acaba de solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n\nPuedes supervisarlo en vivo desde tu panel."
+                        msg = f"🚗 *Traslados UBI - Control Familiar*\n\n{nombre_hijo} acaba de solicitar un viaje:\n📍 Desde: {origen_str}\n🏁 Hasta: {destino_str}\n\nPuedes supervisarlo en vivo desde tu panel."
                         
                     asyncio.create_task(send_whatsapp_message(settings.EVOLUTION_INSTANCE, t_data.data[0]["telefono"], msg))
             except Exception as e:

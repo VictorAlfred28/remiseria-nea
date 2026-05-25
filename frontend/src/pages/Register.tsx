@@ -123,7 +123,7 @@ export default function Register() {
         
         {/* LOGO ORIGINAL CENTRADO */}
         <div className="flex flex-col items-center mb-8">
-           <img src={logoOriginal} alt="UBI Viajes NEA" className="w-52 sm:w-60 object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)]" />
+           <img src={logoOriginal} alt="Traslados UBI" className="w-52 sm:w-60 object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)]" />
         </div>
 
         {errorMsg && (

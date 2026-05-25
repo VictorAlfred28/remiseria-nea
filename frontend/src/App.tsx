@@ -77,7 +77,7 @@ function App() {
         {user && (
           <nav className="w-full glass-panel !border-l-0 !border-r-0 !border-t-0 p-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex justify-between items-center border-b border-[rgba(255,255,255,0.08)] sticky top-0 z-50 safe-pt">
             <div className="flex items-center gap-6">
-              <span className="text-xl font-black text-white ml-2 tracking-tight">Viajes NEA</span>
+              <span className="text-xl font-black text-white ml-2 tracking-tight">Traslados UBI</span>
               
               <div className="flex gap-4 border-l border-white/10 pl-6 ml-2 text-sm font-medium">
                 {(role === 'admin' || role === 'superadmin') && (

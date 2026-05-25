@@ -89,7 +89,7 @@ async def invite_member(req: InviteRequest, claims: Dict[str, Any] = Depends(get
 
     # 2. Logic to notify via WhatsApp 
     # Fetch org info to get Evolution API instance if needed, or use the global send_whatsapp_message wrapper
-    mensaje = f"🚗 *Viajes NEA - Control Familiar*\n\nHola {req.nombre}! {tutor_nombre} te ha invitado a unirte a su Grupo Familiar para abonar y supervisar tus viajes.\n\n👉 *Ingresa a la app y en tu perfil selecciona 'Vincular Tutor' usando su número de teléfono.*"
+    mensaje = f"🚗 *Traslados UBI - Control Familiar*\n\nHola {req.nombre}! {tutor_nombre} te ha invitado a unirte a su Grupo Familiar para abonar y supervisar tus viajes.\n\n👉 *Ingresa a la app y en tu perfil selecciona 'Vincular Tutor' usando su número de teléfono.*"
     
     try:
         # Check if user already exists in platform by phone

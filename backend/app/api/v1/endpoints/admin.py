@@ -174,7 +174,7 @@ def aprobar_chofer(chofer_id: str, background_tasks: BackgroundTasks, claims: Di
     supabase.table("usuarios").update({"estado": "aprobado", "activo": True}).eq("id", u_id).execute()
 
     if telefono:
-        msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Viajes NEA ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
+        msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Traslados UBI ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
         def _send_sync_admin():
             import asyncio
             asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
@@ -200,7 +200,7 @@ def rechazar_chofer(chofer_id: str, background_tasks: BackgroundTasks, claims: D
     supabase.table("usuarios").update({"estado": "rechazado", "activo": False}).eq("id", u_id).execute()
 
     if telefono:
-        msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Viajes NEA ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
+        msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Traslados UBI ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
         def _send_sync_admin():
             import asyncio
             asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
@@ -862,7 +862,7 @@ def create_titular(
         phone = phone + "@s.whatsapp.net"
 
     mensaje_invitacion = (
-        f"👋 ¡Hola *{data.nombre}*! Fuiste registrado como *Titular* en Viajes NEA.\n\n"
+        f"👋 ¡Hola *{data.nombre}*! Fuiste registrado como *Titular* en Traslados UBI.\n\n"
         f"🔑 Tus credenciales de acceso:\n"
         f"📧 Email: *{data.email}*\n"
         f"🔐 Contraseña temporal: *{password}*\n\n"
@@ -950,7 +950,7 @@ def aprobar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims: 
         }).eq("usuario_id", usuario_id).execute()
         
         if telefono:
-            msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Viajes NEA ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
+            msg = f"🎉 ¡Felicidades {nombre}! Tu solicitud para ser chofer en Traslados UBI ha sido APROBADA. 🚖\n\nYa puedes iniciar sesión en la aplicación con tu correo y contraseña."
             def _send_sync_admin():
                 import asyncio
                 asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))
@@ -992,7 +992,7 @@ def rechazar_usuario(usuario_id: str, background_tasks: BackgroundTasks, claims:
     if rol == "chofer":
         supabase.table("choferes").update({"estado_validacion": "rechazado"}).eq("usuario_id", usuario_id).execute()
         if telefono:
-            msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Viajes NEA ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
+            msg = f"Hola {nombre}. Lamentamos informarte que tu solicitud para ser chofer en Traslados UBI ha sido RECHAZADA. ❌\n\nPor favor, contacta a la administración para más detalles."
             def _send_sync_admin():
                 import asyncio
                 asyncio.run(send_whatsapp_message("Viejes-Nea", telefono, msg))

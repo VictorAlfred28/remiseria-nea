@@ -501,12 +501,12 @@ export default function ChoferDashboard() {
           <div className="w-full sm:w-auto flex flex-col">
             <div className="flex items-center justify-between sm:justify-start w-full gap-3">
                <div className="flex items-center gap-3">
-                   <div className={`p-2 rounded-xl ${isOnline ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-400'} transition-colors duration-500`}>
+                   <div className={`p-2 rounded-xl ${isOnline ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-400'} transition-colors duration-500`}>
                       <Zap size={24} fill="currentColor" />
                    </div>
                    <div>
                       <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-none">
-                         Viajes <span className={isOnline ? "text-green-500" : "text-zinc-500"}>NEA</span>
+                         Traslados <span className={isOnline ? "text-cyan-400" : "text-zinc-500"}>UBI</span>
                       </h1>
                       {!isMainPage && <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Panel Chofer</p>}
                    </div>
@@ -530,7 +530,7 @@ export default function ChoferDashboard() {
                   ${isBlocked 
                     ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed opacity-50' 
                     : (isOnline 
-                        ? 'bg-[#10B981] text-[#030712] shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:bg-[#059669] hover:shadow-[#10B981]/60' 
+                        ? 'bg-[#009EE3] text-white shadow-[0_0_25px_rgba(0,158,227,0.4)] hover:bg-blue-500 hover:shadow-blue-500/60' 
                         : 'bg-[#0D6EFD] text-white hover:bg-blue-600 shadow-[0_0_20px_rgba(13,110,253,0.3)]')}
                 `}
               >
@@ -568,10 +568,10 @@ export default function ChoferDashboard() {
             )}
 
             {/* ESTADO VISUAL LIVE */}
-            <div className={`relative mb-10 p-5 flex items-center gap-4 rounded-3xl border transition-all duration-700 ${isOnline ? 'bg-green-500/5 border-green-500/20 text-green-400 shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]' : 'bg-zinc-950/30 border-white/5 text-zinc-500'}`}>
+            <div className={`relative mb-10 p-5 flex items-center gap-4 rounded-3xl border transition-all duration-700 ${isOnline ? 'bg-blue-500/5 border-blue-500/20 text-blue-400 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)]' : 'bg-zinc-950/30 border-white/5 text-zinc-500'}`}>
                 <div className="relative flex h-5 w-5">
-                  {isOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-40"></span>}
-                  <span className={`relative inline-flex rounded-full h-5 w-5 border-2 ${isOnline ? 'bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-zinc-700 border-zinc-600'}`}></span>
+                  {isOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-40"></span>}
+                  <span className={`relative inline-flex rounded-full h-5 w-5 border-2 ${isOnline ? 'bg-blue-500 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'bg-zinc-700 border-zinc-600'}`}></span>
                 </div>
                 <p className="font-bold text-sm tracking-tight">{isOnline ? "CONECTADO: TRANSMITIENDO SEÑAL GPS EN VIVO" : "DESCONECTADO: SEÑAL DE RADAR INACTIVA"}</p>
             </div>
@@ -579,7 +579,7 @@ export default function ChoferDashboard() {
             {/* GRID DE NAVEGACIÓN PREMIUM */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
               {[
-                { id: 'solicitudes', icon: Navigation, label: 'Solicitudes', badge: isOnline && viajesDisponibles.length > 0 ? viajesDisponibles.length : 0, color: 'text-green-400' },
+                { id: 'solicitudes', icon: Navigation, label: 'Solicitudes', badge: isOnline && viajesDisponibles.length > 0 ? viajesDisponibles.length : 0, color: 'text-blue-400' },
                 { id: 'reservas', icon: Calendar, label: 'Reservas', color: 'text-blue-400' },
                 { id: 'caja', icon: Wallet, label: 'Mi Caja', color: 'text-emerald-400' },
                 { id: 'tarifas', icon: Zap, label: 'Tarifario', color: 'text-yellow-400' },

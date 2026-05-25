@@ -59,9 +59,9 @@ export default function SolicitudesPage({
             <div className="space-y-6">
                 {viajeActivo && (
                     // PANTALLA DE VIAJE EN CURSO 
-                    <div className="bg-gradient-to-b from-green-950/40 to-zinc-900 border-2 border-green-500/40 p-6 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="bg-gradient-to-b from-blue-950/40 to-zinc-900 border-2 border-blue-500/40 p-6 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="text-center mb-6">
-                            <span className="bg-green-500/20 text-green-400 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide border border-green-500/30 inline-block mb-3 animate-pulse">
+                            <span className="bg-blue-500/20 text-blue-400 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide border border-blue-500/30 inline-block mb-3 animate-pulse">
                                 Viaje en Curso
                             </span>
                             <h2 className="text-2xl font-black text-white">Navegando al Destino</h2>
@@ -82,16 +82,16 @@ export default function SolicitudesPage({
                             <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
                                 <p className="text-sm font-semibold text-zinc-500 mb-1 uppercase tracking-widest">Punto de Destino</p>
                                 <p className="text-lg text-white font-medium flex items-center gap-2">
-                                    <Navigation className="text-green-400" size={20} />
+                                    <Navigation className="text-blue-400" size={20} />
                                     {viajeActivo.destino?.direccion || "Destino"}
                                 </p>
                             </div>
                             
                             <LocalWaitTimer isActive={viajeActivo.estado === 'ARRIVED'} />
 
-                            <div className="bg-green-950/20 p-4 rounded-xl border border-green-500/20 text-center">
-                                <p className="text-sm font-semibold text-green-500 mb-1 uppercase tracking-widest">Cotización Estimada</p>
-                                <p className="text-2xl text-green-400 font-black">
+                            <div className="bg-blue-950/20 p-4 rounded-xl border border-blue-500/20 text-center">
+                                <p className="text-sm font-semibold text-blue-500 mb-1 uppercase tracking-widest">Cotización Estimada</p>
+                                <p className="text-2xl text-cyan-400 font-black">
                                     ${viajeActivo.precio}
                                 </p>
                                 {viajeActivo.estado === 'STARTED' && (
@@ -237,7 +237,7 @@ export default function SolicitudesPage({
                                                     <MapPin size={18} className="text-red-400"/> {viaje.origen?.direccion || "Origen Desconocido"}
                                                 </p>
                                                 <div className="flex flex-col items-end">
-                                                    <p className={`font-bold px-3 py-1 rounded-full text-sm flex-shrink-0 ${viaje.usado_viaje_gratis ? 'bg-amber-500 text-black' : 'bg-green-950/40 text-green-400'}`}>
+                                                    <p className={`font-bold px-3 py-1 rounded-full text-sm flex-shrink-0 ${viaje.usado_viaje_gratis ? 'bg-amber-500 text-black' : 'bg-blue-950/40 text-blue-400'}`}>
                                                         {viaje.usado_viaje_gratis ? '🎁 GRATIS' : `$${viaje.precio}`}
                                                     </p>
                                                     {viaje.usado_viaje_gratis && <span className="text-[9px] text-amber-500 font-bold mt-1 uppercase">Puntos Cliente</span>}

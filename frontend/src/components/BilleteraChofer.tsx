@@ -39,32 +39,50 @@ export default function BilleteraChofer() {
 
   const handleOpenMercadoPago = async () => {
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    const webUrl = 'https://www.mercadopago.com.ar/';
+    // Intent Android Oficial sugerido
+    const intentUrl = 'intent://www.mercadopago.com.ar/#Intent;scheme=https;package=com.mercadopago.wallet;end;';
+    const fallbackPlayStore = 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet';
+    
+    console.log('MP URL:', webUrl);
+    console.log('INTENT URL:', intentUrl);
 
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await Browser.open({ url: 'mercadopago://' });
-      } catch (error) {
-        console.warn("Error abriendo scheme nativo:", error);
-        try {
-          await Browser.open({ url: 'market://details?id=com.mercadopago.wallet' });
-        } catch (marketError) {
-          try {
-            window.open('https://play.google.com/store/apps/details?id=com.mercadopago.wallet', '_blank');
-          } catch (e) {
-            alert("No se pudo abrir Mercado Pago. Instala la aplicación manualmente.");
-          }
+    if (Capacitor.isNativePlatform() || isMobileDevice) {
+      console.log('TRY OPEN MP APP');
+      
+      let fallbackTimer: any;
+      
+      const handleVisibility = () => {
+         if (document.hidden) {
+             console.log('MP APP DETECTADA Y ABIERTA: Cancelando fallbacks');
+             if (fallbackTimer) clearTimeout(fallbackTimer);
+             document.removeEventListener("visibilitychange", handleVisibility);
+         }
+      };
+      
+      document.addEventListener("visibilitychange", handleVisibility);
+      
+      // Se utiliza location.href para delegar el Intent al Webview Nativo
+      window.location.href = intentUrl;
+      
+      // El timeout se amplía a 3 segundos para dar tiempo suficiente al OS de resolver el intent
+      fallbackTimer = setTimeout(() => {
+        console.log('MP APP OPEN FAILED');
+        console.log('OPEN PLAYSTORE');
+        document.removeEventListener("visibilitychange", handleVisibility);
+        
+        if (Capacitor.isNativePlatform()) {
+             // En capacitor nativo es seguro usar el scheme market:// para abrir la tienda nativa sin romper el DOM
+             window.location.href = 'market://details?id=com.mercadopago.wallet';
+        } else {
+             window.open(fallbackPlayStore, '_blank');
         }
-      }
-    } else if (isMobileDevice) {
-      // Navegador móvil o PWA: Forzamos el deep link
-      window.location.href = 'mercadopago://';
-      // Fallback a Google Play si no tiene la app de Mercado Pago instalada
-      setTimeout(() => {
-        window.location.href = 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet';
-      }, 2500);
+      }, 3000);
+      
     } else {
-      // Entorno Desktop Web
-      window.open('https://www.mercadopago.com.ar/', '_blank');
+      console.log('FALLBACK WEB: Navegador Desktop');
+      window.open(webUrl, '_blank');
     }
   };
 

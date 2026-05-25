@@ -508,11 +508,11 @@ export default function AdminDashboard() {
                     <p className="text-zinc-400 mb-6 text-sm">Crea la cuenta del chofer internamente y de forma directa sin pasar por revisión.</p>
                     {errorMsg && <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-lg text-sm">{errorMsg}</div>}
                     <form onSubmit={handleAltaChofer} className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="form-grid">
                            <input type="text" required value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre Completo" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                            <input type="tel" required value={telefono} onChange={e=>setTelefono(e.target.value)} placeholder="Teléfono" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="form-grid">
                            <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo Electrónico" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                            <input type="text" required value={dni} onChange={e=>setDni(e.target.value)} placeholder="Número de DNI" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                         </div>
@@ -525,7 +525,7 @@ export default function AdminDashboard() {
                               <label className="text-sm text-zinc-300">Tiene vehículo propio</label>
                            </div>
                            {tieneVehiculo && (
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="form-grid">
                                  <input type="text" value={vehiculo} onChange={e=>setVehiculo(e.target.value)} placeholder="Vehículo (Marca/Modelo)" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                                  <input type="text" value={patente} onChange={e=>setPatente(e.target.value)} placeholder="Patente" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none uppercase" />
                               </div>
@@ -534,7 +534,7 @@ export default function AdminDashboard() {
 
                         <div className="border-t border-zinc-800 pt-4 mt-2">
                            <p className="text-sm font-semibold text-zinc-300 mb-3">Licencia de Conducir</p>
-                           <div className="grid grid-cols-3 gap-4">
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <input type="text" value={licenciaNumero} onChange={e=>setLicenciaNumero(e.target.value)} placeholder="Número de Licencia" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white outline-none" />
                               <select value={licenciaCategoria} onChange={e => setLicenciaCategoria(e.target.value)} className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white text-sm outline-none">
                                  <option value="B">B (Particular)</option>
@@ -547,7 +547,7 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="form-grid">
                                 <select value={tipoPago} onChange={e => setTipoPago(e.target.value)} className="bg-zinc-950 border border-zinc-800 px-3 py-2.5 rounded-lg text-white text-sm outline-none">
                                     <option value="comision">Por Comisión (%)</option>
                                     <option value="base">Base Fija Semanal ($)</option>
@@ -662,7 +662,7 @@ export default function AdminDashboard() {
                   <input type="text" required value={promoTitulo} onChange={e=>setPromoTitulo(e.target.value)} placeholder="Título interactivo (Ej: Descuento 20% Lunes)" className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none" />
                   <textarea required value={promoDesc} onChange={e=>setPromoDesc(e.target.value)} placeholder="Descripción detallada de la oferta..." rows={3} className="bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="form-grid">
                     <div>
                       <label className="text-xs text-zinc-500 block mb-1">Tipo Descuento</label>
                       <select value={promoTipoDescuento} onChange={e=>setPromoTipoDescuento(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 px-4 py-3 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none">
@@ -756,7 +756,7 @@ export default function AdminDashboard() {
             </div>
 
             {loadingFleet ? <div className="flex justify-center p-12"><Loader2 className="animate-spin text-blue-500" size={32}/></div> : (
-               <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+               <div className="table-container bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
                   <table className="w-full text-left text-sm">
                      <thead className="bg-zinc-900 text-zinc-500 font-bold uppercase text-[10px] tracking-wider border-b border-zinc-800">
                         <tr>
@@ -818,7 +818,7 @@ export default function AdminDashboard() {
             {/* Modal Edición (Aesthetic Glassmorphism) */}
             {editChofer && (
                <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+                  <div className="modal bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative">
                      <button onClick={() => setEditChofer(null)} className="absolute right-6 top-6 text-zinc-500 hover:text-white">✕</button>
                      <h3 className="text-xl text-white font-black mb-1">Editar Conductor</h3>
                      <p className="text-zinc-500 text-sm mb-6">Actualiza el perfil y los datos del automóvil.</p>
@@ -883,7 +883,7 @@ export default function AdminDashboard() {
             {/* Modal Confirmación Eliminación */}
             {showDeleteConfirm && (
                <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="bg-zinc-900 border border-red-900/50 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+                  <div className="modal bg-zinc-900 border border-red-900/50 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
                      <AlertTriangle size={48} className="text-red-500 mx-auto mb-4 animate-bounce" />
                      <h3 className="text-xl text-white font-black mb-2">¿Confirmar Baja?</h3>
                      <p className="text-zinc-500 text-sm mb-6">Esta acción es irreversible. Se eliminará el perfil del chofer y su acceso a la plataforma.</p>

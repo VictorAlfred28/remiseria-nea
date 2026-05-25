@@ -146,7 +146,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="header">
         <div>
           <h2 className="text-2xl font-black text-white">Gestión de Flota</h2>
           <p className="text-zinc-500 text-sm">Administrá todos los vehículos de la remisería.</p>
@@ -164,7 +164,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
       {loading && vehicles.length === 0 ? (
         <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-500" size={40} /></div>
       ) : (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl overflow-hidden">
+        <div className="table-container bg-zinc-900/50 border border-zinc-800 rounded-3xl overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-zinc-900 border-b border-zinc-800 text-[10px] uppercase font-black tracking-widest text-zinc-500">
               <tr>
@@ -230,7 +230,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
             </tbody>
           </table>
           {vehicles.length === 0 && (
-            <div className="text-center py-20 text-zinc-600">
+            <div className="empty-state flex-col text-zinc-600 text-center">
               <Car size={60} className="mx-auto mb-4 opacity-10" />
               <p>No hay vehículos registrados.</p>
             </div>
@@ -241,7 +241,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
       {/* Modal: Alta Vehículo */}
       {showCreate && (
         <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
+          <div className="modal bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button onClick={() => setShowCreate(false)} className="absolute right-6 top-6 text-zinc-500 hover:text-white">✕</button>
             <h3 className="text-2xl text-white font-black mb-6">Registrar Vehículo</h3>
             <form onSubmit={handleCreate} className="space-y-4">
@@ -258,7 +258,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
                 </select>
                 {titulares.length === 0 && <p className="text-[10px] text-orange-500 mt-1">⚠️ Primero debés crear un titular en la pestaña correspondinte.</p>}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
                   <label className="text-[10px] text-zinc-500 mb-1 block uppercase font-black tracking-widest">Marca</label>
                   <input required placeholder="Ej: Chevrolet" value={newV.marca} onChange={e => setNewV({...newV, marca: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all" />
@@ -268,7 +268,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
                   <input required placeholder="Ej: Onix" value={newV.modelo} onChange={e => setNewV({...newV, modelo: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
                   <label className="text-[10px] text-zinc-500 mb-1 block uppercase font-black tracking-widest">Patente</label>
                   <input required placeholder="ABC 123" value={newV.patente} onChange={e => setNewV({...newV, patente: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all uppercase" />
@@ -289,7 +289,7 @@ export default function FlotaAdminTab({ onVehicleAction }: FlotaAdminTabProps) {
       {/* Modal: Asignar Chofer */}
       {subView === 'asignar' && selectedV && (
         <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-sm w-full relative shadow-2xl">
+          <div className="modal bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-sm w-full relative shadow-2xl">
             <button onClick={() => setSubView('lista')} className="absolute right-6 top-6 text-zinc-500 hover:text-white">✕</button>
             <h3 className="text-xl text-white font-black mb-1">Asignar Chofer</h3>
             <p className="text-zinc-500 text-sm mb-6">{selectedV.marca} {selectedV.modelo} - {selectedV.patente}</p>

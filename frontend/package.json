@@ -20,6 +20,7 @@
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
     "@capacitor/geolocation": "^8.2.0",
+    "@react-google-maps/api": "^2.20.8",
     "@supabase/supabase-js": "^2.100.1",
     "@types/leaflet": "^1.9.21",
     "axios": "^1.14.0",
@@ -34,6 +35,7 @@
     "react-router-dom": "^7.13.2",
     "sirv-cli": "^3.0.0",
     "tailwind-merge": "^3.5.0",
+    "use-places-autocomplete": "^4.0.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

@@ -111,3 +111,108 @@ html, body {
 .light-theme .leaflet-layer {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* SOLUCION UI RESPONSIVE */
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+input, select {
+  width: 100%;
+  min-width: 0;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+button {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  button {
+    width: auto;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.container {
+  padding-bottom: 80px;
+}
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+.break-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.min-h-screen {
+  min-height: 100dvh !important;
+}
+
+.h-screen {
+  height: 100dvh !important;
+}
+
+.footer-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.empty-state {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+

@@ -9,6 +9,10 @@ import ControlParental from "../components/cliente/ControlParental";
 import MiNegocioTab from "../components/cliente/MiNegocioTab";
 import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import { calculateDistance } from "../utils/geo";
+import AddressSelector from "../components/cliente/AddressSelector";
+import TripMap from "../components/cliente/TripMap";
+import { useJsApiLoader } from "@react-google-maps/api";
+import { getCurrentUserLocation, reverseGeocode } from "../services/geolocation";
 
 export default function ClienteDashboard() {
   const { user, role, roles } = useAuthStore();
@@ -23,6 +27,15 @@ export default function ClienteDashboard() {
   const [destinoCoords, setDestinoCoords] = useState<{lat: number, lng: number} | null>(null);
   const [loading, setLoading] = useState(false);
   const [cotizacion, setCotizacion] = useState<any>(null);
+
+  const [mapCenter, setMapCenter] = useState({ lat: -27.4692, lng: -58.8306 });
+  const [isLocating, setIsLocating] = useState(false);
+
+  const { isLoaded: isMapLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
+    libraries: ['places'] as any,
+  });
 
   // Autocomplete Sugerencias
   const [sugerencias, setSugerencias] = useState<any[]>([]);
@@ -470,24 +483,25 @@ export default function ClienteDashboard() {
       setActiveSugField(null);
   };
 
-  const useMyLocation = () => {
-      if (!navigator.geolocation) return;
-      setLoading(true);
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setOrigenCoords({ lat: latitude, lng: longitude });
-          try {
-              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-              const data = await res.json();
-              setOrigen(data.display_name || `Ubicación actual (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
-          } catch (e) {
-              setOrigen(`Mi ubicación actual`);
-          }
-          setLoading(false);
-      }, () => {
-          setLoading(false);
-          alert("No pudimos obtener tu ubicación.");
-      });
+  const useMyLocation = async () => {
+      setIsLocating(true);
+      const loc = await getCurrentUserLocation();
+      if (loc.error) {
+         alert(loc.error);
+      }
+      setMapCenter({ lat: loc.lat, lng: loc.lng });
+      setOrigenCoords({ lat: loc.lat, lng: loc.lng });
+      
+      const address = await reverseGeocode(loc.lat, loc.lng);
+      setOrigen(address);
+      setIsLocating(false);
+  };
+
+  const handleMapCenterChanged = async (lat: number, lng: number) => {
+     setMapCenter({ lat, lng });
+     setOrigenCoords({ lat, lng });
+     const address = await reverseGeocode(lat, lng);
+     setOrigen(address);
   };
   // ---- Reservas ---- //
   const handleReservarViaje = async () => {
@@ -746,80 +760,36 @@ export default function ClienteDashboard() {
                      </div>
                    )}
 
-                      <div className="space-y-4 relative">
-                      <div className="absolute left-6 top-8 bottom-12 w-0.5 bg-zinc-800"></div>
-                      
-                      {/* ORIGEN */}
-                      <div className="relative pl-10">
-                        <div className="absolute left-4 top-3.5 w-4 h-4 bg-rose-500/20 border border-rose-500 rounded-full flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
-                        </div>
-                        <div className="flex gap-2">
-                           <input
-                             type="text"
-                             value={origen}
-                             onChange={(e) => {
-                                 setOrigen(e.target.value);
-                                 handleFetchSugerencias(e.target.value, 'origen');
-                                 if(cotizacion) setCotizacion(null);
-                             }}
-                             placeholder="¿Dónde te buscamos?"
-                             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] outline-none pr-10 transition-all"
+                      {isMapLoaded ? (
+                        <>
+                           <div className="h-64 mb-6 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-xl">
+                              <TripMap 
+                                center={mapCenter}
+                                onCenterChanged={handleMapCenterChanged}
+                                destination={destinoCoords}
+                                isLoaded={isMapLoaded}
+                                isLocating={isLocating}
+                              />
+                           </div>
+                           <AddressSelector
+                              originAddress={origen}
+                              onOriginSelect={(lat, lng, address) => {
+                                setOrigen(address);
+                                setOrigenCoords({ lat, lng });
+                                setMapCenter({ lat, lng });
+                              }}
+                              onDestinationSelect={(lat, lng, address) => {
+                                setDestino(address);
+                                setDestinoCoords({ lat, lng });
+                              }}
+                              onRequestCurrentLocation={useMyLocation}
                            />
-                           <button 
-                             onClick={useMyLocation}
-                             className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 p-3 rounded-xl border border-white/5 transition-colors"
-                             title="Usar mi ubicación actual"
-                           >
-                             <MapPin size={18} />
-                           </button>
-                        </div>
-                        {activeSugField === 'origen' && sugerencias.length > 0 && (
-                            <div className="absolute z-50 left-10 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                               {sugerencias.map((s, i) => (
-                                   <button 
-                                     key={i} 
-                                     onClick={() => handleSelectSugerencia(s)}
-                                     className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-sm text-zinc-300 border-b border-white/5 last:border-0 truncate"
-                                   >
-                                      {s.display_name}
-                                   </button>
-                               ))}
-                            </div>
-                        )}
-                      </div>
-
-                      {/* DESTINO */}
-                      <div className="relative pl-10 mt-6 pt-4">
-                        <div className="absolute left-4 top-7 w-4 h-4 bg-blue-500/20 border border-blue-500 rounded-full flex items-center justify-center">
-                           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        </>
+                      ) : (
+                         <div className="h-64 mb-6 rounded-2xl overflow-hidden border border-zinc-800 relative flex items-center justify-center bg-zinc-900">
+                             <Loader2 className="animate-spin text-blue-500" size={32} />
                          </div>
-                        <input
-                          type="text"
-                          value={destino}
-                          onChange={(e) => {
-                              setDestino(e.target.value);
-                              handleFetchSugerencias(e.target.value, 'destino');
-                              if(cotizacion) setCotizacion(null);
-                          }}
-                          placeholder="¿A dónde nos dirigimos?"
-                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] outline-none transition-all"
-                        />
-                        {activeSugField === 'destino' && sugerencias.length > 0 && (
-                            <div className="absolute z-50 left-10 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                               {sugerencias.map((s, i) => (
-                                   <button 
-                                     key={i} 
-                                     onClick={() => handleSelectSugerencia(s)}
-                                     className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-sm text-zinc-300 border-b border-white/5 last:border-0 truncate"
-                                   >
-                                      {s.display_name}
-                                   </button>
-                               ))}
-                            </div>
-                        )}
-                      </div>
-                    </div>
+                      )}
 
                    {!cotizacion ? (
                      <button 

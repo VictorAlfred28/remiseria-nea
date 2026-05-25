@@ -13,6 +13,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RegisterChofer from "./pages/RegisterChofer";
 import ResetPassword from "./pages/ResetPassword";
+import ResetHandler from "./pages/ResetHandler";
+import NuevaPassword from "./pages/NuevaPassword";
 import LiveTracker from "./pages/LiveTracker";
 import { useAuthStore } from "./store/useAuthStore";
 import { LogOut, Sun, Moon } from "lucide-react";
@@ -55,13 +57,6 @@ function App() {
         setRecoveringPassword(true);
       }
     });
-
-    // Validar deep link / hash de recuperación manual si no lanza evento
-    const hash = window.location.hash || '';
-    const search = window.location.search || '';
-    if (hash.includes('type=recovery') || search.includes('type=recovery') || hash.includes('access_token=') || search.includes('access_token=')) {
-       setRecoveringPassword(true);
-    }
 
     checkSession();
 
@@ -123,6 +118,10 @@ function App() {
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
             <Route path="/registro-conductor" element={user ? <Navigate to="/" /> : <RegisterChofer />} />
+            
+            <Route path="/admin/validacion" element={<ResetHandler />} />
+            <Route path="/nueva-password" element={<NuevaPassword />} />
+            
             <Route path="/reset-password" element={
               isRecoveringPassword ? <ResetPassword /> : (user ? <Navigate to="/" /> : <ResetPassword />)
             } />

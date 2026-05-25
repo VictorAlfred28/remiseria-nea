@@ -3,6 +3,7 @@ import { getPagosChofer, uploadPagoChofer, getMyBalance } from "../services/api"
 import { Loader2, Wallet, Upload, CheckCircle2, AlertCircle, Clock, Copy, Check, Inbox } from "lucide-react";
 import logoUbi from "../../assets/icon.png";
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 export default function BilleteraChofer() {
   const [balance, setBalance] = useState<number>(0);
@@ -37,10 +38,18 @@ export default function BilleteraChofer() {
   };
 
   const handleOpenMercadoPago = async () => {
-    try {
+    if (Capacitor.isNativePlatform()) {
+      try {
         await App.openUrl({ url: 'mercadopago://' });
-    } catch (error) {
-        window.open('https://www.mercadopago.com.ar/', '_blank');
+      } catch (error) {
+        try {
+          await App.openUrl({ url: 'market://details?id=com.mercadopago.wallet' });
+        } catch (marketError) {
+          await App.openUrl({ url: 'https://play.google.com/store/apps/details?id=com.mercadopago.wallet' });
+        }
+      }
+    } else {
+      window.open('https://www.mercadopago.com.ar/', '_blank');
     }
   };
 
@@ -117,7 +126,7 @@ export default function BilleteraChofer() {
                 </div>
             </div>
 
-            <div className="bg-zinc-900/60 border border-white/5 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl w-full">
+            <div className="bg-zinc-900/60 border border-white/5 backdrop-blur-md rounded-3xl p-4 sm:p-7 shadow-xl w-full">
                 <div className="flex items-center gap-3 mb-6">
                    <img src={logoUbi} alt="Traslados UBI" className="w-10 h-10 object-contain rounded-xl bg-white/5 p-1 border border-white/10" />
                    <h3 className="text-lg sm:text-xl font-black text-white">
@@ -125,7 +134,7 @@ export default function BilleteraChofer() {
                    </h3>
                 </div>
                 
-                <div className="bg-zinc-950/80 p-4 sm:p-5 rounded-2xl border border-blue-500/20 mb-6 flex flex-col gap-4">
+                <div className="bg-zinc-950/80 p-3 sm:p-5 rounded-2xl border border-blue-500/20 mb-6 flex flex-col gap-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <p className="text-[10px] sm:text-xs text-blue-400 font-bold uppercase tracking-widest">Datos para Transferir</p>
                         <button 
@@ -138,7 +147,7 @@ export default function BilleteraChofer() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-sm text-zinc-300 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-zinc-300 w-full">
                         <div className="bg-zinc-900/70 p-3 rounded-xl border border-white/5 flex flex-col justify-center min-w-0">
                             <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">Banco</span>
                             <span className="font-bold text-white text-xs sm:text-sm truncate">Banco Provincia del Chaco</span>
@@ -148,10 +157,10 @@ export default function BilleteraChofer() {
                             <span className="font-bold text-white text-xs sm:text-sm truncate">TRASLADOS UBI S.R.L.</span>
                         </div>
                         
-                        <div className="bg-zinc-900/70 p-2 sm:p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 col-span-2 sm:col-span-1">
+                        <div className="bg-zinc-900/70 p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 sm:col-span-1">
                             <div className="min-w-0 pr-2">
                                 <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">CBU</span>
-                                <span className="font-bold text-white text-xs sm:text-sm tracking-tight truncate block">3110030211000012345678</span>
+                                <span className="font-bold text-white text-[11px] sm:text-sm tracking-tight break-all block">3110030211000012345678</span>
                             </div>
                             <button 
                                 type="button"
@@ -163,10 +172,10 @@ export default function BilleteraChofer() {
                             </button>
                         </div>
                         
-                        <div className="bg-zinc-900/70 p-2 sm:p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 col-span-2 sm:col-span-1">
+                        <div className="bg-zinc-900/70 p-3 rounded-xl border border-white/5 flex justify-between items-center group min-w-0 sm:col-span-1">
                             <div className="min-w-0 pr-2">
                                 <span className="block text-[9px] sm:text-[10px] uppercase text-zinc-500 font-black mb-0.5">Alias</span>
-                                <span className="font-bold text-white text-xs sm:text-sm tracking-tight truncate block">UBI.TRASLADOS.OFICIAL</span>
+                                <span className="font-bold text-white text-[11px] sm:text-sm tracking-tight break-all block">UBI.TRASLADOS.OFICIAL</span>
                             </div>
                             <button 
                                 type="button"

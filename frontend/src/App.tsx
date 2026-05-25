@@ -57,8 +57,9 @@ function App() {
     });
 
     // Validar deep link / hash de recuperación manual si no lanza evento
-    const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    if (hash.includes('type=recovery') || search.includes('type=recovery') || hash.includes('access_token=') || search.includes('access_token=')) {
        setRecoveringPassword(true);
     }
 

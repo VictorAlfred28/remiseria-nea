@@ -16,22 +16,54 @@ export default function ResetPassword() {
   const { setRecoveringPassword } = useAuthStore();
 
   useEffect(() => {
+    let mounted = true;
     // Verificar si el usuario llegó con un token de recuperación válido
     const checkSession = async () => {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      
+      const isRecoveryFlow = 
+        hash.includes('type=recovery') || 
+        search.includes('type=recovery') ||
+        hash.includes('access_token=') ||
+        search.includes('access_token=');
+
+      if (isRecoveryFlow) {
+        // Estamos en el flujo de recuperación. Supabase Auth procesará la URL 
+        // y emitirá un evento (PASSWORD_RECOVERY o SIGNED_IN).
+        setRecoveringPassword(true);
+        return;
+      }
+
+      // Si no hay tokens en la URL, verificamos si existe sesión
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        setError('El enlace es inválido o ha expirado. Por favor, solicita uno nuevo.');
-      } else if (!session) {
-        // En un flujo de recovery, Supabase inicializa una sesión implícita con el token en el fragmento de la URL.
-        // Si no hay sesión tras procesar el fragmento, el enlace expiró o es inválido.
-        const hash = window.location.hash;
-        if (!hash || !hash.includes('type=recovery')) {
+      
+      if (mounted) {
+        if (error) {
+          setError('El enlace es inválido o ha expirado. Por favor, solicita uno nuevo.');
+        } else if (!session) {
           setError('No estás autorizado para ver esta página.');
         }
       }
     };
+    
     checkSession();
-  }, []);
+
+    // Escuchar el evento de Supabase cuando procese el token de la URL
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        if (mounted) {
+          setError('');
+          setRecoveringPassword(true);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [setRecoveringPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

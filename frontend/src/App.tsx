@@ -33,7 +33,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allow
   const location = useLocation();
 
   if (isRecoveringPassword) {
-    return <Navigate to="/reset-password" replace />;
+    return <Navigate to="/nueva-password" replace />;
   }
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">Cargando Sistema...</div>;
@@ -122,16 +122,12 @@ function App() {
             <Route path="/admin/validacion" element={<ResetHandler />} />
             <Route path="/nueva-password" element={<NuevaPassword />} />
             
-            <Route path="/reset-password" element={
-              isRecoveringPassword ? <ResetPassword /> : (user ? <Navigate to="/" /> : <ResetPassword />)
-            } />
-            
             <Route path="/track/:viajeId" element={<LiveTracker />} />
             <Route path="/test-simulator" element={<TestSimulator />} />
             
             <Route path="/" element={
               isRecoveringPassword ? (
-                <Navigate to="/reset-password" replace />
+                <Navigate to="/nueva-password" replace />
               ) : (
                 <div className="flex items-center justify-center p-10 h-[80vh]">
                   {isLoading ? (

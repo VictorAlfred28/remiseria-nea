@@ -1346,11 +1346,12 @@ export default function ClienteDashboard() {
 
     {/* BOTTOM NAVIGATION MOBILE (ESTILO UBER) */}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-panel !border-b-0 !border-l-0 !border-r-0 !rounded-none pb-[env(safe-area-inset-bottom)] z-50">
-      <div className="flex justify-between items-center px-6 py-2">
+      <div className="flex justify-between items-center px-2 sm:px-6 py-2">
          {[
            { id: 'pedir', label: 'Inicio', icon: Car },
            { id: 'reservas', label: 'Agendar', icon: Calendar },
            { id: 'historial', label: 'Viajes', icon: History },
+           { id: 'familia', label: 'Seguridad', icon: Shield },
            { id: 'perfil', label: 'Cuenta', icon: User }
          ].map(tab => (
             <button 

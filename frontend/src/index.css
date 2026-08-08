@@ -1,0 +1,321 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ubi-deep: #071B4D;
+  --color-ubi-electric: #0D6EFD;
+  --color-ubi-cyan: #00D4FF;
+  --color-ubi-bg: #030712;
+  --color-ubi-card: rgba(10, 20, 60, 0.85);
+  --color-ubi-text-sec: #C7D2FE;
+  --color-ubi-border: rgba(255, 255, 255, 0.12);
+}
+
+:root {
+  font-family: 'Inter', 'Poppins', 'Manrope', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #ffffff;
+  background-color: var(--color-ubi-bg, #030712);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+html, body {
+  margin: 0;
+  min-width: 320px;
+  /* Mobile WebView Optimization */
+  background-color: var(--color-ubi-bg, #030712);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  
+  /* WEB FIX: Restaurar scrollbar vertical perdido por flex/h-screen global */
+  overflow-y: auto;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Utils for Capacitor Safe Areas */
+.safe-pt { padding-top: env(safe-area-inset-top, 0px); }
+.safe-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-mb { margin-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Custom Glassmorphism */
+.glass-panel {
+  background: var(--color-ubi-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-ubi-border);
+}
+
+/* Scrollbar Hide (Utility) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar for Admin Tabs in WEB */
+.web-admin-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.web-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.web-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* ========================================================
+   MODO CLARO (INVERSIÓN HSL DINÁMICA)
+   --------------------------------------------------------
+   Transforma los fondos oscuros en claros e invierte textos 
+   con un solo switch, manteniendo los tonos de color base.
+   ======================================================== */
+   
+.light-theme {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #fff;
+}
+
+/* Prevenir que se reinviertan fotos de perfil, logotipos, mapas o videos */
+.light-theme img,
+.light-theme video,
+.light-theme iframe,
+.light-theme .no-invert,
+.light-theme .leaflet-container,
+.light-theme .leaflet-layer {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* SOLUCION UI RESPONSIVE */
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Reglas globales especificadas para mobile */
+p, span, h1, h2, h3, h4, h5, h6, div, label {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+button {
+  flex-shrink: 0;
+}
+
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+input, select {
+  width: 100%;
+  min-width: 0;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* ── Auth Components ──────────────────────────────── */
+/* Clase explícita para botones full-width (reemplaza el global peligroso) */
+.btn-block {
+  width: 100%;
+}
+
+/* Botones icon/inline — nunca deben expandirse */
+.btn-icon {
+  width: auto !important;
+  flex-shrink: 0;
+}
+
+/* Input wrapper con iconos (auth fields) */
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-wrap .input-icon-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-input-wrap .input-icon-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 14px;
+  z-index: 2;
+  width: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Solo para el wrapper principal de la app en mobile (evita que el tab bar tape el contenido) */
+.app-container {
+  padding-bottom: max(80px, env(safe-area-inset-bottom, 0px));
+}
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+.break-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.min-h-screen {
+  min-height: 100dvh !important;
+}
+
+.h-screen {
+  height: 100dvh !important;
+}
+
+.footer-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.empty-state {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Responsive admin utilities & Smooth Scroll ────────────────────── */
+/* Activa momentum scrolling en iOS y Android para una experiencia premium */
+.overflow-x-auto, .overflow-y-auto, .scroll-x {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ocultar scrollbars horizontales antiestéticas en todo contenedor touch-friendly */
+.overflow-x-auto::-webkit-scrollbar, .scroll-x::-webkit-scrollbar {
+  display: none;
+}
+.overflow-x-auto, .scroll-x {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Tabla con scroll horizontal y min-width para no comprimir columnas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1rem;
+}
+
+/* Sub-tab pill que hace scroll en mobile en lugar de cortarse */
+.subtab-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.subtab-scroll::-webkit-scrollbar { display: none; }
+.subtab-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Admin Panel Mobile Optimizations ──────────────── */
+/* Asegura que el glass-panel principal ocupe el máximo ancho disponible */
+.glass-panel {
+  box-sizing: border-box;
+}
+
+/* En mobile, los grupos de acción en tablas son siempre visibles */
+@media (max-width: 768px) {
+  .group .opacity-0 {
+    opacity: 1 !important;
+  }
+  /* Reduce padding de celdas de tabla en mobile */
+  table td, table th {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+/* Garantiza que los botones de subtabs sean siempre shrink-0 */
+.tab-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+

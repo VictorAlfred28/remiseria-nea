@@ -1,0 +1,25 @@
+import os
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "Viajes-Nea API"
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+    EVOLUTION_URL: str = ""
+    EVOLUTION_API_KEY: str = ""
+    EVOLUTION_INSTANCE: str = "Viejes-Nea"
+    OPENAI_API_KEY: str = ""
+    GOOGLE_MAPS_API_KEY: str | None = None
+    EMERGENCY_PHONE: str | None = None
+    MERCADOPAGO_ACCESS_TOKEN: str | None = None
+    WEBHOOK_SECRET: str | None = None
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://viajesnea.agentech.ar")
+    SUPABASE_JWT_SECRET: str | None = None
+    GMAIL_EMAIL: str | None = None
+    GMAIL_APP_PASSWORD: str | None = None
+    SUPERADMIN_EMAIL: str = "agentech.nea@gmail.com"  # Configurable via .env SUPERADMIN_EMAIL
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()

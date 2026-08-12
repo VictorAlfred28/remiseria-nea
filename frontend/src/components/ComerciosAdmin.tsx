@@ -1,11 +1,13 @@
 import { API_BASE_URL } from '../config';
 import React, { useState, useEffect } from "react";
-import { Loader2, CheckCircle2, XCircle, Store, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Store, ExternalLink, Edit, Trash2, X } from "lucide-react";
 
 export default function ComerciosAdmin() {
   const [solicitudes, setSolicitudes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [editingComercio, setEditingComercio] = useState<any | null>(null);
+  const [editFormData, setEditFormData] = useState<any>({});
 
   useEffect(() => {
     fetchSolicitudes();
@@ -46,6 +48,75 @@ export default function ComerciosAdmin() {
     } catch (e) {
       console.error(e);
       alert("Error de red");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de eliminar este comercio adherido? Esta acción no se puede deshacer.")) return;
+    
+    setProcessingId(id);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/admin/comercios/solicitudes/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
+      });
+      if (resp.ok) {
+        alert("Comercio eliminado exitosamente.");
+        fetchSolicitudes();
+      } else {
+        const error = await resp.json();
+        alert(`Error: ${error.detail}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de red al eliminar");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const openEdit = (sol: any) => {
+    setEditingComercio(sol);
+    setEditFormData({
+      nombre: sol.nombre || '',
+      rubro: sol.rubro || '',
+      direccion: sol.direccion || '',
+      telefono: sol.telefono || '',
+      email: sol.email || '',
+      descripcion: sol.descripcion || '',
+      logo_url: sol.logo_url || '',
+      instagram_url: sol.instagram_url || '',
+      facebook_url: sol.facebook_url || '',
+    });
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingComercio) return;
+    
+    setProcessingId(editingComercio.id);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/admin/comercios/solicitudes/${editingComercio.id}`, {
+        method: "PUT",
+        headers: { 
+          "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(editFormData)
+      });
+      if (resp.ok) {
+        alert("Comercio actualizado exitosamente.");
+        setEditingComercio(null);
+        fetchSolicitudes();
+      } else {
+        const error = await resp.json();
+        alert(`Error: ${error.detail}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de red al actualizar");
     } finally {
       setProcessingId(null);
     }
@@ -113,29 +184,130 @@ export default function ComerciosAdmin() {
                 </div>
 
                 {/* Footer (Actions) */}
-                {sol.estado === 'PENDIENTE' && (
-                  <div className="grid grid-cols-2 gap-3 mt-auto">
+                <div className="grid grid-cols-2 gap-3 mt-auto">
+                  {sol.estado === 'PENDIENTE' && (
+                    <>
+                      <button 
+                        onClick={() => handleAction(sol.id, 'rechazar')}
+                        disabled={processingId === sol.id}
+                        className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-rose-500/20 hover:text-rose-400 text-zinc-400 border border-transparent hover:border-rose-500/30 py-2.5 rounded-xl font-bold transition disabled:opacity-50 text-sm"
+                      >
+                        {processingId === sol.id ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />} 
+                        Rechazar
+                      </button>
+                      <button 
+                        onClick={() => handleAction(sol.id, 'aprobar')}
+                        disabled={processingId === sol.id}
+                        className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50 text-sm"
+                      >
+                        {processingId === sol.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                        Aprobar
+                      </button>
+                    </>
+                  )}
+                  {sol.estado !== 'PENDIENTE' && (
                     <button 
-                      onClick={() => handleAction(sol.id, 'rechazar')}
+                      onClick={() => openEdit(sol)}
+                      disabled={processingId === sol.id}
+                      className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2.5 rounded-xl font-bold transition disabled:opacity-50 text-sm"
+                    >
+                      <Edit size={16} /> 
+                      Editar
+                    </button>
+                  )}
+                  {sol.estado !== 'PENDIENTE' && (
+                    <button 
+                      onClick={() => handleDelete(sol.id)}
                       disabled={processingId === sol.id}
                       className="flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-rose-500/20 hover:text-rose-400 text-zinc-400 border border-transparent hover:border-rose-500/30 py-2.5 rounded-xl font-bold transition disabled:opacity-50 text-sm"
                     >
-                      {processingId === sol.id ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />} 
-                      Rechazar
+                      {processingId === sol.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} 
+                      Eliminar
                     </button>
-                    <button 
-                      onClick={() => handleAction(sol.id, 'aprobar')}
-                      disabled={processingId === sol.id}
-                      className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50 text-sm"
-                    >
-                      {processingId === sol.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                      Aprobar
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingComercio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#111111] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/10">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Edit size={20} className="text-[#0D6EFD]" />
+                Editar Comercio Adherido
+              </h3>
+              <button 
+                onClick={() => setEditingComercio(null)}
+                className="text-zinc-500 hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-2"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdate} className="overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Nombre</label>
+                  <input type="text" required value={editFormData.nombre} onChange={e => setEditFormData({...editFormData, nombre: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Rubro</label>
+                  <input type="text" required value={editFormData.rubro} onChange={e => setEditFormData({...editFormData, rubro: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Descripción</label>
+                  <textarea rows={2} required value={editFormData.descripcion} onChange={e => setEditFormData({...editFormData, descripcion: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm resize-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Dirección</label>
+                  <input type="text" required value={editFormData.direccion} onChange={e => setEditFormData({...editFormData, direccion: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Teléfono</label>
+                  <input type="text" required value={editFormData.telefono} onChange={e => setEditFormData({...editFormData, telefono: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Email</label>
+                  <input type="email" value={editFormData.email} onChange={e => setEditFormData({...editFormData, email: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">URL Logo</label>
+                  <input type="url" value={editFormData.logo_url} onChange={e => setEditFormData({...editFormData, logo_url: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">URL Instagram</label>
+                  <input type="url" value={editFormData.instagram_url} onChange={e => setEditFormData({...editFormData, instagram_url: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">URL Facebook</label>
+                  <input type="url" value={editFormData.facebook_url} onChange={e => setEditFormData({...editFormData, facebook_url: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0D6EFD]/50 focus:ring-1 focus:ring-[#0D6EFD]/50 transition text-sm" />
+                </div>
+              </div>
+              
+              <div className="pt-4 flex justify-end gap-3 mt-6 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setEditingComercio(null)}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={processingId === editingComercio.id}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm bg-[#0D6EFD] text-white hover:bg-blue-600 transition shadow-[0_0_15px_rgba(13,110,253,0.3)] flex items-center gap-2"
+                >
+                  {processingId === editingComercio.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

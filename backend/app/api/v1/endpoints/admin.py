@@ -684,6 +684,64 @@ def rechazar_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_
     supabase.table("comercio_solicitudes").update({"estado": "RECHAZADO"}).eq("id", sol_id).execute()
     return {"mensaje": "Solicitud rechazada."}
 
+class ComercioUpdate(BaseModel):
+    nombre: Optional[str] = None
+    rubro: Optional[str] = None
+    direccion: Optional[str] = None
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    descripcion: Optional[str] = None
+    logo_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    facebook_url: Optional[str] = None
+
+@router.put("/comercios/solicitudes/{sol_id}")
+def update_comercio(sol_id: str, data: ComercioUpdate, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Actualiza una solicitud de comercio y, si está aprobada, sincroniza con la tabla comercios."""
+    sol_resp = supabase.table("comercio_solicitudes").select("*").eq("id", sol_id).execute()
+    if not sol_resp.data:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+    
+    solicitud = sol_resp.data[0]
+    update_data = data.dict(exclude_unset=True)
+    
+    if not update_data:
+        return {"mensaje": "Sin cambios a aplicar", "data": solicitud}
+
+    # Update in comercio_solicitudes
+    upd_resp = supabase.table("comercio_solicitudes").update(update_data).eq("id", sol_id).execute()
+    
+    # If approved, sync to comercios
+    if solicitud["estado"] == "APROBADO":
+        # Map fields for comercios table
+        sync_data = {}
+        if "nombre" in update_data: sync_data["nombre_comercio"] = update_data["nombre"]
+        for field in ["rubro", "direccion", "telefono", "email", "descripcion", "logo_url", "instagram_url", "facebook_url"]:
+            if field in update_data: sync_data[field] = update_data[field]
+            
+        if sync_data:
+            supabase.table("comercios").update(sync_data).eq("user_id", solicitud["user_id"]).eq("nombre_comercio", solicitud["nombre"]).execute()
+
+    return {"mensaje": "Solicitud actualizada.", "data": upd_resp.data[0]}
+
+@router.delete("/comercios/solicitudes/{sol_id}")
+def delete_comercio(sol_id: str, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """Elimina una solicitud de comercio y, si está aprobada, también de la tabla comercios."""
+    sol_resp = supabase.table("comercio_solicitudes").select("*").eq("id", sol_id).execute()
+    if not sol_resp.data:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
+    
+    solicitud = sol_resp.data[0]
+    
+    # If approved, delete from comercios
+    if solicitud["estado"] == "APROBADO":
+        supabase.table("comercios").delete().eq("user_id", solicitud["user_id"]).eq("nombre_comercio", solicitud["nombre"]).execute()
+        
+    # Delete from comercio_solicitudes
+    supabase.table("comercio_solicitudes").delete().eq("id", sol_id).execute()
+    
+    return {"mensaje": "Comercio adherido eliminado exitosamente."}
+
 
 # ============================================================
 # MÓDULO: GESTIÓN DE VEHÍCULOS (Admin)

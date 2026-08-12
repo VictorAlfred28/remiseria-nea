@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Navigation, Navigation2, BellRing, CheckCircle2, XCircle, Loader2, Lock } from "lucide-react";
 import { calculateDistance } from "../../utils/geo";
+import { normalizeEstado } from "../../utils/estadoUtils";
 
 // El cronómetro aislado
 export const LocalWaitTimer = ({ isActive }: { isActive: boolean }) => {

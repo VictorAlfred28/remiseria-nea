@@ -328,7 +328,7 @@ async def procesar_mensaje_whatsapp(instance: str, phone: str, message: str, pus
             logger.info("viaje_created: Insertando nuevo viaje desde WhatsApp")
             supabase.table("viajes").insert(viaje_data).execute()
             
-            respuesta_texto = f"✅ Perfecto {nombre}, he lanzado la bengala a nuestros choferes. Tu remis está siendo despachado para {origen}.\n💸 Cotización estimada: *${precio}*.\n\n*Nota:* Incluye 5 min de espera sin cargo. Luego: $250/min."
+            respuesta_texto = f"✅ Perfecto {nombre}, tu viaje ya ingresó a nuestro sistema. Tu móvil está siendo despachado para {origen}.\n💸 Cotización estimada: *${precio}*.\n\n*Nota:* Incluye 5 min de espera sin cargo. Luego: $250/min."
             supabase.table("chat_sessions").update({"historial": [], "estado": "confirmado"}).eq("telefono", phone).execute()
             await send_whatsapp_message(instance, phone, respuesta_texto)
             return

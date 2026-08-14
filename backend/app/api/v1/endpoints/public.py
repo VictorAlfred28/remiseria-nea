@@ -57,6 +57,44 @@ async def test_wpp(phone: str, claims: Dict[str, Any] = Depends(get_current_admi
         except Exception as e:
              return {"error": str(e)}
 
+class LimpiarHuerfanoRequest(BaseModel):
+    email: str
+
+@router.post("/registro/limpiar-huerfano")
+async def limpiar_usuario_huerfano(req: LimpiarHuerfanoRequest):
+    """
+    Elimina un usuario de Supabase Auth si quedó "huérfano" (es decir, falló 
+    el registro en la base de datos pública y quedó solo en Auth).
+    """
+    email = req.email.strip().lower()
+    try:
+        # 1. Verificar si el usuario ya tiene un perfil válido
+        resp = supabase.table("usuarios").select("id").eq("email", email).execute()
+        if resp.data:
+            return {"deleted": False, "message": "El usuario ya tiene un perfil activo."}
+        
+        # 2. Si no existe en usuarios, lo buscamos en Auth usando la API Admin REST
+        url = f"{settings.SUPABASE_URL}/auth/v1/admin/users"
+        headers = {
+            "apikey": settings.SUPABASE_KEY,
+            "Authorization": f"Bearer {settings.SUPABASE_KEY}"
+        }
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers)
+            if res.status_code == 200:
+                users = res.json().get("users", [])
+                user_to_delete = next((u for u in users if u.get("email") == email), None)
+                if user_to_delete:
+                    # 3. Eliminar usuario de Auth
+                    del_url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_to_delete['id']}"
+                    await client.delete(del_url, headers=headers)
+                    logger.info(f"Usuario huérfano limpiado: {email}")
+                    return {"deleted": True, "message": "Usuario huérfano eliminado correctamente."}
+            return {"deleted": False, "message": "El usuario no se encontró en auth."}
+    except Exception as e:
+        logger.error(f"Error limpiando huérfano {email}: {e}")
+        return {"deleted": False, "message": str(e)}
+
 class RegistroPerfilRequest(BaseModel):
     organizacion_id: str
     email: str

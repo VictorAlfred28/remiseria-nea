@@ -128,6 +128,7 @@ export default function RegisterChofer() {
       const { id: organizacionId } = await response.json();
 
       // 2. Crear usuario en Supabase Auth
+      let userId: string | undefined;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: finalEmail,
         password,
@@ -135,13 +136,35 @@ export default function RegisterChofer() {
 
       if (authError) {
         if (authError.message.includes('already registered')) {
-          throw new Error("Este correo ya se encuentra registrado.");
+          try {
+             const checkResp = await fetch(`${apiBase}/public/registro/limpiar-huerfano`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: finalEmail })
+             });
+             if (checkResp.ok) {
+                 const res = await checkResp.json();
+                 if (res.deleted) {
+                     const retry = await supabase.auth.signUp({ email: finalEmail, password });
+                     if (retry.error) throw new Error(retry.error.message);
+                     if (retry.data?.user) userId = retry.data.user.id;
+                 } else {
+                     throw new Error("Este correo ya se encuentra registrado.");
+                 }
+             } else {
+                 throw new Error("Este correo ya se encuentra registrado.");
+             }
+          } catch(e: any) {
+             throw new Error(e.message || "Este correo ya se encuentra registrado.");
+          }
+        } else {
+          throw new Error(authError.message);
         }
-        throw new Error(authError.message);
+      } else {
+        if (authData.user) userId = authData.user.id;
       }
-      if (!authData.user) throw new Error("No se pudo crear el usuario.");
 
-      const userId = authData.user.id;
+      if (!userId) throw new Error("No se pudo crear el usuario.");
 
       // 3. Subir Imágenes
       let uploadedDocs = [];

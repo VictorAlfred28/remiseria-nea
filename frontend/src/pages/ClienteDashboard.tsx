@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck, Eye, EyeOff, Gift, Edit2, ThumbsUp, Clock, Route } from "lucide-react";
-import { formatEstado } from "../utils/estadoUtils";
+import { formatEstado, normalizeEstado } from "../utils/estadoUtils";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
 import WeatherWidget from "../components/WeatherWidget";

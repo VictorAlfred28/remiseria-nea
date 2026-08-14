@@ -73,23 +73,33 @@ async def limpiar_usuario_huerfano(req: LimpiarHuerfanoRequest):
         if resp.data:
             return {"deleted": False, "message": "El usuario ya tiene un perfil activo."}
         
-        # 2. Si no existe en usuarios, lo buscamos en Auth usando la API Admin REST
+        # 2. Si no existe en usuarios, lo buscamos en Auth iterando páginas
         url = f"{settings.SUPABASE_URL}/auth/v1/admin/users"
         headers = {
             "apikey": settings.SUPABASE_KEY,
             "Authorization": f"Bearer {settings.SUPABASE_KEY}"
         }
         async with httpx.AsyncClient() as client:
-            res = await client.get(url, headers=headers)
-            if res.status_code == 200:
-                users = res.json().get("users", [])
-                user_to_delete = next((u for u in users if u.get("email") == email), None)
-                if user_to_delete:
-                    # 3. Eliminar usuario de Auth
-                    del_url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_to_delete['id']}"
-                    await client.delete(del_url, headers=headers)
-                    logger.info(f"Usuario huérfano limpiado: {email}")
-                    return {"deleted": True, "message": "Usuario huérfano eliminado correctamente."}
+            page = 1
+            while True:
+                res = await client.get(f"{url}?page={page}&per_page=50", headers=headers)
+                if res.status_code == 200:
+                    users = res.json().get("users", [])
+                    if not users:
+                        break # No hay más usuarios
+                    
+                    user_to_delete = next((u for u in users if u.get("email") == email), None)
+                    if user_to_delete:
+                        # 3. Eliminar usuario de Auth
+                        del_url = f"{url}/{user_to_delete['id']}"
+                        await client.delete(del_url, headers=headers)
+                        logger.info(f"Usuario huérfano limpiado: {email}")
+                        return {"deleted": True, "message": "Usuario huérfano eliminado correctamente."}
+                    
+                    page += 1
+                else:
+                    break
+                    
             return {"deleted": False, "message": "El usuario no se encontró en auth."}
     except Exception as e:
         logger.error(f"Error limpiando huérfano {email}: {e}")

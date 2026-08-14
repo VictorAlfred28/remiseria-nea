@@ -14,7 +14,7 @@ import PremiosPage from "./chofer/PremiosPage";
 import AjustesChoferPage from "./chofer/AjustesChoferPage";
 import FlotaPage from "./chofer/FlotaPage";
 import { Geolocation } from '@capacitor/geolocation';
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin, Capacitor } from '@capacitor/core';
 const BackgroundGeolocation = registerPlugin<any>('BackgroundGeolocation');
 import { supabase } from "../lib/supabase";
 import { 
@@ -147,7 +147,13 @@ export default function ChoferDashboard() {
         fetchDatosGenerales();
 
         return () => {
-            if (watchIdRef.current) Geolocation.clearWatch({ id: watchIdRef.current });
+            if (watchIdRef.current) {
+                if (Capacitor.getPlatform() === 'web') {
+                    Geolocation.clearWatch({ id: watchIdRef.current });
+                } else {
+                    BackgroundGeolocation.removeWatcher({ id: watchIdRef.current });
+                }
+            }
             if (channelRef.current) supabase.removeChannel(channelRef.current);
         };
     }
@@ -249,7 +255,11 @@ export default function ChoferDashboard() {
       if (isOnline) {
           setIsOnline(false);
           if (watchIdRef.current) {
-              BackgroundGeolocation.removeWatcher({ id: watchIdRef.current });
+              if (Capacitor.getPlatform() === 'web') {
+                  Geolocation.clearWatch({ id: watchIdRef.current });
+              } else {
+                  BackgroundGeolocation.removeWatcher({ id: watchIdRef.current });
+              }
               watchIdRef.current = null;
           }
           channelRef.current?.untrack();
@@ -280,45 +290,75 @@ export default function ChoferDashboard() {
           }
           
           try {
-              const watcherId = await BackgroundGeolocation.addWatcher(
-                  { 
-                      backgroundMessage: "Compartiendo ubicación con Ubi Integral", 
-                      backgroundTitle: "Viajes activos", 
-                      requestPermissions: true, 
-                      stale: false, 
-                      distanceFilter: 10
-                  },
-                  (pos: any, err: any) => {
-                      if (err) {
-                          if (err.message?.toLowerCase().includes("denied") || err.code === 1) {
-                              setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
-                              setIsOnline(false);
-                          } else {
-                              console.warn("GPS Error:", err);
+              if (Capacitor.getPlatform() === 'web') {
+                  const watcherId = await Geolocation.watchPosition(
+                      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+                      (pos: any, err: any) => {
+                          if (err) {
+                              console.warn("GPS Web Error:", err);
+                              return;
                           }
-                          return;
-                      }
+                          if (pos) {
+                              const lat = pos.coords?.latitude;
+                              const lng = pos.coords?.longitude;
+                              setChoferCoords({ lat, lng });
 
-                      if (pos) {
-                          const lat = pos.latitude || pos.coords?.latitude;
-                          const lng = pos.longitude || pos.coords?.longitude;
-                          setChoferCoords({ lat, lng });
-
-                          const isBusy = !!viajeActivo;
-                          const payload = {
-                              chofer_id: user?.id,
-                              nombre: user?.email, 
-                              lat,
-                              lng,
-                              status: isBusy ? 'busy' : 'free',
-                              timestamp: new Date().toISOString()
-                          };
-                          channelRef.current?.track(payload);
+                              const isBusy = !!viajeActivo;
+                              const payload = {
+                                  chofer_id: user?.id,
+                                  nombre: user?.email, 
+                                  lat,
+                                  lng,
+                                  status: isBusy ? 'busy' : 'free',
+                                  timestamp: new Date().toISOString()
+                              };
+                              channelRef.current?.track(payload);
+                          }
                       }
-                  }
-              );
-              watchIdRef.current = watcherId;
+                  );
+                  watchIdRef.current = watcherId;
+              } else {
+                  const watcherId = await BackgroundGeolocation.addWatcher(
+                      { 
+                          backgroundMessage: "Compartiendo ubicación con Ubi Integral", 
+                          backgroundTitle: "Viajes activos", 
+                          requestPermissions: true, 
+                          stale: false, 
+                          distanceFilter: 10
+                      },
+                      (pos: any, err: any) => {
+                          if (err) {
+                              if (err.message?.toLowerCase().includes("denied") || err.code === 1) {
+                                  setLocationError("Debes permitir acceso a tu ubicación para comenzar tu turno.");
+                                  setIsOnline(false);
+                              } else {
+                                  console.warn("GPS Error:", err);
+                              }
+                              return;
+                          }
+
+                          if (pos) {
+                              const lat = pos.latitude || pos.coords?.latitude;
+                              const lng = pos.longitude || pos.coords?.longitude;
+                              setChoferCoords({ lat, lng });
+
+                              const isBusy = !!viajeActivo;
+                              const payload = {
+                                  chofer_id: user?.id,
+                                  nombre: user?.email, 
+                                  lat,
+                                  lng,
+                                  status: isBusy ? 'busy' : 'free',
+                                  timestamp: new Date().toISOString()
+                              };
+                              channelRef.current?.track(payload);
+                          }
+                      }
+                  );
+                  watchIdRef.current = watcherId;
+              }
           } catch (error) {
+              console.error("Error al iniciar servicio GPS:", error);
               setLocationError("Error al iniciar servicio GPS.");
               setIsOnline(false);
           }

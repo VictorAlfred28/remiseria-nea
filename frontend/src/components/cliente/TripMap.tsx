@@ -12,11 +12,12 @@ interface TripMapProps {
   center: { lat: number; lng: number };
   onCenterChanged: (lat: number, lng: number) => void;
   destination?: { lat: number; lng: number } | null;
+  driverLocation?: { lat: number; lng: number } | null;
   isLoaded: boolean;
   isLocating: boolean;
 }
 
-export default function TripMap({ center, onCenterChanged, destination, isLoaded, isLocating }: TripMapProps) {
+export default function TripMap({ center, onCenterChanged, destination, driverLocation, isLoaded, isLocating }: TripMapProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
@@ -149,6 +150,16 @@ export default function TripMap({ center, onCenterChanged, destination, isLoaded
               strokeWeight: 2,
               strokeColor: '#ffffff',
               scale: 8,
+            }}
+          />
+        )}
+
+        {driverLocation && (
+          <Marker 
+            position={driverLocation} 
+            icon={{
+              url: 'https://cdn-icons-png.flaticon.com/512/3202/3202926.png',
+              scaledSize: new google.maps.Size(40, 40),
             }}
           />
         )}

@@ -5,14 +5,10 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Coordenadas por defecto (Centro de Corrientes/Resistencia) para fallback crítico
-DEFAULT_LAT = -27.4692
-DEFAULT_LNG = -58.8306
-
 async def geocode_address(address: str, city_context: str = "Corrientes, Argentina") -> tuple[float, float]:
     """
     Intenta geocodificar la dirección usando Google Maps o Nominatim (OpenStreetMap).
-    Siempre devuelve una (lat, lng). Si todo falla, devuelve el default.
+    Siempre devuelve una (lat, lng). Si todo falla, levanta un ValueError.
     """
     # Limpiar y concatenar la dirección con la ciudad para mayor precisión
     full_address = f"{address}, {city_context}"
@@ -56,13 +52,8 @@ async def geocode_address(address: str, city_context: str = "Corrientes, Argenti
                 logger.info(f"Geocodificado con Nominatim: {address} -> {lat}, {lng}")
                 return lat, lng
     except Exception as e:
-        logger.warning(f"Falla en Nominatim Geocoding ({e}). Usando coordenadas por defecto.")
+        logger.warning(f"Falla en Nominatim Geocoding ({e}).")
 
-    # 3. Fallback crítico: Devolver el centro urbano con leve variación simulada
-    logger.error(f"Geocoding falló por completo para '{full_address}'. Usando fallback de seguridad del microcentro.")
-    
-    # Variante micro-simulada para que no todos caigan exactamente en el mismo pixel cero-cero (0,0) u origen
-    mock_lat = DEFAULT_LAT + random.uniform(-0.01, 0.01)
-    mock_lng = DEFAULT_LNG + random.uniform(-0.01, 0.01)
-    
-    return mock_lat, mock_lng
+    # 3. Fallback crítico: Error en lugar de devolver default
+    logger.error(f"Geocoding falló por completo para '{full_address}'.")
+    raise ValueError(f"No se pudo obtener la ubicación para la dirección: {address}")

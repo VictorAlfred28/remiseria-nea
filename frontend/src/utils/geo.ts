@@ -14,3 +14,16 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
     const distance = R * c; // Distancia en km
     return distance.toFixed(1);
 }
+
+/**
+ * Valida que las coordenadas geográficas sean números reales y dentro del rango mundial
+ */
+export function isValidCoordinate(lat: any, lng: any): boolean {
+    if (lat === null || lat === undefined || lng === null || lng === undefined) return false;
+    if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return false;
+    if (lat < -90 || lat > 90) return false;
+    if (lng < -180 || lng > 180) return false;
+    return true;
+}

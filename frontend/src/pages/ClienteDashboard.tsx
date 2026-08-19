@@ -9,7 +9,7 @@ import WeatherWidget from "../components/WeatherWidget";
 import ControlParental from "../components/cliente/ControlParental";
 import MiNegocioTab from "../components/cliente/MiNegocioTab";
 import MiFlotaTab from "../components/cliente/MiFlotaTab";
-import { calculateDistance } from "../utils/geo";
+import { calculateDistance, isValidCoordinate } from "../utils/geo";
 import AddressSelector from "../components/cliente/AddressSelector";
 import TripMap from "../components/cliente/TripMap";
 import { useJsApiLoader } from "@react-google-maps/api";
@@ -31,8 +31,8 @@ export default function ClienteDashboard() {
   // States
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
-  const [origenCoords, setOrigenCoords] = useState<{lat: number, lng: number} | null>(null);
-  const [destinoCoords, setDestinoCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [origenCoords, setOrigenCoords] = useState<{lat: number, lng: number, source?: string} | null>(null);
+  const [destinoCoords, setDestinoCoords] = useState<{lat: number, lng: number, source?: string} | null>(null);
   const [loading, setLoading] = useState(false);
   const [cotizacion, setCotizacion] = useState<any>(null);
   const [observaciones, setObservaciones] = useState("");
@@ -48,6 +48,7 @@ export default function ClienteDashboard() {
 
   const [mapCenter, setMapCenter] = useState({ lat: -27.4692, lng: -58.8306 });
   const [isLocating, setIsLocating] = useState(false);
+  const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -139,6 +140,40 @@ export default function ClienteDashboard() {
       supabase.removeChannel(sub_tutor);
     }
   }, [user]);
+
+  // Tracking del chofer en vivo
+  useEffect(() => {
+    if (!viajeActivo || !viajeActivo.chofer_id) {
+       setDriverLocation(null);
+       return;
+    }
+
+    // Inicializar
+    supabase.from('choferes').select('lat, lng').eq('id', viajeActivo.chofer_id).single().then(({data}) => {
+        if (data && data.lat && data.lng) setDriverLocation({lat: data.lat, lng: data.lng});
+    });
+
+    const sub = supabase.channel('driver_location')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'choferes', filter: `id=eq.${viajeActivo.chofer_id}` }, (payload) => {
+         const newData = payload.new as any;
+         if (newData.lat && newData.lng) {
+            setDriverLocation({ lat: newData.lat, lng: newData.lng });
+         }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, [viajeActivo?.chofer_id]);
+
+  // Hook para inicializar GPS al cargar la página
+  useEffect(() => {
+     if (user) {
+         useMyLocation();
+     }
+  }, [user]);
+
 
   const cargarDatosIniciales = async () => {
     if(!user) return;
@@ -429,13 +464,23 @@ export default function ClienteDashboard() {
   // ---- Funciones Viaje Activo ---- //
   const handleCotizar = async () => {
     if (!origen || !destino) return;
+    
+    if (!origenCoords || !destinoCoords) {
+        alert("Faltan coordenadas precisas. Por favor selecciona tu origen y destino de las sugerencias del mapa, o activa el GPS.");
+        return;
+    }
+    
+    if (!isValidCoordinate(origenCoords.lat, origenCoords.lng) || !isValidCoordinate(destinoCoords.lat, destinoCoords.lng)) {
+        alert("Las coordenadas del viaje no son válidas. Por favor selecciona nuevamente.");
+        return;
+    }
+    
     setLoading(true);
     
-    // Coordenadas reales o fallback a Resistencia centro
-    const oLat = origenCoords?.lat || -27.4511;
-    const oLng = origenCoords?.lng || -58.9866;
-    const dLat = destinoCoords?.lat || -27.4566;
-    const dLng = destinoCoords?.lng || -58.9822;
+    const oLat = origenCoords.lat;
+    const oLng = origenCoords.lng;
+    const dLat = destinoCoords.lat;
+    const dLng = destinoCoords.lng;
     
     // Calculo Dinámico por Haversine
     const distanciaKmCalculada = parseFloat(calculateDistance(oLat, oLng, dLat, dLng));
@@ -448,8 +493,8 @@ export default function ClienteDashboard() {
           "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`
         },
         body: JSON.stringify({
-          origen: { direccion: origen, lat: oLat, lng: oLng, observaciones, referencia },
-          destino: { direccion: destino, lat: dLat, lng: dLng },
+          origen: { direccion: origen, lat: oLat, lng: oLng, observaciones, referencia, source: origenCoords.source || 'manual' },
+          destino: { direccion: destino, lat: dLat, lng: dLng, source: destinoCoords.source || 'manual' },
           precio_estimado: 0, // Ignorado por el backend nuevo (usa pricing.py)
           distancia_km: distanciaKmCalculada,
           tipo_viaje: tipoViaje
@@ -468,12 +513,23 @@ export default function ClienteDashboard() {
 
   const handleSolicitarViaje = async () => {
     if (!cotizacion) return;
+    
+    if (!origenCoords || !destinoCoords) {
+        alert("Por favor asegúrate de seleccionar una dirección válida para origen y destino.");
+        return;
+    }
+    
+    if (!isValidCoordinate(origenCoords.lat, origenCoords.lng) || !isValidCoordinate(destinoCoords.lat, destinoCoords.lng)) {
+        alert("Las coordenadas no son válidas. Revisa tu ubicación o destino.");
+        return;
+    }
+    
     setLoading(true);
     
-    const oLat = origenCoords?.lat || -27.4511;
-    const oLng = origenCoords?.lng || -58.9866;
-    const dLat = destinoCoords?.lat || -27.4566;
-    const dLng = destinoCoords?.lng || -58.9822;
+    const oLat = origenCoords.lat;
+    const oLng = origenCoords.lng;
+    const dLat = destinoCoords.lat;
+    const dLng = destinoCoords.lng;
 
     try {
       const response = await fetch(`${API_BASE_URL}/cliente/viaje`, {
@@ -483,8 +539,8 @@ export default function ClienteDashboard() {
           "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`
         },
         body: JSON.stringify({
-          origen: { direccion: origen, lat: oLat, lng: oLng, observaciones, referencia },
-          destino: { direccion: destino, lat: dLat, lng: dLng },
+          origen: { direccion: origen, lat: oLat, lng: oLng, observaciones, referencia, source: origenCoords.source || 'manual' },
+          destino: { direccion: destino, lat: dLat, lng: dLng, source: destinoCoords.source || 'manual' },
           precio_estimado: cotizacion.precio_original,
           distancia_km: cotizacion.distancia_km || 2.5,
           usar_viaje_gratis: usarViajeGratis,
@@ -514,12 +570,18 @@ export default function ClienteDashboard() {
 
   const handleGuardarEdicion = async () => {
     if (!viajeActivo) return;
+    
+    if (!editOrigenCoords || !editDestinoCoords) {
+        alert("Por favor selecciona una dirección válida para continuar con la edición.");
+        return;
+    }
+    
     setLoading(true);
     try {
-      const oLat = editOrigenCoords?.lat || -27.4511;
-      const oLng = editOrigenCoords?.lng || -58.9866;
-      const dLat = editDestinoCoords?.lat || -27.4566;
-      const dLng = editDestinoCoords?.lng || -58.9822;
+      const oLat = editOrigenCoords.lat;
+      const oLng = editOrigenCoords.lng;
+      const dLat = editDestinoCoords.lat;
+      const dLng = editDestinoCoords.lng;
 
       // Calcular nueva distancia
       const R = 6371; // km
@@ -630,10 +692,10 @@ export default function ClienteDashboard() {
   const handleSelectSugerencia = (item: any) => {
       if (activeSugField === 'origen') {
           setOrigen(item.display_name);
-          setOrigenCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
+          setOrigenCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), source: 'manual' });
       } else if (activeSugField === 'destino') {
           setDestino(item.display_name);
-          setDestinoCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
+          setDestinoCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), source: 'manual' });
       }
       setSugerencias([]);
       setActiveSugField(null);
@@ -644,18 +706,27 @@ export default function ClienteDashboard() {
       const loc = await getCurrentUserLocation();
       if (loc.error) {
          alert(loc.error);
+         setIsLocating(false);
+         return; // Evita inicializar el mapa en default si falla el GPS
       }
-      setMapCenter({ lat: loc.lat, lng: loc.lng });
-      setOrigenCoords({ lat: loc.lat, lng: loc.lng });
       
-      const address = await reverseGeocode(loc.lat, loc.lng);
-      setOrigen(address);
+      if (loc.accuracy && loc.accuracy > 100) {
+         alert(`La precisión actual de tu GPS es baja (margen de ${Math.round(loc.accuracy)} metros). Por favor, ajusta el pin en el mapa si es necesario.`);
+      }
+      
+      if (loc.lat !== undefined && loc.lng !== undefined) {
+         setMapCenter({ lat: loc.lat, lng: loc.lng });
+         setOrigenCoords({ lat: loc.lat, lng: loc.lng, source: 'gps' });
+         
+         const address = await reverseGeocode(loc.lat, loc.lng);
+         setOrigen(address);
+      }
       setIsLocating(false);
   };
 
   const handleMapCenterChanged = async (lat: number, lng: number) => {
      setMapCenter({ lat, lng });
-     setOrigenCoords({ lat, lng });
+     setOrigenCoords({ lat, lng, source: 'manual' });
      const address = await reverseGeocode(lat, lng);
      setOrigen(address);
   };
@@ -1019,6 +1090,7 @@ export default function ClienteDashboard() {
                                 center={mapCenter}
                                 onCenterChanged={handleMapCenterChanged}
                                 destination={destinoCoords}
+                                driverLocation={driverLocation}
                                 isLoaded={isMapLoaded}
                                 isLocating={isLocating}
                               />
@@ -1027,12 +1099,12 @@ export default function ClienteDashboard() {
                               originAddress={origen}
                               onOriginSelect={(lat, lng, address) => {
                                 setOrigen(address);
-                                setOrigenCoords({ lat, lng });
+                                setOrigenCoords({ lat, lng, source: 'manual' });
                                 setMapCenter({ lat, lng });
                               }}
                               onDestinationSelect={(lat, lng, address) => {
                                 setDestino(address);
-                                setDestinoCoords({ lat, lng });
+                                setDestinoCoords({ lat, lng, source: 'manual' });
                               }}
                               onRequestCurrentLocation={useMyLocation}
                            />

@@ -33,7 +33,7 @@ import {
 import BilleteraChofer from "../components/BilleteraChofer";
 import WeatherWidget from "../components/WeatherWidget";
 import BolsaChoferTab from "../components/bolsa/BolsaChoferTab";
-import { calculateDistance } from "../utils/geo";
+import { calculateDistance, isValidCoordinate } from "../utils/geo";
 import BeneficiosModal from "../components/chofer/BeneficiosModal";
 
 export default function ChoferDashboard() {
@@ -48,6 +48,7 @@ export default function ChoferDashboard() {
   const [locationError, setLocationError] = useState("");
   const [acceptError, setAcceptError] = useState("");
   const [choferCoords, setChoferCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const choferCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const [choferIdReal, setChoferIdReal] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [beneficios, setBeneficios] = useState<any[]>([]);
@@ -265,6 +266,7 @@ export default function ChoferDashboard() {
           channelRef.current?.untrack();
           setIsOnline(false);
           setChoferCoords(null);
+          choferCoordsRef.current = null;
       } else {
           setLocationError("");
           setAcceptError("");
@@ -301,7 +303,12 @@ export default function ChoferDashboard() {
                           if (pos) {
                               const lat = pos.coords?.latitude;
                               const lng = pos.coords?.longitude;
+                              if (!isValidCoordinate(lat, lng)) {
+                                  console.warn("GPS Web Warning: Coordenada inválida");
+                                  return;
+                              }
                               setChoferCoords({ lat, lng });
+                              choferCoordsRef.current = { lat, lng };
 
                               const isBusy = !!viajeActivo;
                               const payload = {
@@ -340,7 +347,12 @@ export default function ChoferDashboard() {
                           if (pos) {
                               const lat = pos.latitude || pos.coords?.latitude;
                               const lng = pos.longitude || pos.coords?.longitude;
+                              if (!isValidCoordinate(lat, lng)) {
+                                  console.warn("Background GPS Warning: Coordenada inválida");
+                                  return;
+                              }
                               setChoferCoords({ lat, lng });
+                              choferCoordsRef.current = { lat, lng };
 
                               const isBusy = !!viajeActivo;
                               const payload = {
@@ -367,13 +379,15 @@ export default function ChoferDashboard() {
 
   useEffect(() => {
     let logInterval: any;
-    if (isOnline && choferIdReal && choferCoords && orgId) {
+    if (isOnline && choferIdReal && orgId) {
         const updateUbicacion = async () => {
+            const currentCoords = choferCoordsRef.current;
+            if (!currentCoords) return;
             try {
                 // 1. Actualizar la tabla choferes (para que titulares vean en tiempo real)
                 const apiUrl = API_BASE_URL;
                 const token = sessionStorage.getItem('sb-access-token');
-                await fetch(`${apiUrl}/chofer/ubicacion/actualizar?lat=${choferCoords.lat}&lng=${choferCoords.lng}`, {
+                await fetch(`${apiUrl}/chofer/ubicacion/actualizar?lat=${currentCoords.lat}&lng=${currentCoords.lng}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -382,17 +396,17 @@ export default function ChoferDashboard() {
                 await supabase.from('ubicaciones_logs').insert({
                     chofer_id: choferIdReal,
                     organizacion_id: orgId,
-                    lat: choferCoords.lat,
-                    lng: choferCoords.lng
+                    lat: currentCoords.lat,
+                    lng: currentCoords.lng
                 });
             } catch (err: any) {}
         };
         updateUbicacion();
-        // Actualizar cada 30 segundos en lugar de 60 para mayor precisión
+        // Actualizar cada 30 segundos
         logInterval = setInterval(updateUbicacion, 30000);
     }
     return () => { if (logInterval) clearInterval(logInterval); };
-  }, [isOnline, choferIdReal, (choferCoords?.lat), (choferCoords?.lng), orgId]);
+  }, [isOnline, choferIdReal, orgId]);
 
   const handleAceptarViaje = async (viaje: any) => {
       if (!user) return;

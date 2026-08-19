@@ -28,6 +28,8 @@ export default function MiNegocioTab() {
 
   // Formulario Promocion
   const [showFormPromo, setShowFormPromo] = useState(false);
+  const [fotoPromoLocal, setFotoPromoLocal] = useState<File | null>(null);
+  const [uploadingPromoFoto, setUploadingPromoFoto] = useState(false);
   const [formPromo, setFormPromo] = useState({
     titulo: "",
     descripcion: "",
@@ -131,31 +133,59 @@ export default function MiNegocioTab() {
     }
   };
 
+  const subidaImagenPromo = async () => {
+    if (!fotoPromoLocal || !user) return null;
+    setUploadingPromoFoto(true);
+    try {
+      const fileExt = fotoPromoLocal.name.split('.').pop();
+      const filePath = `promocion_${user.id}_${Date.now()}.${fileExt}`;
+      const { error } = await supabase.storage.from('comercios').upload(filePath, fotoPromoLocal, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('comercios').getPublicUrl(filePath);
+      return publicUrl;
+    } catch (e: any) {
+      alert(`Error subiendo foto de promoción: ${e.message}`);
+      return null;
+    } finally {
+      setUploadingPromoFoto(false);
+    }
+  };
+
   const handleCrearPromo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!datosComercio) return;
     
-    // Asumimos que usa la organizacion root (si aplica). Backend lo saca del token.
+    setUploadingPromoFoto(true);
+    let imagen_url = null;
+    if (fotoPromoLocal) {
+        imagen_url = await subidaImagenPromo();
+    }
+
     try {
+        const payload = { ...formPromo, imagen_url };
         const resp = await fetch(`${API_BASE_URL}/cliente/negocio/promociones`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}`
             },
-            body: JSON.stringify(formPromo)
+            body: JSON.stringify(payload)
         });
         if (resp.ok) {
             alert("Promoción creada correctamente.");
             setShowFormPromo(false);
             setFormPromo({titulo: "", descripcion: "", tipo_descuento: "fijo", valor_descuento: 0, fecha_inicio: "", fecha_fin: ""});
+            setFotoPromoLocal(null);
             cargarPromociones();
         } else {
-            alert("Hubo un error al crear la promoción.");
+            const errorData = await resp.json();
+            alert(`Hubo un error al crear la promoción: ${errorData.detail || 'Fallo desconocido'}`);
         }
     } catch (e) {
         console.error(e);
         alert("Error de red");
+    } finally {
+        setUploadingPromoFoto(false);
     }
   };
 
@@ -262,6 +292,25 @@ export default function MiNegocioTab() {
                  <div className="bg-zinc-900/50 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-6 animate-in slide-in-from-top-4 fade-in">
                      <h3 className="text-lg font-bold text-white mb-6 border-b border-white/5 pb-4">Nueva Promoción / Beneficio</h3>
                      <form onSubmit={handleCrearPromo} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         
+                         <div className="md:col-span-2 mb-2">
+                            <label className="cursor-pointer group flex flex-col items-center">
+                               <div className="w-full h-32 md:h-40 rounded-xl bg-black/40 border-2 border-dashed border-zinc-600 group-hover:border-blue-500 flex items-center justify-center overflow-hidden transition relative">
+                                  {fotoPromoLocal ? (
+                                     <img src={URL.createObjectURL(fotoPromoLocal)} className="w-full h-full object-cover" />
+                                  ) : (
+                                     <div className="text-center">
+                                        <Camera className="text-zinc-500 group-hover:text-blue-400 mx-auto mb-2" size={28} />
+                                        <span className="text-sm font-medium text-zinc-400 group-hover:text-blue-400">Añadir Imagen (Recomendado)</span>
+                                     </div>
+                                  )}
+                                  <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
+                                      <UploadCloud className="text-white" size={24} />
+                                  </div>
+                               </div>
+                               <input type="file" accept="image/*" className="hidden" onChange={(e) => setFotoPromoLocal(e.target.files?.[0] || null)} />
+                            </label>
+                         </div>
                          <div className="space-y-1">
                              <label className="text-xs text-zinc-400 font-bold ml-1">Título de la promoción *</label>
                              <input required type="text" value={formPromo.titulo} onChange={e => setFormPromo({...formPromo, titulo: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" placeholder="Ej: 20% Off en Cenas" />
@@ -293,7 +342,9 @@ export default function MiNegocioTab() {
                          </div>
 
                          <div className="md:col-span-2 pt-4">
-                             <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl transition shadow-[0_0_20px_rgba(37,99,235,0.3)]">Guardar Promoción</button>
+                             <button disabled={uploadingPromoFoto} type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black rounded-xl transition shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                                {uploadingPromoFoto ? "Procesando..." : "Guardar Promoción"}
+                             </button>
                          </div>
                      </form>
                  </div>
@@ -307,15 +358,20 @@ export default function MiNegocioTab() {
                       </div>
                   ) : (
                       promociones.map((promo, idx) => (
-                           <div key={idx} className="bg-zinc-900 border border-white/5 p-5 rounded-2xl relative overflow-hidden group hover:border-blue-500/30 transition-colors">
-                              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-500 to-indigo-600"></div>
-                              <div className="ml-2">
+                           <div key={idx} className="bg-zinc-900 border border-white/5 rounded-2xl relative overflow-hidden group hover:border-blue-500/30 transition-colors flex flex-col">
+                              {promo.imagen_url && (
+                                 <div className="w-full h-32 overflow-hidden bg-black">
+                                    <img src={promo.imagen_url} alt={promo.titulo} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                                 </div>
+                              )}
+                              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-600 z-10"></div>
+                              <div className="p-5 flex-1 flex flex-col">
                                   <div className="flex justify-between items-start mb-2">
                                       <h4 className="font-bold text-white text-lg pr-4">{promo.titulo}</h4>
                                       <span className="shrink-0 bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded border border-emerald-500/20">ACTIVA</span>
                                   </div>
                                   <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{promo.descripcion}</p>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-2 mt-auto">
                                       {promo.tipo_descuento === 'porcentaje' ? (
                                          <span className="bg-blue-600/20 text-blue-400 font-black text-sm px-3 py-1 rounded-lg border border-blue-500/20">
                                             {promo.valor_descuento}% OFF

@@ -34,10 +34,19 @@ export default function ComerciosPage({ loadingComercios, promocionesComercio }:
                     </div>
                 ) : (
                     promocionesComercio?.map((promo: any) => (
-                        <div key={promo.id} className="relative bg-zinc-900/80 border border-white/5 p-6 rounded-[2rem] shadow-2xl overflow-hidden group hover:border-orange-500/30 transition-all duration-500">
+                        <div key={promo.id} className="relative bg-zinc-900/80 border border-white/5 rounded-[2rem] shadow-2xl overflow-hidden group hover:border-orange-500/30 transition-all duration-500 flex flex-col">
+                            {promo.imagen_url && (
+                                <div className="w-full h-48 bg-black relative">
+                                    <img src={promo.imagen_url} alt={promo.titulo} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 to-transparent"></div>
+                                </div>
+                            )}
+                            
                             <div className="absolute top-4 right-4 bg-orange-500 text-black font-black text-xs px-3 py-1.5 rounded-full shadow-lg z-10">
                                 {promo.tipo_descuento === 'porcentaje' ? `${promo.valor_descuento}% OFF` : `$${promo.valor_descuento} OFF`}
                             </div>
+                            
+                            <div className="p-6 flex-1 flex flex-col">
 
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="w-14 h-14 bg-zinc-800 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
@@ -83,6 +92,7 @@ export default function ComerciosPage({ loadingComercios, promocionesComercio }:
                             </div>
 
                             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-500/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                            </div>
                         </div>
                     ))
                 )}

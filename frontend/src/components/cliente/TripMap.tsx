@@ -1,8 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { Loader2 } from 'lucide-react';
-import { DEFAULT_LOCATION } from '../../services/geolocation';
-
 const mapContainerStyle = {
   width: '100%',
   height: '100%',

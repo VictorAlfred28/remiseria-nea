@@ -131,7 +131,7 @@ export default function SolicitudesPage({
                                             style={{ border: 0 }} 
                                             allowFullScreen 
                                             loading="lazy"
-                                            src={`https://maps.google.com/maps?saddr=${viajeActivo.origen.lat},${viajeActivo.origen.lng}&daddr=${viajeActivo.destino.lat},${viajeActivo.destino.lng}&output=embed`}
+                                            src={`https://maps.google.com/maps?saddr=${viajeActivo.origen.lat},${viajeActivo.origen.lng}&daddr=${viajeActivo.destino.lat},${viajeActivo.destino.lng}&dirflg=d&output=embed`}
                                         ></iframe>
                                     </div>
                                     <a 

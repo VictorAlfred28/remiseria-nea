@@ -1,7 +1,6 @@
 import { API_BASE_URL } from '../config';
-import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, Phone, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Plus, Trash2, Map, Truck, Eye, EyeOff, Gift, Edit2, ThumbsUp, Clock, Route } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Car, MapPin, Calculator, Loader2, Navigation, History, CreditCard, Calendar, User, XCircle, ChevronRight, Lock, Building, CheckCircle2, Star, MessageSquare, ArrowLeft, Shield, Eye, EyeOff, Gift, Edit2, ThumbsUp, Clock, Route } from "lucide-react";
 import { formatEstado, normalizeEstado } from "../utils/estadoUtils";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/useAuthStore";
@@ -15,7 +14,6 @@ import TripMap from "../components/cliente/TripMap";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { getCurrentUserLocation, reverseGeocode } from "../services/geolocation";
 import BeneficiosModal from "../components/chofer/BeneficiosModal";
-import ubiLogo from "../../assets/splash.png";
 import carnetIcon from "../../assets/icon.png";
 import logoUbi from "../assets/login/logoUbi.png";
 import QRCode from "react-qr-code";
@@ -57,8 +55,7 @@ export default function ClienteDashboard() {
   });
 
   // Autocomplete Sugerencias
-  const [sugerencias, setSugerencias] = useState<any[]>([]);
-  const [activeSugField, setActiveSugField] = useState<'origen' | 'destino' | null>(null);
+  // Eliminadas las sugerencias manuales (AddressSelector maneja esto)
   
   const [viajeActivo, setViajeActivo] = useState<any>(null);
   const [historial, setHistorial] = useState<any[]>([]);
@@ -98,7 +95,7 @@ export default function ClienteDashboard() {
   
   // Carnet Digital
   const [qrToken, setQrToken] = useState<string | null>(null);
-  const [recomendacionPromo, setRecomendacionPromo] = useState<any>(null);
+  const [recomendacionPromo] = useState<any>(null); // setRecomendacionPromo sin uso por ahora
   const [qrTimeLeft, setQrTimeLeft] = useState(60);
   const [numeroSocio, setNumeroSocio] = useState<string | null>(null);
   const [socioActivo, setSocioActivo] = useState(true);
@@ -139,6 +136,7 @@ export default function ClienteDashboard() {
       supabase.removeChannel(subscription);
       supabase.removeChannel(sub_tutor);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Tracking del chofer en vivo
@@ -165,12 +163,13 @@ export default function ClienteDashboard() {
     return () => {
       supabase.removeChannel(sub);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viajeActivo?.chofer_id]);
 
   // Hook para inicializar GPS al cargar la página
   useEffect(() => {
      if (user) {
-         useMyLocation();
+         fetchMyLocation();
      }
   }, [user]);
 
@@ -268,27 +267,9 @@ export default function ClienteDashboard() {
            const d = await resp.json();
            setReservas(d);
        }
-     } catch (e) {}
-  };
-
-
-  // Recarga aprobaciones pendientes del Control Parental (llamada desde handleTripAction)
-  const cargarAprobacionesPro = () => {
-    // No-op: Control Parental es un componente auto-contenido que maneja su propio state.
-    // Esta función existe para evitar ReferenceError al confirmar/rechazar viajes de menores.
-  };
-
-  const handleTripAction = async (tripId: string, action: 'approve' | 'reject') => {
-      try {
-          const resp = await fetch(`${API_BASE_URL}/family/${action}-trip/${tripId}`, {
-              method: 'POST',
-              headers: { "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` }
-          });
-          if(resp.ok) {
-              alert(`Viaje ${action === 'approve'? 'Aprobado' : 'Rechazado'}`);
-              cargarAprobacionesPro();
-          }
-      } catch(e) {}
+     } catch (e) {
+       console.error("Error cargando reservas:", e);
+     }
   };
 
   const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -375,6 +356,7 @@ export default function ClienteDashboard() {
          }, 1000);
          return () => clearInterval(interval);
      }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user?.id]);
 
   const verificarRatings = async () => {
@@ -431,7 +413,9 @@ export default function ClienteDashboard() {
              setMostrarResumenViaje(true);
            }
          }
-       } catch(_) { /* silenciar — no bloquear flujo */ }
+       } catch(errorFallback) { 
+         console.error("Fallback califs error", errorFallback);
+       }
      }
   };
 
@@ -669,39 +653,13 @@ export default function ClienteDashboard() {
          window.location.href = data.init_point;
       }
     } catch (e) {
+       console.error("Error preference:", e);
        alert("Error al iniciar pago con Mercado Pago");
     }
   };
   // ---- Lógica de Autocompletado y GPS ---- //
-  const handleFetchSugerencias = async (query: string, field: 'origen' | 'destino') => {
-      if (query.length < 3) {
-          setSugerencias([]);
-          return;
-      }
-      try {
-          // Bounding Box ajustado para el NEA (Chaco, Corrientes) para mejorar fuertemente la relevancia
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ar&viewbox=-60.5,-26.0,-57.0,-28.5&bounded=1&limit=5`);
-          const data = await res.json();
-          setSugerencias(data);
-          setActiveSugField(field);
-      } catch (e) {
-          console.error("Error Nominatim:", e);
-      }
-  };
 
-  const handleSelectSugerencia = (item: any) => {
-      if (activeSugField === 'origen') {
-          setOrigen(item.display_name);
-          setOrigenCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), source: 'manual' });
-      } else if (activeSugField === 'destino') {
-          setDestino(item.display_name);
-          setDestinoCoords({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), source: 'manual' });
-      }
-      setSugerencias([]);
-      setActiveSugField(null);
-  };
-
-  const useMyLocation = async () => {
+  const fetchMyLocation = async () => {
       setIsLocating(true);
       const loc = await getCurrentUserLocation();
       if (loc.error) {
@@ -1106,7 +1064,7 @@ export default function ClienteDashboard() {
                                 setDestino(address);
                                 setDestinoCoords({ lat, lng, source: 'manual' });
                               }}
-                              onRequestCurrentLocation={useMyLocation}
+                              onRequestCurrentLocation={fetchMyLocation}
                            />
                            <div className="grid grid-cols-2 gap-4 mt-4 mb-2">
                              <div>

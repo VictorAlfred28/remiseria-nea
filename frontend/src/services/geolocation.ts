@@ -51,8 +51,8 @@ export async function getCurrentUserLocation(): Promise<UserLocation> {
  * Convierte coordenadas (lat, lng) en una dirección formateada.
  */
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  if (!window.google || !window.google.maps) {
-    console.warn("Google Maps no está cargado.");
+  if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
+    console.warn("Google Maps no está cargado completamente.");
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 

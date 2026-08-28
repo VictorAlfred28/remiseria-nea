@@ -168,10 +168,10 @@ export default function ClienteDashboard() {
 
   // Hook para inicializar GPS al cargar la página
   useEffect(() => {
-     if (user) {
+     if (user && isMapLoaded) {
          fetchMyLocation();
      }
-  }, [user]);
+  }, [user, isMapLoaded]);
 
 
   const cargarDatosIniciales = async () => {

@@ -28,22 +28,24 @@ async def evolution_webhook(request: Request, background_tasks: BackgroundTasks,
     """
     try:
         from app.core.config import settings
-        # Validar el Webhook Secret (Si está configurado en .env)
+        import secrets
+        from fastapi import HTTPException
+        
         if settings.WEBHOOK_SECRET:
-            # Soportar que el secreto venga por Header (x-webhook-secret) o por URL (?secret=Miclave)
             header_secret = request.headers.get("x-webhook-secret")
             query_secret = request.query_params.get("secret")
             
-            # Corrección para Evolution API Webhook By Events:
-            # Evolution suele concatenar "/messages-upsert" al final de la URL ignorando querystrings.
-            # Ej: ?secret=mypass/messages-upsert -> limpiamos lo extra.
             if query_secret and "/" in query_secret:
                 query_secret = query_secret.split("/")[0]
             
-            # Chequeamos si alguno de los dos lados tiene la clave correcta
-            if (not header_secret or header_secret != settings.WEBHOOK_SECRET) and (not query_secret or query_secret != settings.WEBHOOK_SECRET):
-                logger.warning(f"Fallo de autenticación en Webhook: Secreto inválido omitido")
-                return {"status": "unauthorized"}
+            is_header_valid = header_secret and secrets.compare_digest(header_secret, settings.WEBHOOK_SECRET)
+            is_query_valid = query_secret and secrets.compare_digest(query_secret, settings.WEBHOOK_SECRET)
+            
+            if not is_header_valid and not is_query_valid:
+                logger.warning(f"Fallo de autenticación en Webhook: Secreto inválido")
+                raise HTTPException(status_code=401, detail="Unauthorized")
+        else:
+            logger.warning("WEBHOOK_SECRET no está configurado. El endpoint es vulnerable.")
 
         body = await request.json()
         logger.info(f"Webhook recibido [Path: {event_path}]: {body}")

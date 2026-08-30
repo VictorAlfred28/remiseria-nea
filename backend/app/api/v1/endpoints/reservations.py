@@ -51,9 +51,15 @@ def update_reservation_status(res_id: str, data: ReservationUpdate, claims: Dict
     org_id = claims.get("organizacion_id")
     
     # Validar existencia
-    check = supabase.table("reservations").select("id").eq("id", res_id).eq("organizacion_id", org_id).execute()
+    check = supabase.table("reservations").select("id, estado").eq("id", res_id).eq("organizacion_id", org_id).execute()
     if not check.data:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
+        
+    # Optimistic locking: solo actualiza si la reserva está en el estado en el que el admin creía que estaba (si aplicara) o simplemente bloqueando asignaciones dobles.
+    # Como admin puede forzar, al menos evitamos re-asignar reservas que ya fueron procesadas, pero permitimos el cambio.
+    # En este caso básico, verificaremos si ya está asignada para evitar sobreescritura accidental.
+    if data.estado == "asignada" and check.data[0].get("estado") != "pendiente":
+        raise HTTPException(status_code=409, detail="La reserva ya fue procesada o asignada previamente.")
         
     resp = supabase.table("reservations").update({"estado": data.estado}).eq("id", res_id).execute()
     return resp.data[0]

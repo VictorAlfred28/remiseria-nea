@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from datetime import datetime, date, time
 import logging
+import uuid
+import io
+from PIL import Image
 
 from app.core.security import get_current_cliente
 from app.db.supabase import supabase
 from app.core.pricing import calculate_fare
+from app.core.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -832,3 +836,60 @@ def create_negocio_promocion(data: PromocionComercioRequest, claims: Dict[str, A
         
     return resp.data[0]
 
+@router.post("/negocio/upload-imagen")
+async def upload_imagen_comercio(
+    imagen: UploadFile = File(...),
+    claims: Dict[str, Any] = Depends(get_current_cliente)
+):
+    """
+    Sube una imagen (logo, descuento, etc.) para el comercio.
+    Redimensiona automáticamente y optimiza a WebP.
+    """
+    user_id = claims.get("sub")
+    
+    file_bytes = await imagen.read()
+    file_size_mb = len(file_bytes) / (1024 * 1024)
+    
+    if file_size_mb > 5:
+        raise HTTPException(status_code=400, detail="El archivo excede el límite de 5MB permitido.")
+        
+    mime_type = imagen.content_type
+    allowed_mimes = ["image/jpeg", "image/png", "image/webp", "image/jpg"]
+    if mime_type not in allowed_mimes:
+        raise HTTPException(status_code=400, detail=f"Formato no permitido: {mime_type}. Usa JPG, PNG o WEBP.")
+        
+    try:
+        # Procesar con Pillow
+        img = Image.open(io.BytesIO(file_bytes))
+        
+        # Redimensionar si es muy ancha (>1024)
+        max_width = 1024
+        if img.width > max_width:
+            ratio = max_width / img.width
+            new_height = int(img.height * ratio)
+            img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+            
+        out_io = io.BytesIO()
+        img.save(out_io, format="WEBP", quality=80)
+        out_bytes = out_io.getvalue()
+        
+    except Exception as e:
+        logger.error(f"Error procesando imagen: {e}")
+        raise HTTPException(status_code=400, detail="Error procesando la imagen. Verifica que sea una imagen válida.")
+        
+    file_name = f"{user_id}/{uuid.uuid4()}.webp"
+    
+    try:
+        # Subir a Supabase Storage (bucket 'comercios')
+        supabase.storage.from_("comercios").upload(
+            file_name, 
+            out_bytes, 
+            {"cache-control": "public, max-age=31536000", "content-type": "image/webp"}
+        )
+    except Exception as e:
+        logger.error(f"Error al subir a Supabase: {e}")
+        raise HTTPException(status_code=500, detail="Error al subir imagen a Supabase. ¿Existe el bucket 'comercios'?")
+        
+    file_url = f"{settings.SUPABASE_URL}/storage/v1/object/public/comercios/{file_name}"
+    
+    return {"imagen_url": file_url}

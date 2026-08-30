@@ -15,3 +15,4 @@ orjson>=3.10.0
 aiosmtplib
 jinja2
 email-validator
+Pillow>=10.2.0

@@ -5,8 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Ubi Integral',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    cleartext: true
+    androidScheme: 'https'
   }
 };
 

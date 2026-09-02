@@ -1,12 +1,13 @@
 import { API_BASE_URL } from '../config';
 import React, { useState, useEffect, useRef } from "react";
 import { Link, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck, ArrowLeft } from "lucide-react";
+import { Users, Gift, MapPin, Navigation, Power, CheckCircle2, Navigation2, Settings, Lock, Loader2, Eye, EyeOff, Wallet, BellRing, XCircle, AlertTriangle, Zap, Calendar, Store, ExternalLink, Briefcase, Truck, ArrowLeft, TrendingUp } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import MiFlotaTab from "../components/cliente/MiFlotaTab";
 import SolicitudesPage from "./chofer/SolicitudesPage";
 import ReservasPage from "./chofer/ReservasPage";
 import CajaPage from "./chofer/CajaPage";
+import RecaudacionesPage from "./chofer/RecaudacionesPage";
 import TarifarioPage from "./chofer/TarifarioPage";
 import ComerciosPage from "./chofer/ComerciosPage";
 import BolsaPage from "./chofer/BolsaPage";
@@ -664,6 +665,7 @@ export default function ChoferDashboard() {
                 { id: 'solicitudes', icon: Navigation, label: 'Solicitudes', badge: isOnline && viajesDisponibles.length > 0 ? viajesDisponibles.length : 0, color: 'text-blue-400' },
                 { id: 'reservas', icon: Calendar, label: 'Reservas', color: 'text-blue-400' },
                 { id: 'caja', icon: Wallet, label: 'Mi Caja', color: 'text-emerald-400' },
+                { id: 'ganancias', icon: TrendingUp, label: 'Ganancias', color: 'text-cyan-400' },
                 { id: 'tarifas', icon: Zap, label: 'Tarifario', color: 'text-yellow-400' },
                 { id: 'comercios', icon: Store, label: 'Beneficios', color: 'text-orange-400' },
                 { id: 'bolsa', icon: Briefcase, label: 'Bolsa', color: 'text-blue-500' },
@@ -730,6 +732,7 @@ export default function ChoferDashboard() {
           } />
           
           <Route path="caja" element={<CajaPage />} />
+          <Route path="ganancias" element={<RecaudacionesPage />} />
           
           <Route path="tarifas" element={
             <TarifarioPage 

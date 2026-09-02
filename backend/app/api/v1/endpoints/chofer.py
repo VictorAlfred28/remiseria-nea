@@ -451,3 +451,80 @@ async def registrar_pago_chofer(
              logger.error(f"Fallo crítico en rollback de archivo {file_name}: {str(rb_e)}")
         
         raise HTTPException(status_code=500, detail=f"Error en BD, archivo eliminado de storage por rollback: {str(e)}")
+
+# === NUEVO MÓDULO: RECAUDACIONES Y GANANCIAS ===
+from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
+
+@router.get("/recaudaciones")
+def get_recaudaciones_chofer(
+    rango: str = "30_dias", 
+    claims: Dict[str, Any] = Depends(get_current_chofer)
+):
+    """
+    Obtiene el historial de viajes finalizados y calcula totales de recaudación y ganancias.
+    Usa una RPC en BD para calcular totales sin traer todos los registros a memoria.
+    Rango soportado: hoy, semana, mes, 30_dias, todo
+    """
+    chofer_user_id = claims.get("sub")
+    
+    c_resp = supabase.table("choferes").select("id").eq("usuario_id", chofer_user_id).execute()
+    if not c_resp.data:
+        raise HTTPException(status_code=404, detail="Perfil de chofer no encontrado.")
+    
+    c_id = c_resp.data[0]["id"]
+    
+    # Calcular fechas de filtro usando el offset de Argentina (-03:00)
+    tz_ar = timezone(timedelta(hours=-3))
+    now_ar = datetime.now(tz_ar)
+    
+    if rango == "hoy":
+        fecha_desde = now_ar.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif rango == "semana":
+        fecha_desde = now_ar - timedelta(days=now_ar.weekday())
+        fecha_desde = fecha_desde.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif rango == "mes":
+        fecha_desde = now_ar.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif rango == "todo":
+        fecha_desde = now_ar - relativedelta(years=10) # Histórico Completo
+    else: # 30_dias (default)
+        fecha_desde = now_ar - timedelta(days=30)
+        
+    fecha_desde_iso = fecha_desde.isoformat()
+    fecha_hasta_iso = now_ar.isoformat()
+
+    # 1. Llamar a la RPC para que la Base de Datos sume y reste de forma nativa (Rendimiento O(1) de transferencia)
+    rpc_resp = supabase.rpc("calcular_recaudaciones_chofer", {
+        "p_chofer_id": c_id,
+        "p_fecha_desde": fecha_desde_iso,
+        "p_fecha_hasta": fecha_hasta_iso
+    }).execute()
+    
+    totales = rpc_resp.data if rpc_resp.data else {
+        "recaudacion_bruta_total": 0,
+        "comisiones_registradas": 0,
+        "recaudacion_con_comision_registrada": 0,
+        "ganancia_neta_verificable": 0,
+        "viajes_total": 0,
+        "viajes_con_comision_registrada": 0,
+        "viajes_sin_comision_historica": 0
+    }
+
+    
+    # 2. Obtener lista paginada de viajes para historial visual (máximo 100 por query)
+    # Filtramos tanto FINALIZADO como FINISHED por compatibilidad histórica
+    viajes_resp = supabase.table("viajes")\
+        .select("id, creado_en, origen, destino, precio, comision_aplicada")\
+        .eq("chofer_id", c_id)\
+        .eq("estado", "FINALIZADO")\
+        .gte("creado_en", fecha_desde_iso)\
+        .lt("creado_en", fecha_hasta_iso)\
+        .order("creado_en", desc=True)\
+        .limit(100)\
+        .execute()
+        
+    return {
+        "totales": totales,
+        "viajes": viajes_resp.data
+    }
+

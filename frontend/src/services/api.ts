@@ -258,3 +258,10 @@ export const rechazarPostulacionBolsa = async (postId: string, mensaje?: string)
     const res = await api.post(`/bolsa/admin/postulaciones/${postId}/rechazar`, { mensaje_admin: mensaje });
     return res.data;
 };
+
+// --- MIS GANANCIAS / RECAUDACIONES ---
+export const getMisRecaudaciones = async (rango: string = "30_dias") => {
+    const res = await api.get("/chofer/recaudaciones", { params: { rango } });
+    return res.data;
+};
+

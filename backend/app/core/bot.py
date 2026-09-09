@@ -78,8 +78,22 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "cancelar_mi_viaje_activo",
-            "description": "El cliente desea cancelar el viaje que tiene solicitado o asignado actualmente (arrepentimiento)."
+            "name": "consultar_viaje_para_cancelar",
+            "description": "El cliente desea cancelar su viaje activo. Esta función consulta el estado y pide confirmación antes de cancelar."
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "ejecutar_cancelacion_viaje",
+            "description": "Utiliza esta función ÚNICAMENTE cuando el pasajero ha dicho explícitamente que SÍ confirma la cancelación.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "viaje_id": {"type": "string", "description": "ID del viaje a cancelar devuelto por consultar_viaje_para_cancelar"}
+                },
+                "required": ["viaje_id"]
+            }
         }
     },
     {
@@ -139,7 +153,7 @@ HABILIDADES DEL SISTEMA:
 2. Cotizar puntual (`consultar_precio_puntual`).
 3. Viajes inmediatos (`confirmar_viaje_inmediato`).
 4. Reserva futura (`iniciar_reserva`).
-5. Cancelar viaje (`cancelar_mi_viaje_activo`)."""
+5. Cancelar viaje: PRIMERO usas `consultar_viaje_para_cancelar` y SÓLO si el usuario confirma usas `ejecutar_cancelacion_viaje`."""
 
 async def procesar_mensaje_whatsapp(instance: str, phone: str, message: str, push_name: str = ""):
     """Núcleo del Cerebro NLP."""
@@ -336,34 +350,58 @@ async def procesar_mensaje_whatsapp(instance: str, phone: str, message: str, pus
             await send_whatsapp_message(instance, phone, respuesta_texto)
             return
 
-        if tool.function.name == "cancelar_mi_viaje_activo":
-            # 1. Buscar viaje activo del pasajero (No finalizado ni cancelado)
-            v_res = supabase.table("viajes") \
-                .select("*") \
-                .filter("origen->>cliente_telefono", "eq", phone) \
-                .in_("estado", ["SOLICITADO", "ACEPTADO", "EN_PUERTA"]) \
-                .order("requested_at", desc=True) \
-                .limit(1) \
-                .execute()
+        if tool.function.name == "consultar_viaje_para_cancelar":
+            from app.services.viaje_repository import get_viaje_activo_por_telefono
+            viajes = get_viaje_activo_por_telefono(phone)
             
-            if not v_res.data:
-                res_cancel = "No encontré ningún viaje activo para cancelar en este momento. ¿Seguro que ya habías pedido uno?"
-            else:
-                viaje = v_res.data[0]
-                viaje_id = viaje["id"]
-                # 2. Actualizar estado a cancelado
-                supabase.table("viajes").update({"estado": "CANCELADO"}).eq("id", viaje_id).execute()
-                res_cancel = "✅ Entendido. He cancelado tu solicitud de viaje exitosamente. ¡Esperamos verte pronto!"
+            if not viajes:
+                respuesta_texto = "No encontré ningún viaje activo tuyo para cancelar. Quizás ya fue cancelado o finalizado."
+                await send_whatsapp_message(instance, phone, respuesta_texto)
+                return
+            
+            viaje = viajes[0]
+            viaje_id = viaje["id"]
+            
+            # Guardar metadata de espera de confirmación
+            current_metadata = chat_req.data[0].get("metadata", {}) if chat_req.data else {}
+            current_metadata["viaje_id_a_cancelar"] = viaje_id
+            
+            supabase.table("chat_sessions").update({
+                "estado": "esperando_confirmacion",
+                "metadata": current_metadata
+            }).eq("telefono", phone).execute()
+            
+            system_msg = {"role": "system", "content": f"RESULTADO DE LA CONSULTA: Viaje encontrado. Origen: {viaje['origen'].get('direccion')}, Destino: {viaje['destino'].get('direccion')}. Debes preguntarle al pasajero si CONFIRMA la cancelación."}
+            historial.append(system_msg)
+            # No enviamos msj directo, dejamos que el bot lea y pregunte (pasará a un loop con tools vacio o continuará)
+            supabase.table("chat_sessions").update({"historial": historial}).eq("telefono", phone).execute()
+            # Respondemos algo rápido por WPP para que no haya delay si el bot tarda
+            await send_whatsapp_message(instance, phone, f"Encontré un viaje desde {viaje['origen'].get('direccion')} hasta {viaje['destino'].get('direccion')}. ¿Deseas confirmar la cancelación? (Responde Sí o No)")
+            return
+            
+        if tool.function.name == "ejecutar_cancelacion_viaje":
+            args = json.loads(tool.function.arguments)
+            viaje_id = args.get("viaje_id")
+            
+            current_metadata = chat_req.data[0].get("metadata", {}) if chat_req.data else {}
+            if current_metadata.get("viaje_id_a_cancelar") != viaje_id:
+                await send_whatsapp_message(instance, phone, "El viaje que intentas cancelar ya no es válido o hubo una confusión.")
+                return
+            
+            from app.services.viaje_repository import cancel_viaje_atomico
+            exito = cancel_viaje_atomico(viaje_id, phone)
+            
+            if exito:
+                current_metadata.pop("viaje_id_a_cancelar", None)
+                supabase.table("chat_sessions").update({
+                    "historial": [], 
+                    "estado": "negociando",
+                    "metadata": current_metadata
+                }).eq("telefono", phone).execute()
                 
-                # 3. Si tenía un chofer asignado, avisarle al chofer (opcional pero recomendado)
-                if viaje.get("chofer_id"):
-                    # Podríamos disparar un mensaje al chofer aquí si tuviésemos su jid. 
-                    # Por ahora la DB se actualiza y el Dashboard del chofer lo reflejará (está escuchando cambios).
-                    pass
-
-            # Limpiar historial para comenzar limpia la próxima negociación
-            supabase.table("chat_sessions").update({"historial": [], "estado": "negociando"}).eq("telefono", phone).execute()
-            await send_whatsapp_message(instance, phone, res_cancel)
+                await send_whatsapp_message(instance, phone, "✅ Entendido. Tu viaje ha sido cancelado exitosamente.")
+            else:
+                await send_whatsapp_message(instance, phone, "❌ No fue posible cancelar el viaje. Es posible que el móvil ya esté en la puerta o ya finalizó.")
             return
 
         if tool.function.name == "hablar_con_operador":

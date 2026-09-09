@@ -487,22 +487,17 @@ export default function ChoferDashboard() {
 
   const handleNotificarLlegada = async () => {
       if (!viajeActivo) return;
-      const { error } = await supabase.from('viajes').update({ 
-        estado: 'EN_PUERTA',
-        arrived_at: new Date().toISOString()
-      }).eq('id', viajeActivo.id);
-      
-      if (error) {
-          alert("Error de conexión: " + error.message);
-          return;
-      }
-      setViajeActivo({ ...viajeActivo, estado: 'EN_PUERTA' });
       try {
-          await notificarLlegadaViaje(viajeActivo.id);
+          // El backend se encarga de la transición atómica y de la idempotencia
+          const res = await notificarLlegadaViaje(viajeActivo.id);
+          // Actualizar UI local para reflejar el estado inmediatamente
+          setViajeActivo({ ...viajeActivo, estado: 'EN_PUERTA' });
       } catch (err: any) {
-          console.error("Error al notificar llegada por WhatsApp", err);
+          // Si el backend lanza error (403, 404, 409) lo mostramos
+          alert("No se pudo notificar la llegada: " + (err.response?.data?.detail || err.message));
       }
   };
+
 
   const handleIniciarViaje = async () => {
     if (!viajeActivo) return;

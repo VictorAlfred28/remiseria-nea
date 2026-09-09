@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { X, MapPin, DollarSign, Phone, Loader2, Navigation } from 'lucide-react';
-import { API_BASE_URL } from '../config';
-import { useAuthStore } from '../store/useAuthStore';
+import { api } from '../services/api';
 
 interface CargaManualModalProps {
   onClose: () => void;
 }
 
 export default function CargaManualModal({ onClose }: CargaManualModalProps) {
-  const { token } = useAuthStore();
   const [telefono, setTelefono] = useState('');
   const [nombre, setNombre] = useState('Cliente Agencia');
   const [origenDir, setOrigenDir] = useState('');
@@ -43,24 +41,12 @@ export default function CargaManualModal({ onClose }: CargaManualModalProps) {
         tipo_viaje: "PERSONAL"
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/viajes/manual`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.detail || "Error al despachar el viaje.");
-      }
+      await api.post("/admin/viajes/manual", payload);
 
       setSuccess(true);
       setTimeout(() => onClose(), 2000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message || "Error al despachar el viaje.");
     } finally {
       setLoading(false);
     }

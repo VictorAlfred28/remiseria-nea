@@ -41,6 +41,7 @@ export default function LiveTracker() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [liveCoords, setLiveCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
   
   const channelRef = useRef<any>(null);
   
@@ -98,6 +99,30 @@ export default function LiveTracker() {
           }
       }
   }, [data]);
+
+  // Cálculo de ETA con OSRM
+  useEffect(() => {
+      if (!liveCoords || !data?.origen?.lat || data.estado === "EN_PUERTA") return;
+      
+      const fetchETA = async () => {
+          try {
+              const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${liveCoords.lng},${liveCoords.lat};${data.origen.lng},${data.origen.lat}?overview=false`);
+              if (res.ok) {
+                  const result = await res.json();
+                  if (result.routes && result.routes.length > 0) {
+                      const durationSec = result.routes[0].duration;
+                      setEtaMinutes(Math.max(1, Math.ceil(durationSec / 60)));
+                  }
+              }
+          } catch (e) {
+              console.error("Error al calcular ETA:", e);
+          }
+      };
+
+      fetchETA();
+      const interval = setInterval(fetchETA, 30000); // Refrescar cada 30s
+      return () => clearInterval(interval);
+  }, [liveCoords, data?.origen, data?.estado]);
 
   if (loading) {
       return (
@@ -189,7 +214,11 @@ export default function LiveTracker() {
                         <Navigation size={24} className="animate-bounce" />
                         <div>
                             <p className="font-bold">El chofer va en camino</p>
-                            <p className="text-xs">Sigue su ubicación en el mapa.</p>
+                            <p className="text-xs">
+                                {etaMinutes !== null 
+                                    ? `Llegada aprox. en ${etaMinutes} min.` 
+                                    : "Sigue su ubicación en el mapa."}
+                            </p>
                         </div>
                     </div>
                 )}

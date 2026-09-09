@@ -314,19 +314,22 @@ async def procesar_mensaje_whatsapp(instance: str, phone: str, message: str, pus
             else:
                 logger.warning(f"orphan_detected: Viaje solicitado por {phone} sin usuario registrado")
 
-            viaje_data = {
-                "organizacion_id": org_id,
-                "cliente_id": cliente_id,
-                "orphan": orphan,
-                "origen": {"direccion": origen, "lat": origen_lat, "lng": origen_lng, "cliente_telefono": phone, "ai_instance": instance},
-                "destino": {"direccion": destino, "lat": destino_lat, "lng": destino_lng},
-                "precio": precio,
-                "estado": "SOLICITADO",
-                "requested_at": datetime.now().isoformat()
-            }
+            from app.services.viaje_factory import build_base_viaje_payload
+            from app.services.viaje_repository import insert_viaje
+
+            viaje_data = build_base_viaje_payload(
+                organizacion_id=org_id,
+                origen_data={"direccion": origen, "lat": origen_lat, "lng": origen_lng, "cliente_telefono": phone, "ai_instance": instance},
+                destino_data={"direccion": destino, "lat": destino_lat, "lng": destino_lng},
+                precio=precio,
+                cliente_id=cliente_id,
+                canal_solicitud="WHATSAPP",
+                creado_por_rol="BOT",
+                orphan=orphan
+            )
             
             logger.info("viaje_created: Insertando nuevo viaje desde WhatsApp")
-            supabase.table("viajes").insert(viaje_data).execute()
+            insert_viaje(viaje_data)
             
             respuesta_texto = f"✅ Perfecto {nombre}, tu viaje ya ingresó a nuestro sistema. Tu móvil está siendo despachado para {origen}.\n💸 Cotización estimada: *${precio}*.\n\n*Nota:* Incluye 5 min de espera sin cargo. Luego: $250/min."
             supabase.table("chat_sessions").update({"historial": [], "estado": "confirmado"}).eq("telefono", phone).execute()

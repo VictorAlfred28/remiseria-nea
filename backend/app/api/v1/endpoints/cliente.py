@@ -268,23 +268,24 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
         else:
             raise HTTPException(status_code=400, detail="No tienes viajes gratis disponibles.")
 
-    nuevo_viaje = {
-        "organizacion_id": claims.get("organizacion_id"),
-        "cliente_id": cliente_id,
-        "origen": data.origen,
-        "destino": data.destino,
-        "precio": precio_final,
-        "final_price": precio_final, # Sync with new logic
-        "precio_original": cotizacion["precio_original"],
-        "monto_descontado": cotizacion["monto_descontado"],
-        "promocion_id": cotizacion["promocion_id"],
-        "estado": "SOLICITADO",
-        "metodo_pago": "efectivo",
-        "usado_viaje_gratis": usado_viaje_gratis,
-        "tipo_viaje": data.tipo_viaje,
-        "empresa_id": cotizacion.get("empresa_id"),
-        "fecha_solicitud": datetime.now().isoformat()
-    }
+    from app.services.viaje_factory import build_base_viaje_payload
+    from app.services.viaje_repository import insert_viaje
+
+    nuevo_viaje = build_base_viaje_payload(
+        organizacion_id=claims.get("organizacion_id"),
+        origen_data=data.origen,
+        destino_data=data.destino,
+        precio=precio_final,
+        cliente_id=cliente_id,
+        canal_solicitud="APP",
+        creado_por_rol="PASAJERO",
+        precio_original=cotizacion["precio_original"],
+        monto_descontado=cotizacion["monto_descontado"],
+        promocion_id=cotizacion["promocion_id"],
+        usado_viaje_gratis=usado_viaje_gratis,
+        tipo_viaje=data.tipo_viaje,
+        empresa_id=cotizacion.get("empresa_id")
+    )
     
     # 3. Lógica de Cuenta Familiar (Control Parental y Reglas PRO)
     fam_check = supabase.table("miembros_familiares").select("rol, estado, grupo_id, grupos_familiares(tutor_user_id)").eq("user_id", cliente_id).eq("estado", "activo").execute()
@@ -406,12 +407,13 @@ def solicitar_viaje(data: TripRequest, claims: Dict[str, Any] = Depends(get_curr
                 logger.warning(f"Aviso de viaje tutelado no enviado: {e}")
                 
     # 4. Inserción del viaje
-    resp = supabase.table("viajes").insert(nuevo_viaje).execute()
+    from app.services.viaje_repository import insert_viaje
+    inserted = insert_viaje(nuevo_viaje)
     
-    if not resp.data:
+    if not inserted:
         raise HTTPException(status_code=500, detail="Error al crear el viaje")
         
-    return resp.data[0]
+    return inserted
 
 @router.get("/viajes")
 def historial_viajes(claims: Dict[str, Any] = Depends(get_current_cliente)):

@@ -2,9 +2,10 @@ import { API_BASE_URL } from '../config';
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase, Truck, ClipboardList, Star } from "lucide-react";
+import { Users, Car, Map as MapIcon, Tag, Loader2, CheckCircle2, Gift, Wallet, AlertTriangle, PlusCircle, History, Lock, Edit3, Trash2, Search, Calendar, Zap, Building, CreditCard, Store, ChevronRight, Briefcase, Truck, ClipboardList, Star, Navigation } from "lucide-react";
 import TariffManager from "../components/TariffManager";
 import ReservationTable from "../components/ReservationTable";
+import CargaManualModal from "../components/CargaManualModal";
 import EmpresasAdmin from "../components/EmpresasAdmin";
 import RecaudacionAdmin from "../components/RecaudacionAdmin";
 import PagosManualesAdmin from "../components/PagosManualesAdmin";
@@ -98,6 +99,9 @@ export default function AdminDashboard() {
 
   // States Caja de Choferes (Finanzas)
   const [choferesFinanzas, setChoferesFinanzas] = useState<any[]>([]);
+
+  // Modal Carga Manual
+  const [showCargaManual, setShowCargaManual] = useState(false);
   const [loadingFinanzas, setLoadingFinanzas] = useState(false);
   const [selectedChofer, setSelectedChofer] = useState<any | null>(null);
   const [montoPago, setMontoPago] = useState<number>(0);
@@ -436,10 +440,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-[2rem] shadow-2xl animate-in fade-in zoom-in-95 duration-500 w-full relative">
-      <h1 className="text-3xl font-black text-white mb-6 tracking-tight">
-        Panel de Administración <span className="text-[#0D6EFD] font-light">| UBI</span>
-      </h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-black text-white tracking-tight">
+          Panel de Administración <span className="text-[#0D6EFD] font-light">| UBI</span>
+        </h1>
+        <button 
+          onClick={() => setShowCargaManual(true)} 
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+        >
+          <Navigation size={18} />
+          Despacho Manual
+        </button>
+      </div>
       
+      {showCargaManual && <CargaManualModal onClose={() => setShowCargaManual(false)} />}
 
       {/* ── Tabs de navegación ─────────────────────────────────── */}
       <div

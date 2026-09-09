@@ -1,6 +1,7 @@
 import httpx
 from app.core.config import settings
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 

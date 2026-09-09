@@ -476,12 +476,14 @@ def create_viaje_manual(payload: dict, background_tasks: BackgroundTasks, claims
     if not origen_dir or not destino_dir:
         raise HTTPException(status_code=400, detail="Falta origen o destino.")
         
-    from app.services.viaje_factory import create_viaje
+    from app.services.viaje_factory import build_base_viaje_payload
+    from app.services.viaje_repository import insert_viaje
     from app.core.evolution import send_whatsapp_message_with_retry
     
     # 1. Crear el viaje usando la Factory unificada
-    viaje_obj = {
-        "origen": {
+    viaje_obj = build_base_viaje_payload(
+        organizacion_id=org_id,
+        origen_data={
             "direccion": origen_dir,
             "lat": payload.get("origen_lat", 0.0),
             "lng": payload.get("origen_lng", 0.0),
@@ -489,20 +491,19 @@ def create_viaje_manual(payload: dict, background_tasks: BackgroundTasks, claims
             "cliente_nombre": nombre,
             "ai_instance": "viajesnea" # Default bot instance
         },
-        "destino": {
+        destino_data={
             "direccion": destino_dir,
             "lat": payload.get("destino_lat", 0.0),
             "lng": payload.get("destino_lng", 0.0)
         },
-        "precio_estimado": precio,
-        "canal_solicitud": "ADMIN_PANEL",
-        "creado_por_rol": "OPERADOR",
-        "organizacion_id": org_id,
-        "tipo_viaje": payload.get("tipo_viaje", "PERSONAL"),
-        "estado": "SOLICITADO"
-    }
+        precio=precio,
+        canal_solicitud="ADMIN_PANEL",
+        creado_por_rol="OPERADOR",
+        tipo_viaje=payload.get("tipo_viaje", "PERSONAL"),
+        orphan=True
+    )
     
-    viaje = create_viaje(viaje_obj)
+    viaje = insert_viaje(viaje_obj)
     
     # 2. Notificar al pasajero si proporcionó teléfono
     if telefono:

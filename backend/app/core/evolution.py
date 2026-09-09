@@ -54,6 +54,24 @@ async def send_whatsapp_message(instance_name: str, phone_number: str, message: 
                  logger.error(f"Error Evolution API: {res.text}")
         except Exception as e:
              logger.error(f"Error enviando WPP: {e}")
+             raise e
+
+async def send_whatsapp_message_with_retry(instance_name: str, phone_number: str, message: str, max_retries: int = 3):
+    """
+    Envía un mensaje de texto con reintentos automáticos (Exponential Backoff).
+    Ideal para BackgroundTasks donde no queremos perder notificaciones críticas si Evolution API parpadea.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            await send_whatsapp_message(instance_name, phone_number, message)
+            return
+        except Exception as e:
+            if attempt == max_retries:
+                logger.error(f"Fallo definitivo enviando WPP a {phone_number} tras {max_retries} intentos. El evento ya fue procesado en BD pero la notificación se perdió.")
+            else:
+                sleep_time = 2 ** attempt
+                logger.warning(f"Reintento {attempt}/{max_retries} para {phone_number} en {sleep_time}s...")
+                await asyncio.sleep(sleep_time)
 
 async def send_whatsapp_list_message(instance_name: str, phone_number: str, title: str, description: str, button_text: str, sections: list):
     """

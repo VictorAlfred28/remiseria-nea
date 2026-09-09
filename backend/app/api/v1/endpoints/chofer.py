@@ -284,41 +284,48 @@ def notificar_finalizacion(viaje_id: str, background_tasks: BackgroundTasks, cla
 def notificar_llegada(viaje_id: str, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_chofer)):
     chofer_user_id = claims.get("sub")
     
-    # 1. Obtener datos del viaje
-    v_resp = supabase.table("viajes").select("*, choferes!inner(usuario_id)").eq("id", viaje_id).execute()
-    if not v_resp.data:
-         raise HTTPException(status_code=404, detail="Viaje no encontrado.")
+    # 1. Obtener la identidad del chofer (PK en tabla choferes)
+    chf_resp = supabase.table("choferes").select("id, vehiculo, patente").eq("usuario_id", chofer_user_id).execute()
+    if not chf_resp.data:
+        raise HTTPException(status_code=403, detail="No eres un chofer registrado.")
     
-    viaje = v_resp.data[0]
-    if viaje.get("choferes", {}).get("usuario_id") != chofer_user_id:
-         raise HTTPException(status_code=403, detail="No tienes permiso para modificar este viaje.")
+    chofer_pk = chf_resp.data[0]["id"]
+    vehiculo = chf_resp.data[0].get("vehiculo", "Auto")
+    patente = chf_resp.data[0].get("patente", "N/A")
+    
+    # 2. Actualización atómica a EN_PUERTA (Transición desde ACEPTADO exclusiva del chofer_id asignado)
+    update_resp = supabase.table("viajes").update({
+        "estado": "EN_PUERTA",
+        "fecha_llegada_origen": datetime.datetime.now().isoformat()
+    }).eq("id", viaje_id).eq("chofer_id", chofer_pk).eq("estado", "ACEPTADO").execute()
+    
+    if len(update_resp.data) == 0:
+        # Falló el update atómico, investigamos la causa para dar buen feedback
+        v_check = supabase.table("viajes").select("estado, chofer_id").eq("id", viaje_id).execute()
+        if not v_check.data:
+            raise HTTPException(status_code=404, detail="Viaje no encontrado.")
+        if v_check.data[0].get("chofer_id") != chofer_pk:
+            raise HTTPException(status_code=403, detail="No tienes permiso para modificar este viaje.")
+        if v_check.data[0].get("estado") == "EN_PUERTA":
+            # Idempotencia: el viaje ya estaba en puerta, devolvemos success silencioso
+            return {"message": "Ya habías notificado la llegada", "sent": False}
+        raise HTTPException(status_code=409, detail=f"Transición inválida. El viaje está en estado: {v_check.data[0].get('estado')}")
+    
+    viaje = update_resp.data[0]
     pasajero_phone = viaje.get("origen", {}).get("cliente_telefono")
     ai_instance = viaje.get("origen", {}).get("ai_instance", "viajesnea")
-    
-    # 2. Actualizar estado a 'ARRIVED' y timestamp
-    supabase.table("viajes").update({
-        "estado": "EN_PUERTA",
-        "arrived_at": datetime.datetime.now().isoformat(),
-        "fecha_llegada_origen": datetime.datetime.now().isoformat()
-    }).eq("id", viaje_id).execute()
     
     if not pasajero_phone:
          return {"message": "Llegada marcada, pero sin telefono de contacto", "sent": False}
     
-    # 3. Obtener info del chofer para WPP
+    # 3. Obtener info adicional para notificar
     usr_resp = supabase.table("usuarios").select("nombre").eq("id", chofer_user_id).execute()
     chofer_nombre = usr_resp.data[0]["nombre"] if usr_resp.data else "Tu Chofer"
     
-    chf_resp = supabase.table("choferes").select("vehiculo, patente").eq("usuario_id", chofer_user_id).execute()
-    vehiculo = "Auto"
-    patente = "N/A"
-    if chf_resp.data:
-        vehiculo = chf_resp.data[0].get("vehiculo", "Auto")
-        patente = chf_resp.data[0].get("patente", "N/A")
-    
-    # 4. Notificar pasajero
+    # 4. Notificar pasajero (Delegado a BackgroundTasks con reintentos)
     llegada_msg = f"🚖 *Tu móvil ya llegó.*\n\nPor favor salí al punto de encuentro.\n\n👤 Chofer: {chofer_nombre}\n🚗 Vehículo: {vehiculo}\n📌 Patente: {patente}"
-    background_tasks.add_task(send_whatsapp_message, ai_instance, pasajero_phone, llegada_msg)
+    from app.core.evolution import send_whatsapp_message_with_retry
+    background_tasks.add_task(send_whatsapp_message_with_retry, ai_instance, pasajero_phone, llegada_msg)
     
     return {"message": "Notificación de llegada enviada", "sent": True}
 

@@ -459,6 +459,58 @@ def get_empresas(claims: Dict[str, Any] = Depends(get_current_admin)):
     resp = supabase.table("empresas").select("*, empresa_beneficios(*)").eq("organizacion_id", org_id).execute()
     return resp.data
 
+@router.post("/viajes/manual")
+def create_viaje_manual(payload: dict, background_tasks: BackgroundTasks, claims: Dict[str, Any] = Depends(get_current_admin)):
+    """
+    Carga un viaje manualmente desde el panel de operador/admin.
+    Envía notificación de WhatsApp al pasajero indicando que el móvil va en camino.
+    """
+    org_id = claims.get("organizacion_id")
+    
+    telefono = payload.get("telefono")
+    nombre = payload.get("nombre", "Cliente Agencia")
+    origen_dir = payload.get("origen_direccion")
+    destino_dir = payload.get("destino_direccion")
+    precio = payload.get("precio_fijado", 0.0)
+    
+    if not origen_dir or not destino_dir:
+        raise HTTPException(status_code=400, detail="Falta origen o destino.")
+        
+    from app.services.viaje_factory import create_viaje
+    from app.core.evolution import send_whatsapp_message_with_retry
+    
+    # 1. Crear el viaje usando la Factory unificada
+    viaje_obj = {
+        "origen": {
+            "direccion": origen_dir,
+            "lat": payload.get("origen_lat", 0.0),
+            "lng": payload.get("origen_lng", 0.0),
+            "cliente_telefono": telefono,
+            "cliente_nombre": nombre,
+            "ai_instance": "viajesnea" # Default bot instance
+        },
+        "destino": {
+            "direccion": destino_dir,
+            "lat": payload.get("destino_lat", 0.0),
+            "lng": payload.get("destino_lng", 0.0)
+        },
+        "precio_estimado": precio,
+        "canal_solicitud": "ADMIN_PANEL",
+        "creado_por_rol": "OPERADOR",
+        "organizacion_id": org_id,
+        "tipo_viaje": payload.get("tipo_viaje", "PERSONAL"),
+        "estado": "SOLICITADO"
+    }
+    
+    viaje = create_viaje(viaje_obj)
+    
+    # 2. Notificar al pasajero si proporcionó teléfono
+    if telefono:
+        msg = f"🚕 *Ubi Traslados*\n\n¡Hola {nombre}!\nTu operador ha registrado tu viaje desde *{origen_dir}* hasta *{destino_dir}*.\n\nPronto un chofer será asignado y pasará a buscarte."
+        background_tasks.add_task(send_whatsapp_message_with_retry, "viajesnea", telefono, msg)
+        
+    return {"message": "Viaje despachado manualmente", "viaje": viaje}
+
 @router.post("/empresas")
 def create_empresa(data: EmpresaCreate, claims: Dict[str, Any] = Depends(get_current_admin)):
     """Crea una nueva empresa."""

@@ -734,12 +734,10 @@ def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, 
     if not viaje["chofer_id"]:
         raise HTTPException(status_code=400, detail="El viaje no tiene un chofer asignado para calificar.")
         
-    # 3. Validar si ya fue calificado
-    c_resp = supabase.table("calificaciones").select("id").eq("viaje_id", viaje_id).execute()
-    if c_resp.data:
-        raise HTTPException(status_code=400, detail="Este viaje ya ha sido calificado.")
+    if data.puntuacion < 1 or data.puntuacion > 5:
+        raise HTTPException(status_code=422, detail="La puntuación debe estar entre 1 y 5.")
         
-    # 4. Insertar calificación
+    # 3. Insertar calificación con manejo de errores de Supabase
     nueva_calificacion = {
         "viaje_id": viaje_id,
         "pasajero_id": cliente_id,
@@ -749,11 +747,36 @@ def calificar_viaje(viaje_id: str, data: CalificacionRequest, claims: Dict[str, 
         "recomendado": data.recomendado
     }
     
-    resp = supabase.table("calificaciones").insert(nueva_calificacion).execute()
-    if not resp.data:
-        raise HTTPException(status_code=500, detail="Error al guardar la calificación.")
+    try:
+        from postgrest.exceptions import APIError
+        resp = supabase.table("calificaciones").insert(nueva_calificacion).execute()
         
-    return {"message": "Calificación registrada con éxito.", "calificacion": resp.data[0]}
+        if not resp.data:
+            raise HTTPException(status_code=500, detail="Error al guardar la calificación.")
+            
+        return {"message": "Calificación registrada con éxito.", "calificacion": resp.data[0]}
+    
+    except APIError as e:
+        error_code = getattr(e, 'code', '') or str(e)
+        error_message = getattr(e, 'message', '') or str(e)
+        
+        # 23505 is the PostgreSQL error code for unique_violation
+        if '23505' in error_code or 'unique' in error_message.lower():
+            raise HTTPException(status_code=409, detail="Este viaje ya ha sido calificado.")
+        
+        # 23514 is check_violation
+        if '23514' in error_code or 'check' in error_message.lower():
+            raise HTTPException(status_code=422, detail="Los datos de la calificación no son válidos.")
+            
+        logger.error(f"Supabase APIError en calificar_viaje: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno al registrar la calificación.")
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error inesperado en calificar_viaje: {str(e)}")
+        raise HTTPException(status_code=500, detail="No pudimos guardar la calificación. Intentá nuevamente.")
+
 
 # ==========================================
 # MI NEGOCIO (COMERCIOS)

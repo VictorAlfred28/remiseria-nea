@@ -48,11 +48,23 @@ export default function ClienteDashboard() {
   const [isLocating, setIsLocating] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
 
-  const { isLoaded: isMapLoaded } = useJsApiLoader({
+  useEffect(() => {
+    // DIAGNOSTIC PROBE
+    fetch('http://10.0.2.2:8000/probe_origin_referrer').catch(() => {});
+  }, []);
+
+
+  const { isLoaded: isMapLoaded, loadError: mapLoadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
     libraries: ['places'] as any,
   });
+
+  useEffect(() => {
+    if (mapLoadError) {
+      console.error("[Google Maps] Failed to load API:", mapLoadError);
+    }
+  }, [mapLoadError]);
 
   // Autocomplete Sugerencias
   // Eliminadas las sugerencias manuales (AddressSelector maneja esto)
@@ -420,7 +432,7 @@ export default function ClienteDashboard() {
   };
 
   const handleCalificar = async () => {
-     if(!viajeACompletar) return;
+     if(!viajeACompletar || ratingLoading) return; // Prevent double tap
      setRatingLoading(true);
      try {
         const resp = await fetch(`${API_BASE_URL}/cliente/viaje/${viajeACompletar.id}/calificar`, {
@@ -428,15 +440,32 @@ export default function ClienteDashboard() {
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem('sb-access-token')}` },
             body: JSON.stringify({ puntuacion: ratingVal, comentario: ratingComentario, recomendado: ratingRecomendado })
         });
+        
         if(resp.ok) {
            setViajeACompletar(null);
            setRatingRecomendado(false);
            alert("¡Gracias por tu calificación!");
         } else {
-           alert("Hubo un error al calificar.");
+           const errData = await resp.json().catch(() => ({}));
+           if (resp.status === 409) {
+               alert("Este viaje ya fue calificado.");
+               setViajeACompletar(null); // Remove from view since it's already rated
+           } else if (resp.status === 422) {
+               alert("Los datos de la calificación no son válidos.");
+           } else if (resp.status === 401) {
+               alert("Tu sesión expiró. Volvé a iniciar sesión.");
+           } else if (resp.status === 403) {
+               alert("No tenés permiso para calificar este viaje.");
+           } else if (resp.status === 404) {
+               alert("El viaje que intentas calificar no existe.");
+               setViajeACompletar(null);
+           } else {
+               alert(errData.detail || "No pudimos guardar la calificación. Intentá nuevamente.");
+           }
         }
      } catch(e) {
         console.error(e);
+        alert("Error de red. Verificá tu conexión e intentá nuevamente.");
      } finally {
         setRatingLoading(false);
      }
@@ -902,7 +931,13 @@ export default function ClienteDashboard() {
                     )}
 
                     {/* Permanent Map */}
-                    {isMapLoaded && (
+                    {mapLoadError ? (
+                      <div className="h-48 mb-6 rounded-2xl overflow-hidden border border-red-500/30 bg-red-500/10 flex flex-col items-center justify-center p-4 text-center shadow-xl z-10">
+                         <XCircle className="text-red-400 mb-2" size={24} />
+                         <p className="text-sm text-red-200">No se pudo cargar el mapa.</p>
+                         <p className="text-xs text-red-400/80 mt-1">Verificá tu conexión e intentá nuevamente.</p>
+                      </div>
+                    ) : isMapLoaded && (
                       <div className="h-48 mb-6 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-xl z-10">
                          <TripMap 
                            center={{ lat: viajeActivo.origen.lat, lng: viajeActivo.origen.lng }}
@@ -1041,7 +1076,13 @@ export default function ClienteDashboard() {
                      </div>
                    )}
 
-                      {isMapLoaded ? (
+                      {mapLoadError ? (
+                         <div className="h-64 mb-6 rounded-2xl overflow-hidden border border-red-500/30 bg-red-500/10 flex flex-col items-center justify-center p-6 text-center shadow-xl">
+                            <XCircle className="text-red-400 mb-2" size={32} />
+                            <p className="text-base font-medium text-red-200 mb-1">No se pudo cargar el mapa</p>
+                            <p className="text-sm text-red-400/80">Verificá tu conexión o intentá reiniciar la aplicación.</p>
+                         </div>
+                      ) : isMapLoaded ? (
                         <>
                            <div className="h-64 mb-6 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-xl">
                               <TripMap 

@@ -10,7 +10,7 @@
     "dev": "vite",
     "build:web": "vite build --mode web",
     "build:android": "vite build --mode android",
-    "build": "echo \"ERROR: Use 'npm run build:web' or 'npm run build:android'\" && exit 1",
+    "build": "npm run build:web",
     "start": "sirv dist --host 0.0.0.0 --port 3000 --single --cors",
     "lint": "eslint .",
     "preview": "vite preview"

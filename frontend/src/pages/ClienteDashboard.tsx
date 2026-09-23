@@ -8,7 +8,7 @@ import WeatherWidget from "../components/WeatherWidget";
 import ControlParental from "../components/cliente/ControlParental";
 import MiNegocioTab from "../components/cliente/MiNegocioTab";
 import MiFlotaTab from "../components/cliente/MiFlotaTab";
-import { calculateDistance, isValidCoordinate } from "../utils/geo";
+import { calculateDistance, isValidCoordinate, obtenerDistanciaVial } from "../utils/geo";
 import AddressSelector from "../components/cliente/AddressSelector";
 import TripMap from "../components/cliente/TripMap";
 import { useJsApiLoader } from "@react-google-maps/api";
@@ -495,8 +495,14 @@ export default function ClienteDashboard() {
     const dLat = destinoCoords.lat;
     const dLng = destinoCoords.lng;
     
-    // Calculo Dinámico por Haversine
-    const distanciaKmCalculada = parseFloat(calculateDistance(oLat, oLng, dLat, dLng));
+    // Calculo Dinámico por Routes API
+    const distanciaKmCalculada = await obtenerDistanciaVial(oLat, oLng, dLat, dLng);
+
+    if (distanciaKmCalculada === null) {
+      alert("No pudimos calcular la distancia de la ruta. Verificá las direcciones e intentá nuevamente.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/cliente/viaje/cotizar`, {
@@ -596,16 +602,14 @@ export default function ClienteDashboard() {
       const dLat = editDestinoCoords.lat;
       const dLng = editDestinoCoords.lng;
 
-      // Calcular nueva distancia
-      const R = 6371; // km
-      const dLatRad = (dLat - oLat) * Math.PI / 180;
-      const dLonRad = (dLng - oLng) * Math.PI / 180;
-      const a = Math.sin(dLatRad/2) * Math.sin(dLatRad/2) +
-                Math.cos(oLat * Math.PI / 180) * Math.cos(dLat * Math.PI / 180) *
-                Math.sin(dLonRad/2) * Math.sin(dLonRad/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      let distanciaKmCalculada = (R * c) * 1.3; // Factor de ruta urbana
-      if(distanciaKmCalculada < 1) distanciaKmCalculada = 1;
+      // Calcular nueva distancia por Routes API
+      const distanciaKmCalculada = await obtenerDistanciaVial(oLat, oLng, dLat, dLng);
+
+      if (distanciaKmCalculada === null) {
+        alert("No pudimos calcular la distancia de la ruta. Verificá las direcciones e intentá nuevamente.");
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(`${API_BASE_URL}/cliente/viaje/${viajeActivo.id}`, {
         method: "PATCH",
